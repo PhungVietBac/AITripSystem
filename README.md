@@ -1,2 +1,2 @@
 # Coder vượt ngàn chông gai
-![Sickle_and_Hammer](https://ih1.redbubble.net/image.783960023.5144/raf,360x360,075,t,fafafa:ca443f4786.jpg)
+![M](https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTl-JasQAHkN9iY0HfOD6VSvnWe68HrV0sLxQ&s)
