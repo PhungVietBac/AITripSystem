@@ -1,18 +1,8 @@
-from fastapi import FastAPI, Depends
-from sqlalchemy.orm import Session
-import schemas, repositories
-from database import get_db
+from fastapi import FastAPI
+from controllers import trip_ctrl, user_ctrl, trip_member_ctrl
 
 app = FastAPI()
 
-#region Trips
-# Post a new trip
-@app.post("/trips/", response_model=schemas.TripResponse)
-def create_trip(trip: schemas.TripCreate, db: Session = Depends(get_db)):
-    return repositories.create_trip(db=db, trip=trip)
-
-# Get all trips
-@app.get("/trips/", response_model=list[schemas.TripResponse])
-def get_trips(db: Session = Depends(get_db)):
-    return repositories.get_trips(db)
-#endregion
+app.include_router(trip_ctrl.router, prefix="/api/v1", tags=["trips"])
+app.include_router(user_ctrl.router, prefix="/api/v1", tags=["users"])
+app.include_router(trip_member_ctrl.router, prefix="/api/v1", tags=["trip_members"])
