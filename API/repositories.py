@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
 import models, schemas
+import random
 
 #region Trips
 # Get all trips
