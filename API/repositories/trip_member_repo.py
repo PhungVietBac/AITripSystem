@@ -7,7 +7,7 @@ def get_trip_members(db: Session):
     return db.query(TripMember)
 
 # Get a trip_member by
-def get_trip_member_byr(db: Session, select: str, lookup: str):
+def get_trip_member_by(db: Session, select: str, lookup: str):
     if select == "idUser":
         return db.query(TripMember).filter(TripMember.idUser == lookup).first()
     elif select == "idTrip":
