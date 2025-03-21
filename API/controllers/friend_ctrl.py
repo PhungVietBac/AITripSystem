@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from database import get_db
-import schemas.friend_schema as friend_schema
-import repositories.friend_repo as friend_repo
+from database import get_db as get_db
+from schemas import friend_schema as friend_schema
+from repositories import friend_repo as friend_repo
 
 router = APIRouter()
 
