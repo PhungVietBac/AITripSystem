@@ -13,7 +13,7 @@ class NotificationResponse(NotificationBase):
 
 class NotificationCreate(NotificationBase):
     idUser: str
-    IsRead: bool | None = False
+    isRead: bool | None = False
 
 class NotificationUpdate(NotificationBase):
     content: str | None = None
