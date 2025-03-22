@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from models import trip
-from schemas import TripCreate, TripUpdate
+from schemas.trip_schema import TripCreate, TripUpdate
 from datetime import datetime
 
 #tìm trong start_date -> end_date và theo keyword
