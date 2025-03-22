@@ -1,12 +1,12 @@
 from pydantic import BaseModel
 
 class AIRecommendationBase(BaseModel):
+    input: str
     idUser: str
-    aiInput: str
-    aiOutput: str
 
 class AIRecResponse(AIRecommendationBase):
     idAIRec: str
+    output: str
 
     class Config:
         from_attributes = True

@@ -1,12 +1,46 @@
 from sqlalchemy.orm import Session
 from models.booking import Booking
 from schemas.booking_schema import BookingCreate, BookingUpdate
+from datetime import datetime, timedelta
+from fastapi import HTTPException
+from repositories import user_repo, place_repo
+import uuid
 
+def get_bookings(db: Session):
+    return db.query(Booking).all()
+
+def get_booking_by_id(db: Session, idBooking: str):
+    return db.query(Booking).filter(Booking.idBooking == idBooking).first()
+
+def get_booking_by(db: Session, select: str, lookup: str):
+    if select == "idPlace":
+        return db.query(Booking).filter(Booking.idPlace == lookup).all()
+    elif select == "idUser":
+        return db.query(Booking).filter(Booking.idUser == lookup).all()
+    elif select == "date":
+        time = datetime.strptime(lookup, "%d/%m/%Y %H:%M:%S")
+        endTime = time + timedelta(milliseconds=999)
+        return db.query(Booking).filter(
+            Booking.date >= time,
+            Booking.date <= endTime).all()
+    elif select == "status":
+        return db.query(Booking).filter(Booking.status == lookup).all()
+    else:
+        raise HTTPException(400, "Bad Request")
+        
 def create_booking(db: Session, booking: BookingCreate):
-    # Tạo ID cho booking (có thể dùng UUID hoặc logic khác để tạo ID)
-    import uuid
-    id_booking = f"B{str(uuid.uuid4())[:5]}"
+    # Kiểm tra IDUser
+    if not user_repo.get_user_by(db, "idUser", booking.idUser):
+        raise HTTPException(status_code=404, detail="User not found")
 
+    # Kiểm tra idPlace
+    if not place_repo.get_place_by_id(db, booking.idPlace):
+        raise HTTPException(status_code=404, detail="Place not found")
+    
+    id_booking = ""
+    while not id_booking or get_booking_by_id(db, id_booking):
+        id_booking = f"BK{str(uuid.uuid4())[:4]}"
+        
     # Tạo đối tượng Booking từ dữ liệu đầu vào
     db_booking = Booking(
         idBooking=id_booking,
@@ -15,38 +49,52 @@ def create_booking(db: Session, booking: BookingCreate):
         date=booking.date,
         status=booking.status
     )
+    
     db.add(db_booking)
     db.commit()
     db.refresh(db_booking)
     return db_booking
 
-def update_booking(db: Session, id_booking: str, id_place: str, id_user: str, booking_update: BookingUpdate):
+def update_booking(db: Session, id_booking: str, booking_update: BookingUpdate):
+    # Kiểm tra idUser
+    if not user_repo.get_user_by(db, "idUser", booking_update.idUser):
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Kiểm tra idPlace
+    if not place_repo.get_place_by_id(db, booking_update.idPlace):
+        raise HTTPException(status_code=404, detail="Place not found")
+
+    # Cập nhật booking nếu kiểm tra thành công    
     db_booking = db.query(Booking).filter(
         Booking.idBooking == id_booking,
-        Booking.idPlace == id_place,
-        Booking.idUser == id_user
+        Booking.idUser == booking_update.idUser
     ).first()
+    
     if not db_booking:
-        return None
+        raise HTTPException(status_code=404, detail="Booking not found")
 
     # Cập nhật các trường
-    db_booking.idPlace = booking_update.idPlace
-    db_booking.idUser = booking_update.idUser
-    db_booking.date = booking_update.date
-    db_booking.status = booking_update.status
-
+    for key, value in booking_update.model_dump(exclude_unset=True).items():
+        setattr(db_booking, key, value)
+        
     db.commit()
     db.refresh(db_booking)
     return db_booking
 
-def delete_booking(db: Session, id_booking: str, id_place: str, id_user: str):
+def delete_booking(db: Session, id_booking: str, id_user: str):
+    # Kiểm tra idUser
+    if not user_repo.get_user_by(db, "idUser", id_user):
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Xóa booking nếu kiểm tra thành công
     db_booking = db.query(Booking).filter(
         Booking.idBooking == id_booking,
-        Booking.idPlace == id_place,
         Booking.idUser == id_user
     ).first()
+    
     if not db_booking:
-        return False
+        raise HTTPException(status_code=404, detail="Booking not found")
+    
     db.delete(db_booking)
     db.commit()
-    return True
+    return db_booking

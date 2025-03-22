@@ -3,11 +3,14 @@ from pydantic import BaseModel
 class FriendBase(BaseModel):
     idSelf: str
     idFriend: str
-    isAccept: bool
 
 class FriendResponse(FriendBase):
+    isAccept: bool
     class Config:
         from_attributes = True
-
+        
 class FriendCreate(FriendBase):
-    isAccept: bool = False
+    pass
+
+class FriendUpdate(FriendBase):
+    isAccept: bool

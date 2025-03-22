@@ -1,7 +1,9 @@
 from sqlalchemy.orm import Session
 from models.user import User
 from schemas.user_schema import UserCreate, UserUpdate
-import random
+from fastapi import HTTPException
+from sqlalchemy import or_
+import uuid
 
 # Get all users
 def get_users(db: Session):
@@ -12,35 +14,28 @@ def get_user_by(db: Session, select: str, lookup: str):
     if select == "idUser":
         return db.query(User).filter(User.idUser == lookup).first()
     elif select == "username":
-        return db.query(User).filter(User.Username == lookup).first()
+        return db.query(User).filter(User.username == lookup).first()
     elif select == "email":
-        return db.query(User).filter(User.Email == lookup).first()
+        return db.query(User).filter(User.email == lookup).first()
     elif select == "phone":
-        return db.query(User).filter(User.PhoneNumber == lookup).first()
+        return db.query(User).filter(User.phoneNumber == lookup).first()
     else:
-        return None
+        raise HTTPException(status_code=400, detail="Bad Request")
 
 # Post a new user
 def create_user(db: Session, user: UserCreate):
     # Check if the user already exists
-    _user = get_users(db).filter(User.Username == user.username or User.Email == user.email or User.PhoneNumber == user.phone).first()
-    if _user:
-        return None
+    if get_users(db).filter(or_(
+            User.username == user.username, User.email == user.email, User.phoneNumber == user.phoneNumber)
+        ).first():
+        raise HTTPException(status_code=422, detail="User already exists")
     
     # If the user does not exist, create a new user    
     idUser = ""
     while not idUser or get_user_by(db, "idUser", idUser):
-        temp = random.randint(0, 9999)
-        if temp < 10:
-            idUser = "US000" + temp
-        elif temp < 100:
-            idUser = "US00" + temp
-        elif temp < 1000:
-            idUser = "US0" + temp
-        else:
-            idUser = "US" + temp
+        idUser =  f"US{str(uuid.uuid4())[:4]}"
     
-    db_user = User(idUser=idUser, name = user.name, username=user.username, password=user.password, gender = user.gender, email = user.email, phone = user.phone, avatar = user.avatar, theme = 0, language = 0)
+    db_user = User(idUser=idUser, name=user.name, username=user.username, password=user.password, gender=user.gender, email=user.email, phoneNumber=user.phoneNumber, avatar=user.avatar, theme=0, language=0)
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
@@ -50,9 +45,19 @@ def create_user(db: Session, user: UserCreate):
 def update_user(db: Session, idUser: str, user: UserUpdate):
     db_user = get_user_by(db, "idUser", idUser)
     if not db_user:
-        return None
+        raise HTTPException(status_code=404, detail="User not found")
     
-    for key, value in user.dict(exclude_unset=True).items():
+    afterUsers = [
+        get_user_by(db=db, select="username", lookup=user.username),
+        get_user_by(db=db, select="email", lookup=user.email),
+        get_user_by(db=db, select="phone", lookup=user.phoneNumber)
+    ]
+    
+    for afterUser in afterUsers:
+        if afterUser and afterUser.idUser != idUser:
+            raise HTTPException(status_code=422, detail="User already exists")
+    
+    for key, value in user.model_dump(exclude_unset=True).items():
         if value:
             setattr(db_user, key, value)
     
@@ -64,7 +69,7 @@ def update_user(db: Session, idUser: str, user: UserUpdate):
 def delete_user(db: Session, idUser: str):
     db_user = get_user_by(db, "idUser", idUser)
     if not db_user:
-        return None
+       raise HTTPException(status_code=404, detail="User not found")
     
     db.delete(db_user)
     db.commit()

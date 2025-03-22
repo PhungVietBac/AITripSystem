@@ -1,35 +1,35 @@
 from sqlalchemy.orm import Session
 from models.notification import Notification
-from models.user import User
 from schemas.notification_schema import NotificationUpdate, NotificationCreate
-import random
+from repositories import user_repo
+import uuid
+from fastapi import HTTPException
 
 # Get all notifications
 def get_notifications(db: Session):
     return db.query(Notification).all()
 
-# Get notifications by
-def get_notification_by(db: Session, select: str, lookup: str):
-    if select == "idNotify":
-        return db.query(Notification).filter(Notification.idNotify == lookup).first()
-    elif select == "idUser":
-        return db.query(Notification).filter(Notification.idUser == lookup).all()
-    else:
-        return None
-
+# Get notification by id
+def get_notification_by_id(db: Session, idNotf: str):
+    return db.query(Notification).filter(Notification.idNotf == idNotf).first()
+    
+# Get notifications by User
+def get_notification_by_user(db: Session, idUser: str):
+    if user_repo.get_user_by(db, "idUser", idUser) is None:
+        raise HTTPException(404, "User not found")
+    return db.query(Notification).filter(Notification.idUser == idUser).all()
 
 # Post a new notification
-def create_notification(db: Session, idUser: str, notification: NotificationCreate):
-    user = db.query(User).filter(User.idUser == idUser).first()
+def create_notification(db: Session, notification: NotificationCreate):
+    user = user_repo.get_user_by(db, "idUser", notification.idUser)
     if not user:
-        return None
+        raise HTTPException(404, "User not found")
     
     idNotify = ""
-    while not idNotify or get_notification_by(db, "idNotify", idNotify):
-        temp = random.randint(1, 9999)
-        idNotify = f"NTF{temp:04d}"
+    while not idNotify or get_notification_by_id(db, idNotify):
+        idNotify = f"NTF{str(uuid.uuid4())[:3]}"
 
-    db_notification = Notification(idNotify = idNotify, idUser = idUser, content = notification.content, isRead = notification.isRead)
+    db_notification = Notification(idNotf = idNotify, idUser = notification.idUser, content = notification.content, isRead = False)
     db.add(db_notification)
     db.commit()
     db.refresh(db_notification)
@@ -38,11 +38,10 @@ def create_notification(db: Session, idUser: str, notification: NotificationCrea
 
 # Update a notification
 def update_notification(db: Session, idNotify: str, notification: NotificationUpdate):
-    db_notification = get_notification_by(db, "idNotify", idNotify)
-
+    db_notification = get_notification_by_id(db, idNotify)
     if not db_notification:
-        return None
-
+        raise HTTPException(status_code=404, detail="Notification not found")
+    
     for key, value in notification.model_dump(exclude_unset=True).items():
         setattr(db_notification, key, value)
     
@@ -52,7 +51,9 @@ def update_notification(db: Session, idNotify: str, notification: NotificationUp
 
 # Mark all notifications as read by user
 def mark_all_notifications_as_read(db: Session, idUser: str):
-    db_notifications = db.query(Notification).filter(Notification.idUser == idUser).all()
+    db_notifications = get_notification_by_user(db=db, idUser=idUser)
+    if db_notifications == []:
+        raise HTTPException(404, "Notification not found")
 
     for db_notification in db_notifications:
         db_notification.isRead = True
@@ -66,10 +67,10 @@ def mark_all_notifications_as_read(db: Session, idUser: str):
 
 # Delete a notification
 def delete_notification(db: Session, idNotify: str):
-    db_notification = get_notification_by(db, "idNotify", idNotify)
+    db_notification = get_notification_by_id(db, idNotify)
 
     if not db_notification:
-        return None
+        raise HTTPException(404, "Notification not found")
     
     db.delete(db_notification)
     db.commit()
@@ -77,7 +78,10 @@ def delete_notification(db: Session, idNotify: str):
 
 # Delete all notifications by user
 def delete_notifications_by_user(db: Session, idUser: str):
-    db_notifications = db.query(Notification).filter(Notification.idUser == idUser).all()
+    db_notifications = get_notification_by_user(db=db, idUser=idUser)
+    if db_notifications == []:
+        raise HTTPException(404, "Notification not found")
+    
     for db_notification in db_notifications:
         db.delete(db_notification)
 

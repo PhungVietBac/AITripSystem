@@ -1,14 +1,16 @@
 from pydantic import BaseModel
+from typing import Optional
 
 class PlaceBase(BaseModel):
     name: str
     country: str
     city: str
+    province: str
     address: str
     description: str
     image: str
     rating: int
-    placeType: int
+    type: int
 
 class PlaceResponse(PlaceBase):
     idPlace: str
@@ -17,15 +19,16 @@ class PlaceResponse(PlaceBase):
         from_attributes = True
 
 class PlaceCreate(PlaceBase):
-    description: str | None
-    image: str | None
+    description: Optional[str]
+    image: Optional[str]
 
 class PlaceUpdate(PlaceBase):
-    name: str | None = None
-    country: str | None = None
-    city: str | None = None
-    address: str | None = None
-    description: str | None = None
-    image: str | None = None
-    rating: int | None = None
-    placeType: int | None = None
+    name: Optional[str] = None
+    country: Optional[str] = None
+    city: Optional[str] = None
+    province: Optional[str] = None
+    address: Optional[str] = None
+    description: Optional[str] = None
+    image: Optional[str] = None
+    rating: Optional[int] = None
+    type: Optional[int] = None

@@ -1,58 +1,55 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from database import get_db
 import schemas.friend_schema as friend_schema
-import repositories.friend_repo as friend_repo
-from models.user import User
+from repositories import friend_repo
+from repositories import user_repo
+from controllers.auth_ctrl import get_current_user
 
 router = APIRouter()
 
+@router.get("/friends/", response_model=list[friend_schema.FriendResponse])
+def get_all_friends(db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+    if not current_user:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized")
+    
+    return friend_repo.get_friends(db)
+
 @router.get("/friends/{user_id}", response_model=list[friend_schema.FriendResponse])
-def get_friends(user_id: str, db: Session = Depends(get_db)):
+def get_friends(user_id: str, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+    if not current_user:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized")
+    
     # Kiểm tra user_id
-    user = db.query(User).filter(User.idUser == user_id).first()
-    if not user:
+    if not user_repo.get_user_by(db, "idUser", user_id):
         raise HTTPException(status_code=404, detail="User not found")
 
     # Lấy danh sách bạn bè
     friends = friend_repo.get_friends_by_user(db, user_id)
-    if not friends:
+    if friends == []:
         raise HTTPException(status_code=404, detail="No friends found for this user")
     return friends
 
 @router.post("/friends/", response_model=friend_schema.FriendResponse)
-def create_new_friend(friend: friend_schema.FriendCreate, db: Session = Depends(get_db)):
-    # Kiểm tra idSelf
-    user_self = db.query(User).filter(User.idUser == friend.idSelf).first()
-    if not user_self:
-        raise HTTPException(status_code=404, detail="User (idSelf) not found")
-
-    # Kiểm tra idFriend
-    user_friend = db.query(User).filter(User.idUser == friend.idFriend).first()
-    if not user_friend:
-        raise HTTPException(status_code=404, detail="User (idFriend) not found")
-
-    # Kiểm tra không cho phép kết bạn với chính mình
-    if friend.idSelf == friend.idFriend:
-        raise HTTPException(status_code=400, detail="Cannot add yourself as a friend")
-
+def create_new_friend(friend: friend_schema.FriendCreate, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+    if not current_user:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized")
+    
     # Tạo quan hệ bạn bè
     return friend_repo.create_friend(db, friend)
 
-@router.delete("/friends/{id_self}/{id_friend}", response_model=dict)
-def delete_friend(id_self: str, id_friend: str, db: Session = Depends(get_db)):
-    # Kiểm tra idSelf
-    user_self = db.query(User).filter(User.idUser == id_self).first()
-    if not user_self:
-        raise HTTPException(status_code=404, detail="User (idSelf) not found")
+@router.put("/friends/", response_model=friend_schema.FriendResponse)
+def create_new_friend(friend: friend_schema.FriendUpdate, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+    if not current_user:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized")
+    
+    # Tạo quan hệ bạn bè
+    return friend_repo.update_friend(db, friend)
 
-    # Kiểm tra idFriend
-    user_friend = db.query(User).filter(User.idUser == id_friend).first()
-    if not user_friend:
-        raise HTTPException(status_code=404, detail="User (idFriend) not found")
+@router.delete("/friends/", response_model=friend_schema.FriendResponse)
+def delete_friend(id_self: str, id_friend: str, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+    if not current_user:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized")
 
     # Xóa quan hệ bạn bè
-    success = friend_repo.delete_friend(db, id_self, id_friend)
-    if not success:
-        raise HTTPException(status_code=404, detail="Friend relationship not found")
-    return {"message": "Friend relationship deleted successfully"}
+    return friend_repo.delete_friend(db, id_self, id_friend)

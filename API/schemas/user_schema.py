@@ -1,12 +1,13 @@
 from pydantic import BaseModel
+from typing import Optional
 
 class UserBase(BaseModel):
     name: str
     username: str
     gender: int
     email: str
-    phone: str
-    avatar: str
+    phoneNumber: Optional[str] = None
+    avatar: Optional[bytes] = None
     theme: int = 0
     language: int = 0
 
@@ -17,18 +18,18 @@ class UserResponse(UserBase):
         from_attributes = True
 
 class UserCreate(UserBase):
-    gender: int | None = None
-    avatar: str | None = None
-    language: int | None = None
+    gender: Optional[int] = None
+    avatar: Optional[bytes] = None
+    language: Optional[int] = None
     password: str
 
 class UserUpdate(UserBase):
-    name: str | None = None
-    username: str | None = None
-    email: str | None = None
-    phone: str | None = None
-    gender: int | None = None
-    avatar: str | None = None
-    theme: int | None = None
-    language: int | None = None
-    password: str | None = None
+    name: Optional[str] = None
+    username: Optional[str] = None
+    email: Optional[str] = None
+    phoneNumber: Optional[str] = None
+    gender: Optional[int] = None
+    avatar: Optional[bytes] = None
+    theme: Optional[int] = None
+    language: Optional[int] = None
+    password: Optional[str] = None

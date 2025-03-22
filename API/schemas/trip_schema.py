@@ -1,5 +1,6 @@
 from datetime import datetime
 from pydantic import BaseModel
+from typing import Optional
 
 class TripBase(BaseModel):
     name: str
@@ -16,6 +17,6 @@ class TripCreate(TripBase):
     pass
 
 class TripUpdate(TripBase):
-    name: str | None = None
-    startDate: datetime | None = None
-    endDate: datetime | None = None
+    name: Optional[str] = None
+    startDate: Optional[datetime] = None
+    endDate: Optional[datetime] = None

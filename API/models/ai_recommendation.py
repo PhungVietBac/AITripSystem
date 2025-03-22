@@ -4,7 +4,7 @@ from database import Base
 class AIRecommendation(Base):
     __tablename__ = "AIRecommendations"
 
-    idAIRec = Column(String, primary_key=True, index=True)
-    idUser = Column(String, ForeignKey("Users.IDUser"))
-    input = Column(String)
-    output = Column(String)
+    idAIRec = Column(String(6), primary_key=True, index=True)
+    idUser = Column(String(6), ForeignKey("Users.idUser"), index=True)
+    input = Column(String(1000))
+    output = Column(String(1000))
