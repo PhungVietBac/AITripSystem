@@ -12,18 +12,18 @@ def get_user_by(db: Session, select: str, lookup: str):
     if select == "idUser":
         return db.query(User).filter(User.idUser == lookup).first()
     elif select == "username":
-        return db.query(User).filter(User.username == lookup).first()
+        return db.query(User).filter(User.Username == lookup).first()
     elif select == "email":
-        return db.query(User).filter(User.email == lookup).first()
+        return db.query(User).filter(User.Email == lookup).first()
     elif select == "phone":
-        return db.query(User).filter(User.phone == lookup).first()
+        return db.query(User).filter(User.PhoneNumber == lookup).first()
     else:
         return None
 
 # Post a new user
 def create_user(db: Session, user: UserCreate):
     # Check if the user already exists
-    _user = get_users(db).filter(User.username == user.username or User.email == user.email or User.phone == user.phone).first()
+    _user = get_users(db).filter(User.Username == user.username or User.Email == user.email or User.PhoneNumber == user.phone).first()
     if _user:
         return None
     
