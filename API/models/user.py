@@ -16,6 +16,4 @@ class User(Base):
     Theme = Column(Integer, nullable=True)
     Language = Column(Integer, nullable=True)
 
-    trips = relationship("Trip", secondary="TripMembers", back_populates="users")
-    reviews = relationship("Review", back_populates="user") 
 

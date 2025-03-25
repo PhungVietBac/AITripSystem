@@ -10,5 +10,3 @@ class Trip(Base):
     StartDate = Column(DateTime, nullable=False)
     EndDate = Column(DateTime, nullable=True)
 
-    users = relationship("User", secondary="TripMembers", back_populates="trips")
-    reviews = relationship("Review", back_populates="trip")  
