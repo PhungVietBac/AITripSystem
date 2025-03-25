@@ -1,5 +1,5 @@
 from sqlalchemy import Column, String, ForeignKey
-from ..database import Base
+from database import Base
 
 class AIRecommendation(Base):
     __tablename__ = "AIRecommendations"

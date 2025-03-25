@@ -4,5 +4,5 @@ from database import Base
 class TripMember(Base):
     __tablename__ = "TripMembers"
 
-    idUser = Column(String(6), ForeignKey("Users.IDUser"), primary_key=True)
-    idTrip = Column(String(6), ForeignKey("Trips.IDTrip"), primary_key=True)
+    idUser = Column(String(6), ForeignKey("Users.idUser"), primary_key=True)
+    idTrip = Column(String(6), ForeignKey("Trips.idTrip"), primary_key=True)

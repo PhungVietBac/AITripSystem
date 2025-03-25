@@ -1,10 +1,9 @@
 from sqlalchemy import Column, String, Integer
 from database import Base
 
-
 class Place(Base):
     # Table name
-    __tablename__ = "Place"
+    __tablename__ = "Places"
 
     idPlace = Column(String, primary_key=True, index=True)
     Name = Column(String)

@@ -1,10 +1,9 @@
 from sqlalchemy import Column, String, DateTime, PrimaryKeyConstraint
 from database import Base
 
-
 class Booking(Base):
     # Table name
-    __tablename__ = "Booking"
+    __tablename__ = "Bookings"
 
     idBooking = Column(String)
     idPlace = Column(String)
@@ -14,5 +13,5 @@ class Booking(Base):
 
     # primary key = idbooking, idplace, iduser
     __table_args__ = (
-        PrimaryKeyConstraint('idBooking', 'idPlace', 'idUser'),
+        PrimaryKeyConstraint('idBooking', 'idUser'),
     )

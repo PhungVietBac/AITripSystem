@@ -14,8 +14,8 @@ def create_new_booking(booking: BookingCreate, db: Session = Depends(get_db)):
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    # Kiểm tra IDPlace
-    place = db.query(Place).filter(Place.IDPlace == booking.idPlace).first()
+    # Kiểm tra idPlace
+    place = db.query(Place).filter(Place.idPlace == booking.idPlace).first()
     if not place:
         raise HTTPException(status_code=404, detail="Place not found")
 

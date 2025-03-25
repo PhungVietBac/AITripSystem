@@ -9,7 +9,7 @@ class Review(Base):
     __tablename__ = 'reviews'  # Tên bảng trong cơ sở dữ liệu
 
     idReview = Column(String, primary_key=True, index=True)  # Khóa chính
-    idTrip = Column(String, ForeignKey('trips.IDTrip'))  # Khóa ngoại liên kết với bảng Trip
+    idTrip = Column(String, ForeignKey('trips.idTrip'))  # Khóa ngoại liên kết với bảng Trip
     idUser = Column(String)  # ID người dùng
     Comment = Column(String)  # Bình luận
     Rating = Column(Integer)  # Đánh giá
@@ -18,4 +18,4 @@ class Review(Base):
     trip = relationship("Trip", back_populates="reviews")
 
     def __repr__(self):
-        return f"<Review(IDReview={self.IDReview}, IDTrip={self.IDTrip}, IDUser={self.IDUser}, Rating={self.Rating})>"
+        return f"<Review(IDReview={self.idReview}, IDTrip={self.idTrip}, IDUser={self.idUser}, Rating={self.Rating})>"
