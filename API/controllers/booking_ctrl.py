@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from database import get_db
 from schemas.booking_schema import BookingCreate, BookingUpdate, BookingResponse
-from repositories import booking_repo
+import repositories.booking_repo as booking_repo
 from models.user import User
 from models.place import Place
 router = APIRouter()
@@ -10,7 +10,7 @@ router = APIRouter()
 @router.post("/bookings/", response_model=BookingResponse)
 def create_new_booking(booking: BookingCreate, db: Session = Depends(get_db)):
     # Kiểm tra IDUser
-    user = db.query(User).filter(User.IDUser == booking.idUser).first()
+    user = db.query(User).filter(User.idUser == booking.idUser).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
@@ -24,13 +24,13 @@ def create_new_booking(booking: BookingCreate, db: Session = Depends(get_db)):
 
 @router.put("/bookings/{id_booking}/{id_place}/{id_user}", response_model=BookingResponse)
 def update_booking(id_booking: str, id_place: str, id_user: str, booking: BookingUpdate, db: Session = Depends(get_db)):
-    # Kiểm tra IDUser
-    user = db.query(User).filter(User.IDUser == booking.idUser).first()
+    # Kiểm tra idUser
+    user = db.query(User).filter(User.idUser == booking.idUser).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    # Kiểm tra IDPlace
-    place = db.query(Place).filter(Place.IDPlace == booking.idPlace).first()
+    # Kiểm tra idPlace
+    place = db.query(Place).filter(Place.idPlace == booking.idPlace).first()
     if not place:
         raise HTTPException(status_code=404, detail="Place not found")
 
@@ -42,13 +42,13 @@ def update_booking(id_booking: str, id_place: str, id_user: str, booking: Bookin
 
 @router.delete("/bookings/{id_booking}/{id_place}/{id_user}", response_model=dict)
 def delete_booking(id_booking: str, id_place: str, id_user: str, db: Session = Depends(get_db)):
-    # Kiểm tra IDUser
-    user = db.query(User).filter(User.IDUser == id_user).first()
+    # Kiểm tra idUser
+    user = db.query(User).filter(User.idUser == id_user).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    # Kiểm tra IDPlace
-    place = db.query(Place).filter(Place.IDPlace == id_place).first()
+    # Kiểm tra idPlace
+    place = db.query(Place).filter(Place.idPlace == id_place).first()
     if not place:
         raise HTTPException(status_code=404, detail="Place not found")
 
