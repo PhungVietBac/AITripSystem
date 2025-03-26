@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from typing import Optional
 
 class ReviewBase(BaseModel):
     idTrip: str
@@ -12,8 +13,8 @@ class ReviewResponse(ReviewBase):
     class Config:
         from_attributes = True
 class ReviewCreate(ReviewBase):
-    comment: str | None = None
+    comment: Optional[str] = None
 
 class ReviewUpdate(ReviewBase):
-    comment: str | None = None
-    rating: int | None = None
+    comment: Optional[str] = None
+    rating: Optional[int] = None

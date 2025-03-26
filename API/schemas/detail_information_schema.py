@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from datetime import datetime
+from typing import Optional
 
 class DetailInformationBase(BaseModel):
     idTrip: str
@@ -14,9 +15,9 @@ class DetailResponse(DetailInformationBase):
     class Config:
         from_attributes = True
 class DetailCreate(DetailInformationBase):
-    note: str | None = None
+    note: Optional[str] = None
 
 class DetailUpdate(DetailInformationBase):
-    startTime: datetime | None = None
-    endTime: datetime | None = None
-    note: str | None = None
+    startTime: Optional[datetime] = None
+    endTime: Optional[datetime] = None
+    note: Optional[str] = None

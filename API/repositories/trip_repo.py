@@ -1,32 +1,60 @@
 from sqlalchemy.orm import Session
-from models import trip
+from models.trip import Trip
 from schemas.trip_schema import TripCreate, TripUpdate
-from datetime import datetime
+from datetime import datetime, timedelta
+from fastapi import HTTPException
+import uuid
 
 #tìm trong start_date -> end_date và theo keyword
 def get_trips(db: Session, start_date: datetime = None, end_date: datetime = None, keyword: str = None):
-    query = db.query(trip.Trip)
+    query = db.query(Trip)
     if start_date and end_date:
-        query = query.filter(trip.Trip.StartDate >= start_date, trip.Trip.EndDate <= end_date)
+        query = query.filter(Trip.startDate >= start_date, Trip.endDate <= end_date).all()
     if keyword:
-        query = query.filter(trip.Trip.Name.ilike(f"%{keyword}%")) 
+        query = query.filter(Trip.name.ilike(f"%{keyword}%")).all()
     return query.all()
+
+# Get a trip by id
+def get_trip_by_id(db: Session, idTrip: str):
+    return db.query(Trip).filter(Trip.idTrip == idTrip).first()
+
+# Get a trip by
+def get_trip_by(db: Session, select: str, lookup: str):
+    if select == "startDate":
+        time = datetime.strptime(lookup, "%d/%m/%Y %H:%M:%S")
+        endTime = time + timedelta(milliseconds=999)
+        return db.query(Trip).filter(
+            Trip.startDate >= time,
+            Trip.startDate <= endTime).all()
+    elif select == "endDate":
+        time = datetime.strptime(lookup, "%d/%m/%Y %H:%M:%S")
+        endTime = time + timedelta(milliseconds=999)
+        return db.query(Trip).filter(
+            Trip.endDate >= time,
+            Trip.endDate <= endTime).all()
+    else:
+        raise HTTPException(status_code=400, detail="Bad Request")
 
 #tạo mới trip
 def create_trip(db: Session, trip: TripCreate):
-    new_trip = trip.Trip(**trip.model_dump())
-    db.add(new_trip)
+    idTrip = ""
+    while not idTrip or get_trip_by_id(db, idTrip):
+        idTrip =  f"TR{str(uuid.uuid4())[:4]}"
+
+    db_trip = Trip(idTrip = idTrip, name = trip.name, startDate = trip.startDate, endDate = trip.endDate)
+    
+    db.add(db_trip)
     db.commit()
-    db.refresh(new_trip)
-    return new_trip
+    db.refresh(db_trip)
+    return db_trip
 
 #update
 def update_trip(db: Session, trip_id: str, trip_update: TripUpdate):
-    trip = db.query(trip.Trip).filter(trip.Trip.IDTrip == trip_id).first()
+    trip = get_trip_by_id(db, trip_id)
     if not trip:
-        return None
+        raise HTTPException(status_code=404, detail="Trip not found")
     
-    for key, value in trip_update.dict().items():
+    for key, value in trip_update.model_dump(exclude_unset=True).items():
         setattr(trip, key, value)
     
     db.commit()
@@ -35,9 +63,9 @@ def update_trip(db: Session, trip_id: str, trip_update: TripUpdate):
 
 #del
 def delete_trip(db: Session, trip_id: str):
-    trip = db.query(trip.Trip).filter(trip.Trip.IDTrip == trip_id).first()
+    trip = get_trip_by_id(db, trip_id)
     if not trip:
-        return None
+        raise HTTPException(status_code=404, detail="Trip not found")
     
     db.delete(trip)
     db.commit()

@@ -5,12 +5,13 @@ class Place(Base):
     # Table name
     __tablename__ = "Places"
 
-    idPlace = Column(String, primary_key=True, index=True)
-    Name = Column(String)
-    Country = Column(String)
-    City = Column(String)
-    Address = Column(String)
-    Description = Column(String)
-    Image = Column(String)  # URL
-    Rating = Column(Integer)
-    Type = Column(Integer)
+    idPlace = Column(String(6), primary_key=True, index=True)
+    name = Column(String(50), index=True)
+    country = Column(String(100), index=True)
+    city = Column(String(100), index=True)
+    province = Column(String(100), index=True)
+    address = Column(String(1000))
+    description = Column(String(1000))
+    image = Column(String(1000))  # URL
+    rating = Column(Integer)
+    type = Column(Integer)

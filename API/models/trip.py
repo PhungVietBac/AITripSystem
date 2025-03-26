@@ -6,7 +6,6 @@ class Trip(Base):
     __tablename__ = "Trips"
 
     idTrip = Column(String(6), primary_key=True, index=True)
-    Name = Column(String(50), nullable=False)
-    StartDate = Column(DateTime, nullable=False)
-    EndDate = Column(DateTime, nullable=True)
-
+    name = Column(String(50), nullable=False)
+    startDate = Column(DateTime, nullable=False, index=True)
+    endDate = Column(DateTime, nullable=True, index=True)

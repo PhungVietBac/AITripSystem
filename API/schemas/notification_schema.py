@@ -1,19 +1,19 @@
 from pydantic import BaseModel
+from typing import Optional
 
 class NotificationBase(BaseModel):
     content: str
-    isRead: bool
 
 class NotificationResponse(NotificationBase):
-    idNotify: str
+    idNotf: str
     idUser: str
-
+    isRead: bool
     class Config:
         from_attributes = True
 
 class NotificationCreate(NotificationBase):
     idUser: str
-    isRead: bool | None = False
 
 class NotificationUpdate(NotificationBase):
-    content: str | None = None
+    content: Optional[str] = None
+    isRead: bool
