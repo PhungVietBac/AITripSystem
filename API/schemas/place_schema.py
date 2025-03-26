@@ -15,7 +15,6 @@ class PlaceResponse(PlaceBase):
 
     class Config:
         from_attributes = True
-
 class PlaceCreate(PlaceBase):
     description: str | None
     image: str | None

@@ -32,13 +32,13 @@ def create_user(db: Session, user: UserCreate):
     while not idUser or get_user_by(db, "idUser", idUser):
         temp = random.randint(0, 9999)
         if temp < 10:
-            idUser = "US000" + temp
+            idUser = "US000" + str(temp)
         elif temp < 100:
-            idUser = "US00" + temp
+            idUser = "US00" + str(temp)
         elif temp < 1000:
-            idUser = "US0" + temp
+            idUser = "US0" + str(temp)
         else:
-            idUser = "US" + temp
+            idUser = "US" + str(temp)
     
     db_user = User(idUser=idUser, name = user.name, username=user.username, password=user.password, gender = user.gender, email = user.email, phone = user.phone, avatar = user.avatar, theme = 0, language = 0)
     db.add(db_user)
