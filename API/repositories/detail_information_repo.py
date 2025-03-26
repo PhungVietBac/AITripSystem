@@ -6,30 +6,30 @@ from repositories import place_repo, trip_repo
 from fastapi import HTTPException
 from datetime import datetime, timedelta
 
-def get_details(db: Session):
-    return db.query(DetailInformation).all()
+def get_details(db: Session, skip: int, limit: int):
+    return db.query(DetailInformation).order_by(DetailInformation.idDetail).offset(skip).limit(limit).all()
 
 # Get detail information by id
 def get_detail_information_by_id(db: Session, id: str):
     return db.query(DetailInformation).filter(DetailInformation.idDetail == id).first()
 
-def get_detail_by(db: Session, select: str, lookup: str):
+def get_detail_by(db: Session, select: str, lookup: str, skip: int, limit: int):
     if select == "idPlace":
-        return db.query(DetailInformation).filter(DetailInformation.idPlace == lookup).all()
+        return db.query(DetailInformation).filter(DetailInformation.idPlace == lookup).order_by(DetailInformation.idDetail).offset(skip).limit(limit).all()
     elif select == "idTrip":
-        return db.query(DetailInformation).filter(DetailInformation.idTrip == lookup).all()
+        return db.query(DetailInformation).filter(DetailInformation.idTrip == lookup).order_by(DetailInformation.idDetail).offset(skip).limit(limit).all()
     elif select == "startTime":
         time = datetime.strptime(lookup, "%d/%m/%Y %H:%M:%S")
         endTime = time + timedelta(milliseconds=999)
         return db.query(DetailInformation).filter(
             DetailInformation.startTime >= time,
-            DetailInformation.startTime <= endTime).all()
+            DetailInformation.startTime <= endTime).order_by(DetailInformation.idDetail).offset(skip).limit(limit).all()
     elif select == "endTime":
         time = datetime.strptime(lookup, "%d/%m/%Y %H:%M:%S")
         endTime = time + timedelta(milliseconds=999)
         return db.query(DetailInformation).filter(
             DetailInformation.endTime >= time,
-            DetailInformation.endTime <= endTime).all()
+            DetailInformation.endTime <= endTime).order_by(DetailInformation.idDetail).offset(skip).limit(limit).all()
     else:
         raise HTTPException(400, "Bad Request")
 

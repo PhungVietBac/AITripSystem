@@ -8,12 +8,12 @@ from controllers.auth_ctrl import get_current_user
 router = APIRouter()
 
 # Get all reviews
-@router.get("/reviews/", response_model=list[review_schema.ReviewResponse])
-def get_reviews(db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+@router.get("/reviews/all", response_model=list[review_schema.ReviewResponse])
+def get_reviews(db: Session = Depends(get_db), current_user = Depends(get_current_user), skip: int = 0, limit: int = 100):
     if not current_user:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized")
     
-    return review_repo.get_reviews(db)
+    return review_repo.get_reviews(db, skip, limit)
 
 # Get a review by id
 @router.get("/reviews", response_model=review_schema.ReviewResponse)
@@ -29,11 +29,11 @@ def get_review_by_id(idReview: str, db: Session = Depends(get_db), current_user 
 
 # Get a review by
 @router.get("/reviews/{select}", response_model=list[review_schema.ReviewResponse])
-def get_review_by(select: str, lookup: str, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+def get_review_by(select: str, lookup: str, db: Session = Depends(get_db), current_user = Depends(get_current_user), skip: int = 0, limit: int = 100):
     if not current_user:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized")
     
-    review = review_repo.get_review_by(db=db, select=select, lookup=lookup)
+    review = review_repo.get_review_by(db, select, lookup, skip, limit)
     if review == []:
         raise HTTPException(status_code=404, detail="Review not found")
     
@@ -62,56 +62,3 @@ def delete_review(idReview: str, db: Session = Depends(get_db), current_user = D
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized")
     
     return review_repo.delete_review(db, idReview)
-# NEW
-@router.get("/", response_model=List[ReviewResponse])
-def get_reviews(
-    skip: int = 0,
-    limit: int = 100,
-    db: Session = Depends(get_db)
-):
-    """Get all reviews with pagination"""
-    reviews = review_repo.get_reviews(db, skip=skip, limit=limit)
-    return reviews
-
-@router.get("/{review_id}", response_model=ReviewResponse)
-def get_review(review_id: str, db: Session = Depends(get_db)):
-    """Get a specific review by ID"""
-    review = review_repo.get_review_by_id(db, review_id)
-    if not review:
-        raise HTTPException(status_code=404, detail="Review not found")
-    return review
-
-@router.get("/user/{user_id}", response_model=List[ReviewResponse])
-def get_user_reviews(
-    user_id: str,
-    skip: int = 0,
-    limit: int = 100,
-    db: Session = Depends(get_db)
-):
-    """Get all reviews by a specific user"""
-    reviews = review_repo.get_reviews_by_user(db, user_id, skip=skip, limit=limit)
-    return reviews
-
-@router.post("/", response_model=ReviewResponse)
-def create_review(review: ReviewCreate, db: Session = Depends(get_db)):
-    """Create a new review"""
-    db_review = review_repo.create_review(db, review)
-    if not db_review:
-        raise HTTPException(status_code=400, detail="Could not create review")
-    return db_review
-
-@router.put("/{review_id}", response_model=ReviewResponse)
-def update_review(review_id: str, review: ReviewUpdate, db: Session = Depends(get_db)):
-    """Update a review"""
-    db_review = review_repo.update_review(db, review_id, review)
-    if not db_review:
-        raise HTTPException(status_code=404, detail="Review not found")
-    return db_review
-
-@router.delete("/{review_id}", response_model=ReviewResponse)
-def delete_review(review_id: str, db: Session = Depends(get_db)):
-    """Delete a review"""
-    db_review = review_repo.delete_review(db, review_id)
-    if not db_review:
-        raise HTTPException(status_code=404, detail="Review not found")
-    return db_review

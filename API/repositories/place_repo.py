@@ -4,8 +4,8 @@ from schemas.place_schema import PlaceCreate, PlaceUpdate
 from fastapi import HTTPException
 import uuid
 
-def get_places(db: Session):
-    return db.query(Place).all()
+def get_places(db: Session, skip: int, limit: int):
+    return db.query(Place).order_by(Place.idPlace).offset(skip).limit(limit).all()
 
 # Get place by id
 def get_place_by_id(db: Session, id: str):
