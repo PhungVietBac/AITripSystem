@@ -14,7 +14,6 @@ class DetailResponse(DetailInformationBase):
 
     class Config:
         from_attributes = True
-
 class DetailCreate(DetailInformationBase):
     note: Optional[str] = None
 

@@ -73,4 +73,3 @@ def delete_place(db: Session, idPlace: str):
     db.delete(db_place)
     db.commit()
     return db_place
-

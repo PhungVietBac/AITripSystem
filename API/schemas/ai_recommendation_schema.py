@@ -10,7 +10,6 @@ class AIRecResponse(AIRecommendationBase):
 
     class Config:
         from_attributes = True
-
 class AIRecCreate(AIRecommendationBase):
     pass
 

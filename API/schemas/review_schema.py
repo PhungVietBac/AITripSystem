@@ -12,7 +12,6 @@ class ReviewResponse(ReviewBase):
     
     class Config:
         from_attributes = True
-
 class ReviewCreate(ReviewBase):
     comment: Optional[str] = None
 
