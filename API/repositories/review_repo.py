@@ -6,8 +6,8 @@ from repositories import user_repo
 from repositories import trip_repo
 import uuid
 
-def get_reviews(db: Session):
-    return db.query(Review).all()
+def get_reviews(db: Session, skip: int, limit: int):
+    return db.query(Review).order_by(Review.idReview).offset(skip).limit(limit).all()
 
 #lấy top reviews (lọc bởi rating)
 def get_best_reviews(db: Session):
@@ -18,11 +18,11 @@ def get_review_by_id(db: Session, idReview: str):
     return db.query(Review).filter(Review.idReview == idReview).first()
 
 #Get a review
-def get_review_by(db: Session, select: str, lookup: str):
+def get_review_by(db: Session, select: str, lookup: str, skip: int, limit: int):
     if select == "idUser":
-        return db.query(Review).filter(Review.idUser == lookup).all()
+        return db.query(Review).filter(Review.idUser == lookup).order_by(Review.idReview).offset(skip).limit(limit).all()
     elif select == "idTrip":
-        return db.query(Review).filter(Review.idTrip == lookup).all()
+        return db.query(Review).filter(Review.idTrip == lookup).order_by(Review.idReview).offset(skip).limit(limit).all()
     else:
         raise HTTPException(400, "Bad Request")
 

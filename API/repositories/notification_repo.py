@@ -6,19 +6,26 @@ import uuid
 from fastapi import HTTPException
 
 # Get all notifications
-def get_notifications(db: Session):
-    return db.query(Notification).all()
+def get_notifications(db: Session, skip: int, limit: int):
+    return db.query(Notification).order_by(Notification.idNotf).offset(skip).limit(limit).all()
 
 # Get notification by id
 def get_notification_by_id(db: Session, idNotf: str):
     return db.query(Notification).filter(Notification.idNotf == idNotf).first()
     
 # Get notifications by User
-def get_notification_by_user(db: Session, idUser: str):
+def get_notification_by_user(db: Session, idUser: str, skip: int, limit: int):
     if user_repo.get_user_by(db, "idUser", idUser) is None:
         raise HTTPException(404, "User not found")
-    return db.query(Notification).filter(Notification.idUser == idUser).all()
+    return db.query(Notification).filter(Notification.idUser == idUser).order_by(Notification.idNotf).offset(skip).limit(limit).all()
 
+def get_unread_notifications(db: Session, user_id: str, skip: int, limit: int):
+    if user_repo.get_user_by(db, "idUser", user_id) is None:
+        raise HTTPException(404, "User not found")
+    return db.query(Notification).filter(
+        Notification.idUser == user_id,
+        Notification.isRead == False).order_by(Notification.idNotf).offset(skip).limit(limit).all()
+    
 # Post a new notification
 def create_notification(db: Session, notification: NotificationCreate):
     user = user_repo.get_user_by(db, "idUser", notification.idUser)

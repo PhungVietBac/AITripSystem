@@ -6,18 +6,18 @@ from fastapi import HTTPException
 import uuid
 
 # Get all AI recommendations
-def get_aiRec(db: Session):
-    return db.query(AIRecommendation).all()
+def get_aiRec(db: Session, skip: int, limit: int):
+    return db.query(AIRecommendation).order_by(AIRecommendation.idAIRec).offset(skip).limit(limit).all()
 
 # Get AI recommendation by
 def get_aiRec_by_id(db: Session, idAIRec: str):
     return db.query(AIRecommendation).filter(AIRecommendation.idAIRec == idAIRec).first()
     
-def get_aiRec_by_user(db: Session, idUser: str):
+def get_aiRec_by_user(db: Session, idUser: str, skip: int, limit: int):
     if not user_repo.get_user_by(db, "idUser", idUser):
         raise HTTPException(404, "User not found")
     
-    return db.query(AIRecommendation).filter(AIRecommendation.idUser == idUser).all()
+    return db.query(AIRecommendation).filter(AIRecommendation.idUser == idUser).order_by(AIRecommendation.idAIRec).offset(skip).limit(limit).all()
 
 # Post new AI recommendation
 def create_aiRec(db: Session, aiRecommendation: AIRecCreate):
