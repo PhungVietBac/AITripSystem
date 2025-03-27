@@ -35,6 +35,9 @@
 
 Đây là dự án website được xây dựng nhằm mục đích giải quyết sự phức tạp của việc tự lập kế hoạch du lịch bằng cách sử dụng AI để tạo ra các lộ trình di chuyển được tối ưu hóa và phù hợp cho người dùng. Hệ thống được xây dựng dựa trên Framwork ReactJS, FastAPI 
 
+Chức năng:
+<img src="https://drive.google.com/drive/u/0/folders/1dYUIh9im0xFhciPFM3W6ju2eCxk1OHUn" alt="function">
+
 ## Installation
 
 - Clone the repository:
