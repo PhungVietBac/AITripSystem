@@ -39,14 +39,14 @@ def create_new_friend(friend: friend_schema.FriendCreate, db: Session = Depends(
     return friend_repo.create_friend(db, friend)
 
 @router.put("/friends/", response_model=friend_schema.FriendResponse)
-def create_new_friend(friend: friend_schema.FriendUpdate, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+def update_friend(friend: friend_schema.FriendUpdate, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     if not current_user:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized")
     
     # Tạo quan hệ bạn bè
     return friend_repo.update_friend(db, friend)
 
-@router.delete("/friends/", response_model=friend_schema.FriendResponse)
+@router.delete("/friends", response_model=friend_schema.FriendResponse)
 def delete_friend(id_self: str, id_friend: str, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     if not current_user:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized")

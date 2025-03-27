@@ -2,7 +2,6 @@ from pydantic import BaseModel
 from datetime import datetime
 
 class BookingBase(BaseModel):
-    idUser: str
     idPlace: str
     date: datetime
     status: int = 0 #Pending, success, failed

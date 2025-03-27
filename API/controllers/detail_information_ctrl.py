@@ -51,7 +51,7 @@ def update_detail(idDetail: str, detail: detail_information_schema.DetailUpdate,
     return detail_information_repo.update_detail_information(db, idDetail, detail)
 
 @router.delete("/details/{idDetail}", response_model=detail_information_schema.DetailResponse)
-def update_detail(idDetail: str, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+def delete_detail(idDetail: str, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     if not current_user:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized")
     

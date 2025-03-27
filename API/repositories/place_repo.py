@@ -27,6 +27,13 @@ def get_place_by(db: Session, select: str, lookup: str):
     else:
         raise HTTPException(400, "Bad Request")
 
+def get_bookings_of_place(db: Session, idPlace: str):
+    place = get_place_by_id(db, idPlace)
+    if not place:
+        raise HTTPException(404, "Place not found")
+    
+    return place.books
+
 # Post place
 def post_place(db: Session, place: PlaceCreate):
     idPlace = ""

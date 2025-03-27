@@ -21,7 +21,24 @@ def get_user_by(db: Session, select: str, lookup: str):
         return db.query(User).filter(User.phoneNumber == lookup).first()
     else:
         raise HTTPException(status_code=400, detail="Bad Request")
+    
+# Get trips of user
+def get_trips_of_user(db: Session, idUser: str):
+    user = get_user_by(db, "idUser", idUser)
+    if not user:
+        raise HTTPException(404, "User not found")
+    
+    return user.trips
 
+# Get bookings of user
+def get_bookings_of_user(db: Session, idUser: str):
+    user = get_user_by(db, "idUser", idUser)
+    if not user:
+        raise HTTPException(404, "User not found")
+    
+    return user.bookings
+
+    
 # Post a new user
 def create_user(db: Session, user: UserCreate):
     # Check if the user already exists

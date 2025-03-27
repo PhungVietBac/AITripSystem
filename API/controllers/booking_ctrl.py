@@ -2,9 +2,9 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from database import get_db
 from schemas.booking_schema import BookingCreate, BookingUpdate, BookingResponse
+from schemas.user_schema import UserResponse
+from schemas.place_schema import PlaceResponse
 from repositories import booking_repo
-from models.user import User
-from models.place import Place
 from controllers.auth_ctrl import get_current_user
 
 router = APIRouter()
@@ -38,6 +38,29 @@ def get_booking_by(select: str, lookup: str, db: Session = Depends(get_db), curr
     
     return booking
 
+@router.get("/bookings/{idBooking}/users/", response_model=list[UserResponse])
+def get_owners_of_booking(idBooking: str, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+    if not current_user:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized")
+    
+    users = booking_repo.get_owners_of_booking(db, idBooking)
+    if users == []:
+        raise HTTPException(404, "Booking hasn't any owner")
+    
+    return users
+
+@router.get("/bookings/{idBooking}/places/", response_model=PlaceResponse)
+def get_place_by_booking(idBooking: str, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+    if not current_user:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized")
+    
+    place = booking_repo.get_place_of_booking(db, idBooking)
+    if place is None:
+        raise HTTPException(404, "Booking hasn't any place")
+    
+    return place
+
+
 @router.post("/bookings/", response_model=BookingResponse)
 def create_new_booking(booking: BookingCreate, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     if not current_user:
@@ -54,8 +77,8 @@ def update_booking(idBooking: str, booking: BookingUpdate, db: Session = Depends
     return booking_repo.update_booking(db, idBooking, booking)
 
 @router.delete("/bookings/", response_model=BookingResponse)
-def delete_booking(id_booking: str, id_user: str, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+def delete_booking(id_booking: str, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     if not current_user:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized")
     
-    return booking_repo.delete_booking(db, id_booking, id_user)
+    return booking_repo.delete_booking(db, id_booking)
