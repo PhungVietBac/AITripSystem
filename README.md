@@ -20,13 +20,13 @@
 
 ## THÀNH VIÊN NHÓM
 <a name="thanhvien"></a>
-| STT    | MSSV          | Họ và Tên              | Github                                               | Email                   |
-| ------ |:-------------:| ----------------------:|-----------------------------------------------------:|-------------------------:
-| 1      | 23520131      | Phùng Việt Bắc         |[PhungVietBac](https://github.com/PhungVietBac)       |22520089@gm.uit.edu.vn   |
-| 2      | 23520357      | Phạm Đức Anh           |[PDAnh77](https://github.com/PDAnh77)                 |22520067@gm.uit.edu.vn   |
-| 3      | 23521548      | Nguyễn Văn Quốc        |[VanQuocNguyen](https://github.com/VanQuocNguyen)     |22521215@gm.uit.edu.vn   |
-| 4      | 23521036      | Trịnh Nhật Duy         |[tnduya3](https://github.com/tnduya3)                 |23520394@gm.uit.edu.vn   |
-| 5      | 23521261      | Trần Anh Tuấn          |[flourineV](https://github.com/flourineV)             |23521729@gm.uit.edu.vn   |
+| STT    | MSSV          | Họ và Tên              | Github                                               | Email                   | Chức năng            |
+| ------ |:-------------:| ----------------------:|-----------------------------------------------------:|-------------------------|---------------------:|
+| 1      | 23520131      | Phùng Việt Bắc         |[PhungVietBac](https://github.com/PhungVietBac)       |22520089@gm.uit.edu.vn   | Trưởng nhóm          |
+| 2      | 23520357      | Phạm Đức Anh           |[PDAnh77](https://github.com/PDAnh77)                 |22520067@gm.uit.edu.vn   | Thành viên           |
+| 3      | 23521548      | Nguyễn Văn Quốc        |[VanQuocNguyen](https://github.com/VanQuocNguyen)     |22521215@gm.uit.edu.vn   | Thành viên           |
+| 4      | 23521036      | Trịnh Nhật Duy         |[tnduya3](https://github.com/tnduya3)                 |23520394@gm.uit.edu.vn   | Thành viên           |
+| 5      | 23521261      | Trần Anh Tuấn          |[flourineV](https://github.com/flourineV)             |23521729@gm.uit.edu.vn   | Thành viên           |
 
 
 ## ĐỒ ÁN MÔN HỌC
@@ -35,8 +35,20 @@
 
 Đây là dự án website được xây dựng nhằm mục đích giải quyết sự phức tạp của việc tự lập kế hoạch du lịch bằng cách sử dụng AI để tạo ra các lộ trình di chuyển được tối ưu hóa và phù hợp cho người dùng. Hệ thống được xây dựng dựa trên Framwork ReactJS, FastAPI 
 
-Chức năng:
+<u>Chức năng: </u>
+
 <img src="https://i.imgur.com/ad07kOl.jpeg" alt="function">
+
+<u>Bảng phân công công việc: </u>
+
+| Thành Viên/ Tuần | Tuần 1                     | Tuần 2              | Tuần 3                               | Tuần 4        |
+| ------ |:-------:| --------------------------:|-----------------------------:|----------------------------:|--------------:|
+| Phùng Việt Bắc   | Tìm hiểu database, fastAPI:| Thiết kế csdl, Repository User, TripMem                   :| Word + Slide :|
+| Phạm Đức Anh     | Tìm hiểu database, fastAPI:| Thiết kế schema, Repository Notify, AI Rec                :| Word + Slide :|    
+| Nguyễn Văn Quốc  | Tìm hiểu database, fastAPI:| Model friends, notify, ai rec, review, Repo Friends, Book :| Word + Slide :|
+| Trịnh Nhật Duy   | Tìm hiểu database, fastAPI:| Model detail, places, book, Repo Places, Detail           :| Word + Slide :|
+| Trần Anh Tuấn    | Tìm hiểu database, fastAPI:| Model users, trips, tripmembers, Repo Trips, Reviews      :| Word + Slide :|
+
 
 ## Installation
 
