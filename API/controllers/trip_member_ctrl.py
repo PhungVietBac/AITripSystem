@@ -28,7 +28,7 @@ def get_trip_member_by(select: str, lookup: str, db: Session = Depends(get_db), 
     return trip_member
 
 # Get a trip_member by user and trip
-@router.get("/trip_members/full/", response_model=trip_member_schema.TripMemberResponse)
+@router.get("/trip_members/full", response_model=trip_member_schema.TripMemberResponse)
 def get_trip_member_by_user_trip(idUser: str, idTrip: str, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     if not current_user:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized")
@@ -48,7 +48,7 @@ def create_trip_member(trip_member: trip_member_schema.TripMemberCreate, db: Ses
     return trip_member_repo.create_trip_member(db=db, trip_member=trip_member)
 
 # Delete a trip_member
-@router.delete("/trip_members/", response_model=trip_member_schema.TripMemberResponse)
+@router.delete("/trip_members", response_model=trip_member_schema.TripMemberResponse)
 def delete_trip_member(idUser: str, idTrip: str, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     if not current_user:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized")

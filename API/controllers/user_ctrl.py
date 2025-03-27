@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from schemas import user_schema
+from schemas import user_schema, trip_schema, booking_schema
 from repositories import user_repo
 from database import get_db
 from controllers.auth_ctrl import get_current_user
@@ -26,6 +26,28 @@ def get_user_by(select: str, lookup: str, db: Session = Depends(get_db), current
         raise HTTPException(status_code=404, detail="User not found")
     
     return user
+
+@router.get("/users/{idUser}/trips", response_model=list[trip_schema.TripResponse])
+def get_trips_of_user(idUser: str, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+    if not current_user:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized")
+    
+    trips = user_repo.get_trips_of_user(db, idUser)
+    if trips == []:
+        raise HTTPException(status_code=404, detail="User hasn't any trip")
+    
+    return trips
+
+@router.get("/users/{idUser}/bookings", response_model=list[booking_schema.BookingResponse])
+def get_bookings_of_user(idUser: str, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+    if not current_user:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized")
+    
+    bookings = user_repo.get_bookings_of_user(db, idUser)
+    if bookings == []:
+        raise HTTPException(status_code=404, detail="User hasn't ever booked")
+    
+    return bookings
 
 # Post a new user
 @router.post("/users/", response_model=user_schema.UserResponse)

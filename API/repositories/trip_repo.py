@@ -34,6 +34,13 @@ def get_trip_by(db: Session, select: str, lookup: str):
             Trip.endDate <= endTime).all()
     else:
         raise HTTPException(status_code=400, detail="Bad Request")
+    
+def get_members_of_trip(db: Session, idTrip: str):
+    trip = get_trip_by_id(db, idTrip)
+    if not trip:
+        raise HTTPException(404, "Trip not found")
+    
+    return trip.members
 
 #tạo mới trip
 def create_trip(db: Session, trip: TripCreate):

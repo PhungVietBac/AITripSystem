@@ -3,7 +3,7 @@ from models.booking import Booking
 from schemas.booking_schema import BookingCreate, BookingUpdate
 from datetime import datetime, timedelta
 from fastapi import HTTPException
-from repositories import user_repo, place_repo
+from repositories import place_repo
 import uuid
 
 def get_bookings(db: Session):
@@ -15,8 +15,6 @@ def get_booking_by_id(db: Session, idBooking: str):
 def get_booking_by(db: Session, select: str, lookup: str):
     if select == "idPlace":
         return db.query(Booking).filter(Booking.idPlace == lookup).all()
-    elif select == "idUser":
-        return db.query(Booking).filter(Booking.idUser == lookup).all()
     elif select == "date":
         time = datetime.strptime(lookup, "%d/%m/%Y %H:%M:%S")
         endTime = time + timedelta(milliseconds=999)
@@ -27,12 +25,22 @@ def get_booking_by(db: Session, select: str, lookup: str):
         return db.query(Booking).filter(Booking.status == lookup).all()
     else:
         raise HTTPException(400, "Bad Request")
+    
+def get_owners_of_booking(db: Session, idBooking: str):
+    booking = get_booking_by_id(db, idBooking)
+    if not booking:
+        raise HTTPException(404, "Booking not found")
+    
+    return booking.owner_booking
         
-def create_booking(db: Session, booking: BookingCreate):
-    # Kiểm tra IDUser
-    if not user_repo.get_user_by(db, "idUser", booking.idUser):
-        raise HTTPException(status_code=404, detail="User not found")
+def get_place_of_booking(db: Session, idBooking: str):
+    booking = get_booking_by_id(db, idBooking)
+    if not booking:
+        raise HTTPException(404, "Booking not found")
+    
+    return booking.place
 
+def create_booking(db: Session, booking: BookingCreate):
     # Kiểm tra idPlace
     if not place_repo.get_place_by_id(db, booking.idPlace):
         raise HTTPException(status_code=404, detail="Place not found")
@@ -45,7 +53,6 @@ def create_booking(db: Session, booking: BookingCreate):
     db_booking = Booking(
         idBooking=id_booking,
         idPlace=booking.idPlace,
-        idUser=booking.idUser,
         date=booking.date,
         status=booking.status
     )
@@ -56,18 +63,13 @@ def create_booking(db: Session, booking: BookingCreate):
     return db_booking
 
 def update_booking(db: Session, id_booking: str, booking_update: BookingUpdate):
-    # Kiểm tra idUser
-    if not user_repo.get_user_by(db, "idUser", booking_update.idUser):
-        raise HTTPException(status_code=404, detail="User not found")
-
     # Kiểm tra idPlace
     if not place_repo.get_place_by_id(db, booking_update.idPlace):
         raise HTTPException(status_code=404, detail="Place not found")
 
     # Cập nhật booking nếu kiểm tra thành công    
     db_booking = db.query(Booking).filter(
-        Booking.idBooking == id_booking,
-        Booking.idUser == booking_update.idUser
+        Booking.idBooking == id_booking
     ).first()
     
     if not db_booking:
@@ -81,15 +83,10 @@ def update_booking(db: Session, id_booking: str, booking_update: BookingUpdate):
     db.refresh(db_booking)
     return db_booking
 
-def delete_booking(db: Session, id_booking: str, id_user: str):
-    # Kiểm tra idUser
-    if not user_repo.get_user_by(db, "idUser", id_user):
-        raise HTTPException(status_code=404, detail="User not found")
-
+def delete_booking(db: Session, id_booking: str):
     # Xóa booking nếu kiểm tra thành công
     db_booking = db.query(Booking).filter(
-        Booking.idBooking == id_booking,
-        Booking.idUser == id_user
+        Booking.idBooking == id_booking
     ).first()
     
     if not db_booking:

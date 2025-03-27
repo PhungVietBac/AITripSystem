@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from database import get_db
-from schemas import place_schema
+from schemas import place_schema, booking_schema
 from controllers.auth_ctrl import get_current_user
 from repositories import place_repo
 
@@ -15,7 +15,7 @@ def get_places(db: Session = Depends(get_db), current_user = Depends(get_current
     return place_repo.get_places(db, skip, limit)
 
 @router.get("/places", response_model=place_schema.PlaceResponse)
-def get_places(idPlace: str, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+def get_place_by_id(idPlace: str, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     if not current_user:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized")
     
@@ -25,16 +25,19 @@ def get_places(idPlace: str, db: Session = Depends(get_db), current_user = Depen
     
     return place
 
-@router.get("/places/{select}", response_model=list[place_schema.PlaceResponse])
-def get_place_by(select: str, lookup: str, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+@router.get("/places/{idPlace}/bookings/", response_model=list[booking_schema.BookingResponse])
+def get_bookings_by_place(idPlace: str, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     if not current_user:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized")
     
-    places = place_repo.get_place_by(db, select, lookup)
-    if places == []:
-        raise HTTPException(404, "Place not found")
+    bookings = place_repo.get_bookings_of_place(db, idPlace)
+    if bookings == []:
+        raise HTTPException(404, "Place hasn't ever booked")
     
-    return places
+    return bookings
+
+@router.get("/places/{select}", response_model=list[place_schema.PlaceResponse])
+
 
 @router.post("/places/", response_model=place_schema.PlaceResponse)
 def create_place(place: place_schema.PlaceCreate, db: Session = Depends(get_db), current_user = Depends(get_current_user)):

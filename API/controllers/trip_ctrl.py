@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from schemas import trip_schema
+from schemas import trip_schema, user_schema
 from repositories import trip_repo
 from database import get_db
 from controllers.auth_ctrl import get_current_user
@@ -25,7 +25,7 @@ def get_trips(db: Session = Depends(get_db), current_user = Depends(get_current_
 
 # Get a trip by id
 @router.get("/trips", response_model=trip_schema.TripResponse)
-def get_trip_by(idTrip: str, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+def get_trip_by_id(idTrip: str, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     if not current_user:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized")
     
@@ -48,8 +48,8 @@ def get_trip_by(select: str, lookup: str, db: Session = Depends(get_db), current
     return trip
 
 # Get trips by date and keyword
-@router.get("/trips/date-key/", response_model=list[trip_schema.TripResponse])
-def get_trips(start_date: str = None, end_date: str = None, keyword: str = None, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+@router.get("/trips/date-key", response_model=list[trip_schema.TripResponse])
+def get_trips_date_key(start_date: str = None, end_date: str = None, keyword: str = None, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     if not current_user:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized")
     
@@ -58,6 +58,18 @@ def get_trips(start_date: str = None, end_date: str = None, keyword: str = None,
         raise HTTPException(status_code=404, detail="Trip not found")
     
     return trip
+
+# Get members by trip
+@router.get("/trips/{idTrip}/members/", response_model=list[user_schema.UserResponse])
+def get_members_by_trip(idTrip: str = None, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+    if not current_user:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized")
+    
+    members = trip_repo.get_members_of_trip(db, idTrip)
+    if members == []:
+        raise HTTPException(status_code=404, detail="Trip hasn't any member")
+    
+    return members
 
 # Update a trip
 @router.put("/trips/{idTrip}", response_model=trip_schema.TripResponse)

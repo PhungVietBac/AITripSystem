@@ -1,5 +1,6 @@
 from sqlalchemy import Column, String, Integer
 from database import Base
+from sqlalchemy.orm import relationship
 
 class Place(Base):
     # Table name
@@ -15,3 +16,5 @@ class Place(Base):
     image = Column(String(1000))  # URL
     rating = Column(Integer)
     type = Column(Integer)
+    
+    books = relationship("Booking", back_populates="place", cascade="all, delete-orphan")
