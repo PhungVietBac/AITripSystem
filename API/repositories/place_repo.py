@@ -34,6 +34,32 @@ def get_bookings_of_place(db: Session, idPlace: str):
     
     return place.books
 
+def get_trips_contain_place(db: Session, idPlace: str):
+    place = get_place_by_id(db, idPlace)
+    if not place:
+        raise HTTPException(404, "Place not found")
+    
+    return place.trip_belong
+
+def search_places(db: Session, query: str, place_type: int = None, min_rating: int = None):
+    from sqlalchemy import or_
+
+    filters = [or_(
+        Place.name.ilike(f"%{query}%"),
+        Place.city.ilike(f"%{query}%"),
+        Place.country.ilike(f"%{query}%"),
+        Place.province.ilike(f"%{query}%"),
+        Place.address.ilike(f"%{query}%")
+    )]
+
+    if place_type is not None:
+        filters.append(Place.type == place_type)
+    
+    if min_rating is not None:
+        filters.append(Place.rating >= min_rating)
+    
+    return db.query(Place).filter(*filters).all()
+
 # Post place
 def post_place(db: Session, place: PlaceCreate):
     idPlace = ""

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, DateTime
+from sqlalchemy import Column, String, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 from database import Base
 
@@ -7,7 +7,7 @@ class Booking(Base):
     __tablename__ = "Bookings"
 
     idBooking = Column(String(6), primary_key=True, index=True)
-    idPlace = Column(String(6), index=True)
+    idPlace = Column(String(6), ForeignKey("Places.idPlace"),index=True)
     date = Column(DateTime, index=True)
     status = Column(String(100))
     

@@ -18,3 +18,5 @@ class Place(Base):
     type = Column(Integer)
     
     books = relationship("Booking", back_populates="place", cascade="all, delete-orphan")
+    
+    trip_belong = relationship("Trip", secondary="DetailInformations", back_populates="place_contain", cascade="all, delete")

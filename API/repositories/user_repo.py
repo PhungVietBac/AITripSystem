@@ -38,7 +38,27 @@ def get_bookings_of_user(db: Session, idUser: str):
     
     return user.bookings
 
+def get_friend_requests_of_user(db: Session, idUser: str):
+    user = get_user_by(db, "idUser", idUser)
+    if not user:
+        raise HTTPException(404, "User not found")
     
+    return user.sent_friends
+
+def get_friend_requests_to_user(db: Session, idUser: str):
+    user = get_user_by(db, "idUser", idUser)
+    if not user:
+        raise HTTPException(404, "User not found")
+    
+    return user.received_friends
+
+def get_reviewed_trips_of_user(db: Session, idUser: str):
+    user = get_user_by(db, "idUser", idUser)
+    if not user:
+        raise HTTPException(404, "User not found")
+    
+    return user.reviewed
+
 # Post a new user
 def create_user(db: Session, user: UserCreate):
     # Check if the user already exists

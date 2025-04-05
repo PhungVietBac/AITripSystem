@@ -71,6 +71,28 @@ def get_members_by_trip(idTrip: str = None, db: Session = Depends(get_db), curre
     
     return members
 
+@router.get("/trips/{idTrip}/reviewed/", response_model=list[user_schema.UserResponse])
+def get_users_reviewed_trip(idTrip: str = None, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+    if not current_user:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized")
+    
+    users = trip_repo.get_users_reviewed_trip(db, idTrip)
+    if users == []:
+        raise HTTPException(status_code=404, detail="Trip hasn't any review")
+    
+    return users
+
+@router.get("/trips/{idTrip}/places/", response_model=list[trip_schema.PlaceResponse])
+def get_places_of_trip(idTrip: str = None, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+    if not current_user:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized")
+    
+    places = trip_repo.get_places_of_trip(db, idTrip)
+    if places == []:
+        raise HTTPException(status_code=404, detail="Trip hasn't any place")
+    
+    return places
+
 # Update a trip
 @router.put("/trips/{idTrip}", response_model=trip_schema.TripResponse)
 def update_trip(idTrip: str, trip: trip_schema.TripUpdate, db: Session = Depends(get_db), current_user = Depends(get_current_user)):

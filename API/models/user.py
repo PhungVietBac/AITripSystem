@@ -33,4 +33,5 @@ class User(Base):
     
     bookings = relationship("Booking", secondary="DetailBookings", back_populates="owner_booking", cascade="all, delete")
     
+    reviewed = relationship("Trip", secondary="Reviews", back_populates="reviewed_by", cascade="all, delete")
 

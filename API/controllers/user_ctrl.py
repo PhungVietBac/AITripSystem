@@ -49,6 +49,39 @@ def get_bookings_of_user(idUser: str, db: Session = Depends(get_db), current_use
     
     return bookings
 
+@router.get("/users/{idUser}/friend_requests_of", response_model=list[user_schema.UserResponse])
+def get_friend_requests_of_user(idUser: str, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+    if not current_user:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized")
+    
+    friend_requests = user_repo.get_friend_requests_of_user(db, idUser)
+    if friend_requests == []:
+        raise HTTPException(status_code=404, detail="User hasn't send any friend request")
+    
+    return friend_requests
+
+@router.get("/users/{idUser}/friend_requests_to", response_model=list[user_schema.UserResponse])
+def get_friend_requests_to_user(idUser: str, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+    if not current_user:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized")
+    
+    friend_requests = user_repo.get_friend_requests_to_user(db, idUser)
+    if friend_requests == []:
+        raise HTTPException(status_code=404, detail="User hasn't received any friend request")
+    
+    return friend_requests
+
+@router.get("/users/{idUser}/reviewed_trips", response_model=list[trip_schema.TripResponse])
+def get_reviewed_trips_of_user(idUser: str, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+    if not current_user:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized")
+    
+    reviewed_trips = user_repo.get_reviewed_trips_of_user(db, idUser)
+    if reviewed_trips == []:
+        raise HTTPException(status_code=404, detail="User hasn't reviewed any trip")
+    
+    return reviewed_trips
+
 # Post a new user
 @router.post("/users/", response_model=user_schema.UserResponse)
 def create_user(user: user_schema.UserCreate, db: Session = Depends(get_db), current_user = Depends(get_current_user)):

@@ -12,3 +12,7 @@ class Trip(Base):
     endDate = Column(DateTime, nullable=True, index=True)
     
     members = relationship("User", secondary="TripMembers", back_populates="trips", cascade="all, delete")
+    
+    reviewed_by = relationship("User", secondary="Reviews", back_populates="reviewed", cascade="all, delete")
+    
+    place_contain = relationship("Place", secondary="DetailInformations", back_populates="trip_belong", cascade="all, delete")
