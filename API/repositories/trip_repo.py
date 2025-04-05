@@ -42,6 +42,20 @@ def get_members_of_trip(db: Session, idTrip: str):
     
     return trip.members
 
+def get_users_reviewed_trip(db: Session, idTrip: str):
+    trip = get_trip_by_id(db, idTrip)
+    if not trip:
+        raise HTTPException(404, "Trip not found")
+    
+    return trip.reviewed_by
+
+def get_places_of_trip(db: Session, idTrip: str):
+    trip = get_trip_by_id(db, idTrip)
+    if not trip:
+        raise HTTPException(404, "Trip not found")
+    
+    return trip.place_contain
+
 #tạo mới trip
 def create_trip(db: Session, trip: TripCreate):
     idTrip = ""
