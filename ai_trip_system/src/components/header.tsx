@@ -17,10 +17,14 @@ const Header = () => {
       <header className={styles.navbar}>
         <div id={styles.leftbox}>
           <div id={styles.logo1}>
-            <Image id={styles.logo2} src="/logo.png" width={30} height={30} alt="logo" />
+            <Link href="/">
+              <Image id={styles.logo2} src="/logo.png" width={30} height={30} alt="logo" />
+            </Link>
           </div>
           <div id={styles.label1}>
-            <b id={styles.label2}>Tên của trang web</b>
+            <Link href="/">
+              <b id={styles.label2}>Tên của trang web</b>
+            </Link>
           </div>
         </div>
         <div id={styles.rightbox}>
@@ -37,13 +41,19 @@ const Header = () => {
             </div>
             <div
               className={`${styles.dropdownContent} ${
-                isDropdownOpen ? styles.dropdownContentOpen : ''}
-              `}>
-              <Link href="/recent" onClick={() => setIsDropdownOpen(false)}>
-                Gần đây
+                isDropdownOpen ? styles.dropdownContentOpen : ''
+              }`}>
+              <Link href="/map" onClick={() => setIsDropdownOpen(false)}>
+                Bản đồ
               </Link>
-              <Link href="/support" onClick={() => setIsDropdownOpen(false)}>
-                Hỗ trợ và trợ giúp
+              <Link href="/friend" onClick={() => setIsDropdownOpen(false)}>
+                Bạn bè
+              </Link>
+              <Link href="/booking" onClick={() => setIsDropdownOpen(false)}>
+                Đặt chỗ
+              </Link>
+              <Link href="/profile" onClick={() => setIsDropdownOpen(false)}>
+                Trang cá nhân
               </Link>
             </div>
           </div>
