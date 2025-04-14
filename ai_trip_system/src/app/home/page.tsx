@@ -1,14 +1,11 @@
 import SearchForm from "../../components/SearchForm";
 import FriendsList from "../../components/FriendsList";
 import DestinationCards from "../../components/DestinationCards";
-import Header from "../../components/header";
-import Footer from "../../components/footer";
 import Map from "../../components/Map";
 
 const Home = () => {
   return (
     <div className="min-h-screen flex flex-col">
-      <Header />
       <main className="flex-grow">
         <div className="w-full px-8 py-8">
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -36,8 +33,6 @@ const Home = () => {
           </div>
         </div>
       </main>
-
-      <Footer />
     </div>
   );
 };
