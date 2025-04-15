@@ -17,7 +17,7 @@
 
 <a name="giangvien"></a>
 ## GIẢNG VIÊN HƯỚNG DẪN
-* ThS. **Trần Tuấn Dũng** - *dungtrt@uit.edu.vn*
+* ThS. **Trần Tuấn Dũng** - *dungtran@uit.edu.vn*
 
 <a name="thanhvien"></a>
 ## THÀNH VIÊN NHÓM
