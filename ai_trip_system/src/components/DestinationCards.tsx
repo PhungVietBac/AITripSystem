@@ -1,5 +1,5 @@
 "use client";
-import Image from "next/image";
+import Image from "next/image"
 
 const DestinationCards = () => {
   const destinations = [
@@ -48,8 +48,6 @@ const DestinationCards = () => {
               <Image
                 src={dest.image}
                 alt={dest.name}
-                width={100}
-                height={100}
                 className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                 onError={(e) => {
                   // Fallback image if the main image fails to load

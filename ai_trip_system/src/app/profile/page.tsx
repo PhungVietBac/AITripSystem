@@ -26,7 +26,6 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Header />
       <main className="flex-grow mx-auto px-4 md:px-16 py-8 dark:bg-gray-900 border-b-2 border-gray-800">
         <div className="flex items-center gap-2 mb-6">
           <button className="p-2 rounded-full hover:bg-gray-300 dark:hover:bg-gray-700 dark:text-white transition-colors duration-200 cursor-pointer" onClick={() => handleBtn()}>
