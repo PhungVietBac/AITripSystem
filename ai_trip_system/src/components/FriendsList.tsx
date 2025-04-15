@@ -1,5 +1,4 @@
 "use client";
-import Image from "next/image";
 
 const FriendsList = () => {
   const friends = [
@@ -46,11 +45,9 @@ const FriendsList = () => {
           <div key={friend.id} className="flex items-center gap-3">
             <div className="relative">
               <div className="w-12 h-12 rounded-full overflow-hidden">
-                <Image
+                <img
                   src={friend.avatar}
                   alt={friend.name}
-                  width={100}
-                  height={100}
                   className="w-full h-full object-cover"
                 />
               </div>
