@@ -29,41 +29,41 @@ const Footer = () => {
           <ul className="list-outside list-none">
             <li className="mt-0 md:mt-2 text-gray-300 hover:text-gray-100 dark:hover:text-white">
               Email:{" "}
-              <a href="mailto:example@gmail.com" className="hover:underline">
+              <Link href="mailto:example@gmail.com" className="hover:underline">
                 example@gmail.com
-              </a>
+              </Link>
             </li>
             <li className="text-gray-300 hover:text-gray-100 dark:hover:text-white">
               Hotline:{" "}
-              <a href="tel:0123456789" className="hover:underline">
+              <Link href="tel:0123456789" className="hover:underline">
                 0123456789
-              </a>
+              </Link>
             </li>
             <li className="text-gray-300 hover:text-gray-100 dark:hover:text-white">
-              <a className="hover:underline" href="#">
+              <Link className="hover:underline" href="#">
                 FAQs
-              </a>
+              </Link>
             </li>
           </ul>
         </div>
         <div>
           <h3 className="text-base font-bold">Subcribe to our newsletter</h3>
           <div className="flex space-x-4 mt-0 md:mt-2">
-            <a href="https://github.com">
+            <Link href="https://github.com">
               <FaGithub className="w-6 h-6 text-gray-400 hover:text-gray-200 dark:hover:text-white" />
-            </a>
-            <a href="https://facebook.com">
+            </Link>
+            <Link href="https://facebook.com">
               <FaFacebook className="w-6 h-6 text-gray-400 hover:text-gray-200 dark:hover:text-white" />
-            </a>
-            <a href="https://instagram.com">
+            </Link>
+            <Link href="https://instagram.com">
               <FaInstagram className="w-6 h-6 text-gray-400 hover:text-gray-200 dark:hover:text-white" />
-            </a>
-            <a href="https://linkedin.com">
+            </Link>
+            <Link href="https://linkedin.com">
               <FaLinkedin className="w-6 h-6 text-gray-400 hover:text-gray-200 dark:hover:text-white" />
-            </a>
-            <a href="https://discord.com">
+            </Link>
+            <Link href="https://discord.com">
               <FaDiscord className="w-6 h-6 text-gray-400 hover:text-gray-200 dark:hover:text-white" />
-            </a>
+            </Link>
           </div>
         </div>
       </div>
