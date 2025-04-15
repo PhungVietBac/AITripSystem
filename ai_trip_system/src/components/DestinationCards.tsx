@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 
 const DestinationCards = () => {
   const destinations = [
@@ -44,9 +45,11 @@ const DestinationCards = () => {
             className="group relative rounded-lg overflow-hidden cursor-pointer"
           >
             <div className="aspect-w-16 aspect-h-9">
-              <img
+              <Image
                 src={dest.image}
                 alt={dest.name}
+                width={100}
+                height={100}
                 className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                 onError={(e) => {
                   // Fallback image if the main image fails to load
