@@ -1,12 +1,8 @@
 // src/app/map/page.tsx
 "use client";
 import React, { useState, useEffect, useRef } from "react";
-import Header from "../../components/header";
-import Footer from "../../components/footer";
-import Link from "next/link";
 import Image from "next/image"
 import { FaUtensils, FaHotel, FaCamera, FaLandmark,  FaRoute, FaSearch, FaUmbrellaBeach, FaStar } from "react-icons/fa";
-import { FaList } from "react-icons/fa";
 
 export default function MapPage() {
   const [isMenuOpen, setIsMenuOpen] = useState(false); // Trạng thái menu mở rộng
