@@ -22,7 +22,7 @@
 <a name="thanhvien"></a>
 ## THÀNH VIÊN NHÓM
 
-| STT    | MSSV          | Họ và Tên              | Github                                               | Email                   | Chức năng            |
+| STT    | MSSV          | Họ và Tên              | Github                                               | Email                   | Chức vụ              |
 | ------ |:-------------:| ----------------------:|-----------------------------------------------------:|-------------------------|---------------------:|
 | 1      | 23520131      | Phùng Việt Bắc         |[PhungVietBac](https://github.com/PhungVietBac)       |22520089@gm.uit.edu.vn   | Trưởng nhóm          |
 | 2      | 23520357      | Phạm Đức Anh           |[PDAnh77](https://github.com/PDAnh77)                 |22520067@gm.uit.edu.vn   | Thành viên           |
