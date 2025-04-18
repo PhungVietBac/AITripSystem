@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from schemas import trip_schema, user_schema
+from schemas import trip_schema, user_schema, place_schema
 from repositories import trip_repo
 from database import get_db
 from controllers.auth_ctrl import get_current_user
@@ -82,7 +82,7 @@ def get_users_reviewed_trip(idTrip: str = None, db: Session = Depends(get_db), c
     
     return users
 
-@router.get("/trips/{idTrip}/places/", response_model=list[trip_schema.PlaceResponse])
+@router.get("/trips/{idTrip}/places/", response_model=list[place_schema.PlaceResponse])
 def get_places_of_trip(idTrip: str = None, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     if not current_user:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized")

@@ -7,7 +7,7 @@ class Review(Base):
 
     idReview = Column(String(6), primary_key=True, index=True)  # Khóa chính
     idTrip = Column(String(6), ForeignKey("Trips.idTrip"), index=True)  # Khóa ngoại liên kết với bảng Trip
-    idUser = Column(String(6), index=True)  # ID người dùng
+    idUser = Column(String(6), ForeignKey("Users.idUser"), index=True)  # ID người dùng
     comment = Column(String(1000))  # Bình luận
     rating = Column(Integer)  # Đánh giá
 
