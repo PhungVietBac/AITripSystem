@@ -1,3 +1,5 @@
+'use client'
+
 import React, { useState } from 'react';
 
 const BookingForm: React.FC = () => {
@@ -6,6 +8,7 @@ const BookingForm: React.FC = () => {
     const [date, setDate] = useState('');
     const [time, setTime] = useState('');
     const [guests, setGuests] = useState(1);
+    const [error, setError] = useState('');
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -15,7 +18,7 @@ const BookingForm: React.FC = () => {
 
     return (
         <div className="max-w-md mx-auto p-4 bg-white rounded-lg shadow-md">
-            <h2 className="text-2xl font-bold text-center text-purple-600">Đặt Lịch</h2>
+            <h2 className="text-2xl font-bold text-center text-blue-900">Đặt Lịch</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                     <label className="block text-sm font-medium text-gray-700">Họ và tên</label>
@@ -68,9 +71,11 @@ const BookingForm: React.FC = () => {
                         className="mt-1 block w-full border border-gray-300 rounded-md p-2"
                     />
                 </div>
+                {error && <p className="text-red-500 text-sm">{error}</p>}
                 <button
                     type="submit"
-                    className="w-full bg-purple-600 text-white py-2 rounded-md hover:bg-purple-700"
+                    className="w-full bg-blue-900 text-white py-2 rounded-md hover:bg-blue-600"
+                    
                 >
                     Đặt Lịch
                 </button>
