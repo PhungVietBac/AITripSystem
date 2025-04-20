@@ -16,7 +16,7 @@ const Footer = () => {
         </div>
         <div>
           <h3 className="text-base font-bold">About us</h3>
-          <ul className="list-outside list-none text-gray-300 hover:text-gray-100 dark:hover:text-white">
+          <ul className="list-outside list-none text-gray-300 hover:text-gray-100 dark:hover:text-white transition-colors duration-200">
             <li className=" mt-0 md:mt-2">
               <Link className="hover:underline" href="/">
                 App introduce
@@ -27,19 +27,19 @@ const Footer = () => {
         <div>
           <h3 className="text-base font-bold">Contact</h3>
           <ul className="list-outside list-none">
-            <li className="mt-0 md:mt-2 text-gray-300 hover:text-gray-100 dark:hover:text-white">
+            <li className="mt-0 md:mt-2 text-gray-300 hover:text-gray-100 dark:hover:text-white transition-colors duration-200">
               Email:{" "}
               <Link href="mailto:example@gmail.com" className="hover:underline">
                 example@gmail.com
               </Link>
             </li>
-            <li className="text-gray-300 hover:text-gray-100 dark:hover:text-white">
+            <li className="text-gray-300 hover:text-gray-100 dark:hover:text-white transition-colors duration-200">
               Hotline:{" "}
               <Link href="tel:0123456789" className="hover:underline">
                 0123456789
               </Link>
             </li>
-            <li className="text-gray-300 hover:text-gray-100 dark:hover:text-white">
+            <li className="text-gray-300 hover:text-gray-100 dark:hover:text-white transition-colors duration-200">
               <Link className="hover:underline" href="#">
                 FAQs
               </Link>
@@ -50,19 +50,19 @@ const Footer = () => {
           <h3 className="text-base font-bold">Subcribe to our newsletter</h3>
           <div className="flex space-x-4 mt-0 md:mt-2">
             <Link href="https://github.com">
-              <FaGithub className="w-6 h-6 text-gray-400 hover:text-gray-200 dark:hover:text-white" />
+              <FaGithub className="w-6 h-6 text-gray-400 hover:text-gray-200 dark:hover:text-white transition-colors duration-200" />
             </Link>
             <Link href="https://facebook.com">
-              <FaFacebook className="w-6 h-6 text-gray-400 hover:text-gray-200 dark:hover:text-white" />
+              <FaFacebook className="w-6 h-6 text-gray-400 hover:text-gray-200 dark:hover:text-white transition-colors duration-200" />
             </Link>
             <Link href="https://instagram.com">
-              <FaInstagram className="w-6 h-6 text-gray-400 hover:text-gray-200 dark:hover:text-white" />
+              <FaInstagram className="w-6 h-6 text-gray-400 hover:text-gray-200 dark:hover:text-white transition-colors duration-200" />
             </Link>
             <Link href="https://linkedin.com">
-              <FaLinkedin className="w-6 h-6 text-gray-400 hover:text-gray-200 dark:hover:text-white" />
+              <FaLinkedin className="w-6 h-6 text-gray-400 hover:text-gray-200 dark:hover:text-white transition-colors duration-200" />
             </Link>
             <Link href="https://discord.com">
-              <FaDiscord className="w-6 h-6 text-gray-400 hover:text-gray-200 dark:hover:text-white" />
+              <FaDiscord className="w-6 h-6 text-gray-400 hover:text-gray-200 dark:hover:text-white transition-colors duration-200" />
             </Link>
           </div>
         </div>
