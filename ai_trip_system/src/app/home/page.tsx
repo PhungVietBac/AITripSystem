@@ -1,7 +1,12 @@
+"use client";
 import SearchForm from "../../components/SearchForm";
 import FriendsList from "../../components/FriendsList";
 import DestinationCards from "../../components/DestinationCards";
-import Map from "../../components/Map";
+import dynamic from "next/dynamic";
+
+const MapView = dynamic(() => import("@/components/Map"), {
+  ssr: false,
+});
 
 const Home = () => {
   return (
@@ -21,7 +26,7 @@ const Home = () => {
                 </p>
               </div>
 
-              <Map />
+              <MapView />
               <SearchForm />
             </div>
 

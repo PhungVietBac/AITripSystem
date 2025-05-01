@@ -9,7 +9,9 @@ type CarouselProps = {
 };
 
 const Carousel = ({ quantity }: CarouselProps) => {
-  const images = Array(quantity).fill("/images/hinh-nen-may-tinh.jpg");
+  const images: string[] = Array(quantity).fill(
+    "/images/hinh-nen-may-tinh.jpg"
+  );
   const imageWidth = 300;
   const containerRef = useRef<HTMLDivElement>(null);
   const [index, setIndex] = useState(0);
@@ -27,7 +29,7 @@ const Carousel = ({ quantity }: CarouselProps) => {
     return 3;
   };
 
-  const [visibleCount, setVisibleCount] = useState(getVisibleCount());
+  const [visibleCount, setVisibleCount] = useState<number>(getVisibleCount());
   const maxIndex = Math.ceil(images.length / visibleCount);
 
   // Set the index to the maximum index if it exceeds the maximum index
@@ -82,24 +84,17 @@ const Carousel = ({ quantity }: CarouselProps) => {
 
   // Handle next and previous button clicks
   const handleNext = () => {
-    if (selectedIndex == images.length - 1) {
-      setSelectedIndex(0);
-    } else {
-      setSelectedIndex(selectedIndex + 1);
-    }
+    const next = selectedIndex + 1;
+    setSelectedIndex(next >= images.length ? 0 : next);
   };
 
   const handlePrev = () => {
-    if (selectedIndex === 0) {
-      setSelectedIndex(images.length - 1);
-    } else {
-      setSelectedIndex(selectedIndex - 1);
-    }
+    const prev = selectedIndex - 1;
+    setSelectedIndex(prev < 0 ? images.length - 1 : prev);
   };
 
   useEffect(() => {
-    const calIndex = Math.floor(selectedIndex / visibleCount);
-    setIndex(calIndex);
+    setIndex(Math.floor(selectedIndex / visibleCount));
   }, [selectedIndex, visibleCount]);
 
   const handleClickImage = (idx: number) => {
@@ -111,14 +106,6 @@ const Carousel = ({ quantity }: CarouselProps) => {
     }
     setHasVisited(true);
   };
-
-  useEffect(() => {
-    console.log("Tab mounted");
-
-    return () => {
-      console.log("Tab unmounted");
-    };
-  }, []);
 
   return (
     <>
@@ -168,13 +155,13 @@ const Carousel = ({ quantity }: CarouselProps) => {
             </div>
 
             <FaAngleLeft
-              className="w-6 h-6 text-black rounded-md active:scale-50 disabled:opacity-50 absolute top-[100px] left-2 cursor-pointer"
+              className="w-6 h-6 text-black rounded-md active:scale-50 absolute top-[100px] left-2 cursor-pointer"
               aria-hidden="true"
               onClick={() => handlePrev()}
             />
 
             <FaAngleRight
-              className="w-6 h-6 text-black rounded-md active:scale-50 disabled:opacity-50 absolute top-[100px] right-2 cursor-pointer"
+              className="w-6 h-6 text-black rounded-md active:scale-50 absolute top-[100px] right-2 cursor-pointer"
               aria-hidden="true"
               onClick={() => handleNext()}
             />
