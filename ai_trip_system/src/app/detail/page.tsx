@@ -1,5 +1,10 @@
+"use client";
 import { AiOutlineExpandAlt } from "react-icons/ai";
-import Map from "@/components/Map";
+import dynamic from "next/dynamic";
+
+const MapView = dynamic(() => import("@/components/Map"), {
+  ssr: false, // BẮT BUỘC: Leaflet không chạy được ở server-side
+});
 
 export default function DetailPage() {
   return (
@@ -13,16 +18,21 @@ export default function DetailPage() {
             </p>
 
             <div>
-              <div className="border-t-1 border-b-1 p-4 bg-[url(/images/hinh-nen-may-tinh.jpg)] bg-center relative h-150">
+              <div className="border-t border-b p-4 bg-[url(/images/hinh-nen-may-tinh.jpg)] bg-center relative h-150">
                 <AiOutlineExpandAlt className="border-1 w-8 h-8 text-white rounded absolute bottom-1 right-1 cursor-pointer" />
 
                 <div className="w-50 h-70 top-0 right-0 absolute">
-                  <Map />
+                  <MapView />
                 </div>
 
                 <div className="bg-black/20 text-white px-4 py-2 inline-block rounded">
                   <div className="flex items-center me-4">
-                    <input id="" type="checkbox" value="" className="w-5 h-5" />
+                    <input
+                      id="default-checkbox"
+                      type="checkbox"
+                      value=""
+                      className="w-5 h-5"
+                    />
                     <label
                       htmlFor="default-checkbox"
                       className="ms-2 text-sm text-[25px] font-bold"

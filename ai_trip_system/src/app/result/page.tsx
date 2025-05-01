@@ -4,16 +4,16 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 const Result = () => {
-  const [showInfo, setShowInfo] = useState(false);
-  const [hasVisited, setHasVisited] = useState(false);
+  const [showInfo, setShowInfo] = useState<boolean>(false);
+  const [hasVisited, setHasVisited] = useState<boolean>(false);
   const router = useRouter();
 
-  const handleClick = () => {
+  const handleClick = (): void => {
     setShowInfo((prev) => !prev);
     setHasVisited(true);
   };
 
-  const handleOnPlan = () => {
+  const handleOnPlan = (): void => {
     router.push("/detail");
   };
 
@@ -26,12 +26,12 @@ const Result = () => {
         <div className="container mx-auto my-8 rounded-lg shadow-sm p-6">
           <span
             className="text-center text-2xl font-bold hover:bg-gray-100 cursor-pointer px-10"
-            onClick={() => handleClick()}
+            onClick={handleClick}
           >
             Ngày 1 (13/4/2025)
           </span>
           {hasVisited && (
-            <div className={`${showInfo ? "block" : "hidden"}`}>
+            <div className={showInfo ? "block" : "hidden"}>
               <Carousel quantity={10} />
             </div>
           )}
@@ -40,7 +40,7 @@ const Result = () => {
         <div className="flex flex-wrap gap-20 justify-center">
           <button
             className="text-green-700 border hover:bg-green-700 hover:text-white font-medium rounded-lg text-lg px-5 py-2.5"
-            onClick={() => handleOnPlan()}
+            onClick={handleOnPlan}
           >
             Lên kế hoạch
           </button>

@@ -3,7 +3,11 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import { FaStar, FaStarHalfStroke, FaRegStar } from "react-icons/fa6";
 import ModalImage from "react-modal-image";
-import Map from "./Map";
+import dynamic from "next/dynamic";
+
+const MapView = dynamic(() => import("@/components/Map"), {
+  ssr: false,
+});
 
 type TabProps = {
   label: string;
@@ -11,7 +15,7 @@ type TabProps = {
   content: React.ReactNode;
 };
 
-const tabs = [
+const tabs: TabProps[] = [
   {
     label: "Thông tin",
     content: (
@@ -129,7 +133,7 @@ const tabs = [
     content: (
       <div>
         <h2 className="text-2xl font-bold mb-4">Bản đồ</h2>
-        <Map />
+        <MapView />
       </div>
     ),
   },
@@ -152,9 +156,12 @@ const tabs = [
 ];
 
 const Tab = () => {
-  const [activeTab, setActiveTab] = useState(0);
-  const tabRef = useRef<(HTMLButtonElement | null)[]>([]);
-  const [underlineProps, setUnderlineProps] = useState({
+  const [activeTab, setActiveTab] = useState<number>(0);
+  const tabRef = useRef<Array<HTMLButtonElement | null>>([]);
+  const [underlineProps, setUnderlineProps] = useState<{
+    width: number;
+    left: number;
+  }>({
     width: 0,
     left: 0,
   });
@@ -163,9 +170,10 @@ const Tab = () => {
     const updateUnderline = () => {
       const tab = tabRef.current[activeTab];
       if (tab) {
+        const { offsetWidth, offsetLeft } = tab;
         setUnderlineProps({
-          width: tab.offsetWidth,
-          left: tab.offsetLeft,
+          width: offsetWidth,
+          left: offsetLeft,
         });
       }
     };
