@@ -1,30 +1,36 @@
 'use client'
 import { FaChevronLeft, FaPen, FaXmark, FaCamera, FaUserCheck } from "react-icons/fa6";
 import { useRouter } from "next/navigation";
-import { useState, useRef, ChangeEvent } from "react";
+import { useState, useRef, ChangeEvent, useEffect } from "react";
 import Image from "next/image";
+import useSWR, { mutate } from 'swr'
 
 export default function ProfilePage() {
-  const [user, setUser] = useState({
-    IDUser: "U00001",
-    Name: "Nguyễn Văn A",
-    Username: "nguyenvana",
-    Friends: 218,
-    Password: "123",
-    Gender: 1,
-    Email: "vana@example.com",
-    PhoneNumber: "0901234567",
-    Avatar: "/logo.png",
-    Theme: 1,
-    Language: 1,
-    Aboutme: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sedeuismod, nunc a dapibus volutpat, quam velit euismod est, bibendum augue tortor sed nulla.Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sedeuismod, nunc a dapibus volutpat, quam velit euismod est, abibendum augue tortor sed nulla.Lorem ipsum dolor sit amet, consectetur adipiscing elit.Sedeuismod, nunc a dapibus volutpat, quam velit euismod est, abibendum augue tortor sed nulla."
-  });
   const [showEditModal, setShowEditModal] = useState(false);
-  const [editedUser, setEditedUser] = useState(user);
+  const [userEdit, setUserEdit] = useState<UserUpdate | null>(null);
+  const [id, setId] = useState<string>("US1b80");
   const [step, setStep] = useState(1);
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isFriendRequestSent, setIsFriendRequestSent] = useState(false);
+  const accessToken = ""
+
+  const fetcher = (url: string) => fetch(url, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    }
+  }).then(res => res.json())
+  const { data: userData, error, isLoading } = useSWR<UserResponse>(`https://aitripsystem-api.onrender.com/api/v1/users/idUser?lookup=${id}`, fetcher,
+    {
+      revalidateIfStale: false,
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false
+    }
+  )
+  console.log(userData);
+  if (error) return <div>failed to load</div>
+  if (isLoading) return <div>Loading...</div>
 
   const genderOptions = [
     { label: "Male", value: 1 },
@@ -33,7 +39,7 @@ export default function ProfilePage() {
   ]
 
   const renderGender = () => {
-    const gender = genderOptions.find(option => option.value === user.Gender);
+    const gender = genderOptions.find(option => option.value === userData?.gender);
     return <span>{gender ? gender.label : 'None'}</span>;
   }
 
@@ -41,11 +47,13 @@ export default function ProfilePage() {
     router.push("/");
   };
 
-  const handleSaveBtn = () => {
-    setUser(editedUser);
+  const openEditModal = () => {
+    if (userData) {
+      setUserEdit({ ...userData });
+    }
     setStep(1);
-    setShowEditModal(false);
-  };
+    setShowEditModal(true);
+  }
 
   const handleAvatarUpload = () => {
     fileInputRef.current?.click();
@@ -58,27 +66,42 @@ export default function ProfilePage() {
 
     const reader = new FileReader();
     reader.onload = () => {
-      setEditedUser(prev => ({
+      setUserEdit(prev => ({
         ...prev,
-        Avatar: reader.result as string,
+        avatar: reader.result as string,
       }));
     };
     reader.readAsDataURL(file);
   };
 
-  const handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setEditedUser(prev => ({
+  const handleNameChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setUserEdit(prev => ({
       ...prev,
-      [name]: name === "Gender" ? parseInt(value) : value, // Parse Gender to integer
+      name: value
+    }))
+  }
+
+  const handleGenderChange = (e: ChangeEvent<HTMLSelectElement>) => {
+    const value = parseInt(e.target.value);
+    setUserEdit(prev => ({
+      ...prev,
+      gender: value,
     }));
   };
 
-  const handleOpenEditModal = () => {
-    setEditedUser({ ...user });
+  const handleDescriptionChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    setUserEdit(prev => ({
+      ...prev,
+      description: value,
+    }));
+  };
+
+  const handleSaveBtn = () => {
     setStep(1);
-    setShowEditModal(true);
-  }
+    setShowEditModal(false);
+  };
 
   const handleFriendRequestSent = () => {
     setIsFriendRequestSent(true);
@@ -93,28 +116,29 @@ export default function ProfilePage() {
             className="p-2 rounded-full hover:bg-gray-300 dark:hover:bg-gray-700 dark:text-white transition-colors duration-200 cursor-pointer">
             <FaChevronLeft />
           </button>
-          <h1 className="text-2xl font-bold text-black dark:text-white">{user.Name}</h1>
+          <h1 className="text-2xl font-bold text-black dark:text-white">{userData?.name}</h1>
         </div>
         <div className="flex-grow flex-col bg-white rounded-lg p-6 mx-auto shadow-sm dark:bg-transparent text-black dark:text-white dark:border-2 border-gray-700">
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 text-center sm:text-left">
             <Image
-              src={user.Avatar}
+              src={userData?.avatar || "/profile.svg"}
+              priority={true}
               width={200}
               height={200}
               alt="avatar"
-              className="border-2 border-black rounded-full object-cover"
+              className="border-2 dark:text-white border-black rounded-full object-cover"
               style={{ width: '200px', height: '200px' }}
             />
             <div className="flex flex-col">
-              <h2 className="text-2xl font-bold">{user.Name}</h2>
-              <p>{user.Email}</p>
-              <p>
-                <span className="font-bold">{user.Friends}</span> Friends
-              </p>
+              <h2 className="text-2xl font-bold">{userData?.name}</h2>
+              <p>{userData?.email}</p>
+              {/* <p>
+                <span className="font-bold">{userData?.friends}</span> Friends
+              </p> */}
             </div>
             <div className="flex gap-2 sm:ml-auto justify-center">
               <button
-                onClick={handleOpenEditModal} // Use the new handler
+                onClick={openEditModal}
                 className="flex items-center justify-center w-16 h-12 font-bold rounded-lg text-white bg-gray-800 hover:bg-gray-900 dark:bg-gray-800 dark:hover:bg-gray-700 dark:border-gray-700 cursor-pointer transition-colors duration-200"
               >
                 <FaPen />
@@ -135,12 +159,12 @@ export default function ProfilePage() {
               <li className="py-3 sm:py-4">
                 <div className="text-justify">
                   <div className="font-bold text-lg">About me:</div>
-                  {user.Aboutme}
+                  {userData?.description}
                 </div>
               </li>
               <li className="py-3 sm:py-4">
                 <div>
-                  <span className="font-bold text-lg">Phone number:</span> {user.PhoneNumber}
+                  <span className="font-bold text-lg">Phone number:</span> {userData?.phonenumber}
                 </div>
               </li>
               <li className="py-3 sm:py-4">
@@ -173,7 +197,7 @@ export default function ProfilePage() {
 
                   <div className="relative p-4 text-gray-700 dark:text-white mx-auto">
                     <Image
-                      src={editedUser.Avatar}
+                      src={userEdit?.avatar || "/profile.svg"}
                       width={200}
                       height={200}
                       alt="avatar"
@@ -207,9 +231,47 @@ export default function ProfilePage() {
                 </>
               }
 
-              {/* {Gender update modal} */}
+              {/* {Name update modal} */}
               {
                 step === 2 &&
+                <>
+                  <div className="flex items-center p-4 border-b border-gray-200 dark:border-gray-600">
+                    <button
+                      onClick={() => setStep(prev => prev - 1)}
+                      className="p-2 mr-2 rounded-full hover:bg-gray-300 dark:hover:bg-gray-700 dark:text-white transition-colors duration-200 cursor-pointer">
+                      <FaChevronLeft />
+                    </button>
+                    <h3 className="text-2xl font-semibold text-gray-900 dark:text-white">Change your name?</h3>
+                    <button
+                      onClick={() => setShowEditModal(false)}
+                      className="text-xl p-2 ml-auto rounded-full hover:bg-gray-300 dark:hover:bg-gray-700 dark:text-white transition-colors duration-200 cursor-pointer">
+                      <FaXmark />
+                    </button>
+                  </div>
+
+                  <div className="p-4 text-gray-700 dark:text-white">
+                    <input
+                      type="text"
+                      value={userEdit?.name}
+                      className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                      onChange={handleNameChange}
+                      placeholder="Your name" />
+                  </div>
+
+                  <div className="flex p-4 mt-auto">
+                    <button
+                      onClick={() => setStep(prev => prev + 1)}
+                      className="w-full h-12 text-md font-bold rounded-4xl cursor-pointer text-white bg-gray-800 hover:bg-gray-900 dark:bg-gray-800 dark:hover:bg-gray-700 border-2 border-black dark:border-gray-600 transition-colors duration-200"
+                    >
+                      Next
+                    </button>
+                  </div>
+                </>
+              }
+
+              {/* {Gender update modal} */}
+              {
+                step === 3 &&
                 <>
                   <div className="flex items-center p-4 border-b border-gray-200 dark:border-gray-600">
                     <button
@@ -227,9 +289,8 @@ export default function ProfilePage() {
 
                   <div className="p-4 text-gray-700 dark:text-white">
                     <select
-                      name="Gender"
-                      value={editedUser.Gender}
-                      onChange={handleInputChange}
+                      value={userEdit?.gender}
+                      onChange={handleGenderChange}
                       className="w-full px-3 py-3 rounded-lg border-2 text-md text-black bg-white focus:ring-blue-500 focus:border-blue-500 dark:bg-black dark:border-gray-600 dark:text-white"
                     >
                       {genderOptions.map(option => (
@@ -249,9 +310,9 @@ export default function ProfilePage() {
                 </>
               }
 
-              {/* {About me update modal} */}
+              {/* {Description update modal} */}
               {
-                step === 3 &&
+                step === 4 &&
                 <>
                   <div className="flex items-center p-4 border-b border-gray-200 dark:border-gray-600">
                     <button
@@ -269,11 +330,10 @@ export default function ProfilePage() {
 
                   <div className="p-4 text-gray-700 dark:text-white">
                     <textarea
-                      name="Aboutme"
                       rows={6}
                       placeholder="Write your bio here..."
-                      value={editedUser.Aboutme}
-                      onChange={handleInputChange}
+                      value={userEdit?.description}
+                      onChange={handleDescriptionChange}
                       className="resize-none w-full p-2.5 text-sm rounded-lg border text-gray-900 bg-gray-50 border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 dark:focus:ring-blue-500 dark:focus:border-blue-500"
                     />
                   </div>
@@ -291,7 +351,7 @@ export default function ProfilePage() {
 
               {/* {Save update modal} */}
               {
-                step === 4 &&
+                step === 5 &&
                 <>
                   <div className="flex items-center p-4 border-b border-gray-200 dark:border-gray-600">
                     <button
