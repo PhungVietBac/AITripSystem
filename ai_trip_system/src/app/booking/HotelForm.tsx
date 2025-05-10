@@ -144,7 +144,7 @@ export default function HotelForm() {
 
   return (
     <div className="w-full px-4 py-8">
-      <h2 className="text-2xl font-semibold mb-6 text-center">Khách sạn gợi ý</h2>
+      <h2 className="text-2xl font-semibold mb-6 text-center">Các điểm du lịch gợi ý</h2>
       
       <div className="relative w-full overflow-hidden" ref={carouselRef}>
         <div 
