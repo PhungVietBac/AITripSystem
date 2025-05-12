@@ -3,25 +3,32 @@ import { FaChevronLeft, FaPen, FaXmark, FaCamera, FaUserCheck } from "react-icon
 import { useRouter } from "next/navigation";
 import { useState, useRef, ChangeEvent, useEffect } from "react";
 import Image from "next/image";
-import useSWR, { mutate } from 'swr'
+import useSWR, { mutate } from "swr"
+import Cookies from "js-cookie"
+import { cookies } from "next/headers";
 
-export default function ProfilePage() {
+interface ProfilePageProps {
+  userID: string;
+}
+
+export default function ProfilePage({ userID = "US1b80" }: ProfilePageProps) {
   const [showEditModal, setShowEditModal] = useState(false);
-  const [userEdit, setUserEdit] = useState<UserUpdate | null>(null);
-  const [id, setId] = useState<string>("US1b80");
+  const [userEdit, setUserEdit] = useState<UserBase>();
   const [step, setStep] = useState(1);
   const router = useRouter();
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [previewAvatar, setPreviewAvatar] = useState<string | null>(null);
   const [isFriendRequestSent, setIsFriendRequestSent] = useState(false);
-  const accessToken = ""
+  const accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVUzVlNDMiLCJyb2xlIjowLCJleHAiOjE3NDcyMDcwMDh9.KfQLKswfIQ65IlW0xNWg7z4GTVD7nFgwbwnAoTCymBU"
 
+  const token = Cookies.get("access_token");
+  // Get user info
   const fetcher = (url: string) => fetch(url, {
     headers: {
       Authorization: `Bearer ${accessToken}`,
       'Content-Type': 'application/json',
     }
   }).then(res => res.json())
-  const { data: userData, error, isLoading } = useSWR<UserResponse>(`https://aitripsystem-api.onrender.com/api/v1/users/idUser?lookup=${id}`, fetcher,
+  const { data: userData, error, isLoading } = useSWR<UserResponse>(`https://aitripsystem-api.onrender.com/api/v1/users/idUser?lookup=${userID}`, fetcher,
     {
       revalidateIfStale: false,
       revalidateOnFocus: false,
@@ -51,56 +58,78 @@ export default function ProfilePage() {
     if (userData) {
       setUserEdit({ ...userData });
     }
+    setPreviewAvatar(null);
     setStep(1);
     setShowEditModal(true);
   }
 
-  const handleAvatarUpload = () => {
-    fileInputRef.current?.click();
-  }
-
-  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarUpload = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (!file.type.startsWith("image/")) return;
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      setUserEdit(prev => ({
-        ...prev,
-        avatar: reader.result as string,
-      }));
-    };
-    reader.readAsDataURL(file);
-  };
+    // Check valid image
+    if (!file.type.startsWith("image/")) {
+      return;
+    }
+
+    if (file) {
+      const previewUrl = URL.createObjectURL(file);
+      setPreviewAvatar(previewUrl);
+    }
+  }
 
   const handleNameChange = (e: ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setUserEdit(prev => ({
-      ...prev,
+      ...prev!,
       name: value
     }))
   }
 
   const handleGenderChange = (e: ChangeEvent<HTMLSelectElement>) => {
-    const value = parseInt(e.target.value);
+    const value = parseInt(e.target.value, 10);
     setUserEdit(prev => ({
-      ...prev,
-      gender: value,
-    }));
+      ...prev!,
+      gender: value
+    }))
   };
 
   const handleDescriptionChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;
     setUserEdit(prev => ({
-      ...prev,
-      description: value,
-    }));
-  };
+      ...prev!,
+      description: value
+    }))
+  }
 
-  const handleSaveBtn = () => {
-    setStep(1);
-    setShowEditModal(false);
+  const handleSaveBtn = async () => {
+    try {
+      const res = await fetch(
+        `https://aitripsystem-api.onrender.com/api/v1/users/${userID}`,
+        {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify(userData),
+        }
+      );
+
+      if (!res.ok) throw new Error('Failed to update user info.');
+
+      // Revalidate SWR to fetch the updated data
+      await mutate(
+        `https://aitripsystem-api.onrender.com/api/v1/users/idUser?lookup=${userID}`
+      );
+
+      console.log("Cập nhật dữ liệu người dùng thành công");
+    } catch (error) {
+      console.error("Error updating user info:", error);
+    } finally {
+      setShowEditModal(false);
+      setStep(1);
+    }
   };
 
   const handleFriendRequestSent = () => {
@@ -121,7 +150,8 @@ export default function ProfilePage() {
         <div className="flex-grow flex-col bg-white rounded-lg p-6 mx-auto shadow-sm dark:bg-transparent text-black dark:text-white dark:border-2 border-gray-700">
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 text-center sm:text-left">
             <Image
-              src={userData?.avatar || "/profile.svg"}
+              src={userData?.avatar && (userData.avatar.startsWith("http://") || userData.avatar.startsWith("https://"))
+                ? userData.avatar : "/profile.svg"}
               priority={true}
               width={200}
               height={200}
@@ -197,7 +227,9 @@ export default function ProfilePage() {
 
                   <div className="relative p-4 text-gray-700 dark:text-white mx-auto">
                     <Image
-                      src={userEdit?.avatar || "/profile.svg"}
+                      src={previewAvatar
+                        ? previewAvatar : userData?.avatar && (userData.avatar.startsWith("http://") || userData.avatar.startsWith("https://"))
+                          ? userData.avatar : "/profile.svg"}
                       width={200}
                       height={200}
                       alt="avatar"
@@ -205,21 +237,21 @@ export default function ProfilePage() {
                       style={{ width: '200px', height: '200px' }}
                     />
 
-                    <button
-                      onClick={handleAvatarUpload}
-                      className="absolute bottom-0 right-0 text-xl m-4 p-3 rounded-full bg-gray-200 hover:bg-gray-300 dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-white transition-colors duration-200 cursor-pointer">
+                    <label
+                      htmlFor="avatarUpload"
+                      className="absolute bottom-0 right-0 text-xl m-4 p-3 rounded-full bg-gray-200 hover:bg-gray-300 dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-white transition-colors duration-200 cursor-pointer"
+                    >
                       <FaCamera />
-                    </button>
+                    </label>
+
+                    <input
+                      id="avatarUpload"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleAvatarUpload}
+                      className="hidden"
+                    />
                   </div>
-
-                  <input
-                    type="file"
-                    accept="image/*"
-                    ref={fileInputRef}
-                    onChange={handleFileChange}
-                    className="hidden"
-                  />
-
                   <div className="flex p-4 mt-auto">
                     <button
                       onClick={() => setStep(prev => prev + 1)}
@@ -332,7 +364,7 @@ export default function ProfilePage() {
                     <textarea
                       rows={6}
                       placeholder="Write your bio here..."
-                      value={userEdit?.description}
+                      value={userEdit?.description ?? ""}
                       onChange={handleDescriptionChange}
                       className="resize-none w-full p-2.5 text-sm rounded-lg border text-gray-900 bg-gray-50 border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 dark:focus:ring-blue-500 dark:focus:border-blue-500"
                     />
