@@ -4,8 +4,6 @@ import { useRouter } from "next/navigation";
 import { useState, useRef, ChangeEvent, useEffect } from "react";
 import Image from "next/image";
 import useSWR, { mutate } from "swr"
-import Cookies from "js-cookie"
-import { cookies } from "next/headers";
 
 interface ProfilePageProps {
   userID: string;
@@ -18,9 +16,9 @@ export default function ProfilePage({ userID = "US1b80" }: ProfilePageProps) {
   const router = useRouter();
   const [previewAvatar, setPreviewAvatar] = useState<string | null>(null);
   const [isFriendRequestSent, setIsFriendRequestSent] = useState(false);
-  const accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVUzVlNDMiLCJyb2xlIjowLCJleHAiOjE3NDcyMDcwMDh9.KfQLKswfIQ65IlW0xNWg7z4GTVD7nFgwbwnAoTCymBU"
 
-  const token = Cookies.get("access_token");
+  const accessToken = localStorage.getItem("token");
+
   // Get user info
   const fetcher = (url: string) => fetch(url, {
     headers: {
@@ -36,18 +34,18 @@ export default function ProfilePage({ userID = "US1b80" }: ProfilePageProps) {
     }
   )
   console.log(userData);
-  if (error) return <div>failed to load</div>
+  if (error) return <div>Failed to load user data: {error.message}</div>
   if (isLoading) return <div>Loading...</div>
 
   const genderOptions = [
-    { label: "Male", value: 1 },
-    { label: "Female", value: 2 },
-    { label: "None", value: 3 }
+    { label: "Male", value: 0 },
+    { label: "Female", value: 1 },
+    { label: "Other", value: 2 }
   ]
 
   const renderGender = () => {
     const gender = genderOptions.find(option => option.value === userData?.gender);
-    return <span>{gender ? gender.label : 'None'}</span>;
+    return <span>{gender ? gender.label : 'Other'}</span>;
   }
 
   const handleBtnBack = () => {
@@ -103,16 +101,23 @@ export default function ProfilePage({ userID = "US1b80" }: ProfilePageProps) {
   }
 
   const handleSaveBtn = async () => {
+    const payload = {
+      name: userEdit?.name,
+      gender: userEdit?.gender,
+      description: userEdit?.description
+    }
+
+    console.log(payload);
     try {
       const res = await fetch(
         `https://aitripsystem-api.onrender.com/api/v1/users/${userID}`,
         {
-          method: 'PATCH',
+          method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${accessToken}`,
           },
-          body: JSON.stringify(userData),
+          body: JSON.stringify(payload),
         }
       );
 

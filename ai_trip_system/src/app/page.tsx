@@ -1,7 +1,15 @@
-import Home from "./home/page";
+import Contents from "@/components/contents";
+import HeroSections from "@/components/herosection";
+import Features from "@/components/features";
+import Members from "@/components/members";
 
-export default function Page() {
-  return <div className="bg-amber-50 min-h-screen flex flex-col">
-    This is main page
-  </div>;
+export default function IntroPage() {
+  return (
+    <>
+      <HeroSections />
+      <Features />
+      <Contents />
+      <Members />
+    </>
+  );
 }
