@@ -40,7 +40,7 @@ export default function LoginForm() {
             const data = await response.json();
 
             // Store token in localStorage or in a secure cookie
-            localStorage.setItem('token', data.token);
+            localStorage.setItem('token', data.access_token);
 
             // Redirect user after successful login
             router.push('/home');
@@ -66,7 +66,7 @@ export default function LoginForm() {
                 <form onSubmit={handleSubmit}>
                     <div className="mb-4">
                         <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
-                            Username 
+                            Username
                         </label>
                         <input
                             id="username"
