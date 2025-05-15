@@ -33,14 +33,15 @@ export default function RegisterForm() {
     setError("");
 
     try {
-      const response = await fetch(`https://aitripsystem-api.onrender.com/api/v1/register`, { // Updated endpoint to match the correct API route
+      const response = await fetch(`https://aitripsystem-api.onrender.com/api/v1/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "accept": "application/json",
         },
         body: JSON.stringify({
-            username: formData.username,
-            password: formData.password,
+          username: formData.username,
+          password: formData.password,
         }),
       });
 

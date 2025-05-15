@@ -3,6 +3,7 @@
 import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { setCookie } from 'cookies-next';
 
 export default function LoginForm() {
     const [username, setUsername] = useState('');
@@ -39,11 +40,16 @@ export default function LoginForm() {
 
             const data = await response.json();
 
-            // Store token in localStorage or in a secure cookie
-            localStorage.setItem('token', data.access_token);
+            // Store token in cookie
+            if (data.access_token) {
+                setCookie('token', data.access_token, { maxAge: 60 * 60 * 24 }); // 1 day
+                
+                // Thay vì chuyển hướng bằng router.push, sử dụng window.location để reload trang
+                window.location.href = '/home';
+            } else {
+                throw new Error('Invalid login credentials.');
+            }
 
-            // Redirect user after successful login
-            router.push('/home');
         } catch (err: any) {
             setError(err.message || 'An unknown error occurred.');
             console.error(err);

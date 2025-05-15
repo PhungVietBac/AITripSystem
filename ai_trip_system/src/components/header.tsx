@@ -2,15 +2,62 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from 'next/navigation';
 import { useState, useEffect, useRef } from "react";
+import { getCookie } from "cookies-next";
+
+function decodeJWT(token: string) {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      window.atob(base64)
+        .split('')
+        .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    return JSON.parse(jsonPayload);
+  } catch (error) {
+    console.error('Error decoding token:', error);
+    return {};
+  }
+}
 
 const Header = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const [isLogin, setIsLogin] = useState(false);
+  const [currentUser, setCurrentUser] = useState("");
+  const router = useRouter();
 
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
   };
+
+  const handleLogout = () => {
+    // Xóa cookie token
+    document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    
+    // Reset states
+    setIsLogin(false);
+    setCurrentUser("");
+    setIsDropdownOpen(false);
+    // Redirect to login page
+    router.push("/login");
+  };
+
+  // Check if user is logged in with cookie
+  useEffect(() => {
+    const token = getCookie("token");
+    if (token) {
+      const decodedToken = decodeJWT(String(token));      
+      setIsLogin(true);
+      setCurrentUser(String(decodedToken.sub));
+    } else {
+      setIsLogin(false);
+      setCurrentUser("");
+    }
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -67,18 +114,34 @@ const Header = () => {
             </Link>
           </div>
 
-          <div className="hidden md:flex items-center p-0">
-            <Link
-              href="/profile"
-              className="flex items-center no-underline text-black hover:opacity-70 transition-opacity duration-300"
-              aria-label="Profile"
-            >
-              <Image src="/profile.svg" width={30} height={30} alt="profile" />
-              <span className="ml-2 text-sm text-black">
-                <b>Profile</b>
-              </span>
-            </Link>
-          </div>
+          {!isLogin && (
+            <div className="hidden md:flex items-center p-0">
+              <Link
+                href="/login"
+                className="flex items-center no-underline text-black hover:opacity-70 transition-opacity duration-300"
+                aria-label="Login"
+              >
+                <span className="ml-2 text-sm text-black">
+                  <b>Đăng nhập</b>
+                </span>
+              </Link>
+            </div>
+          )}
+
+          {isLogin && (
+            <div className="hidden md:flex items-center p-0">
+              <Link
+                href="/profile"
+                className="flex items-center no-underline text-black hover:opacity-70 transition-opacity duration-300"
+                aria-label="Profile"
+              >
+                <Image src="/profile.svg" width={30} height={30} alt="profile" />
+                <span className="ml-2 text-sm text-black">
+                  <b>Profile</b>
+                </span>
+              </Link>
+            </div>
+          )}
 
           <div className="relative inline-block" ref={dropdownRef}>
             <div
@@ -138,6 +201,30 @@ const Header = () => {
                   <Image src="/profile.svg" width={24} height={24} alt="profile" className="mr-2" />
                   Trang cá nhân
                 </Link>
+                
+                {/* Thêm nút Logout cho mobile menu nếu đã đăng nhập */}
+                {isLogin && (
+                  <div
+                    className="flex items-center text-black p-3 no-underline hover:bg-gray-200 cursor-pointer"
+                    onClick={handleLogout}
+                  >
+                    <svg 
+                      xmlns="http://www.w3.org/2000/svg" 
+                      width="24" 
+                      height="24" 
+                      viewBox="0 0 24 24" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      strokeWidth="2" 
+                      className="mr-2"
+                    >
+                      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                      <polyline points="16 17 21 12 16 7"></polyline>
+                      <line x1="21" y1="12" x2="9" y2="12"></line>
+                    </svg>
+                    Đăng xuất
+                  </div>
+                )}
               </div>
 
               {/* Menu items cho desktop */}
@@ -163,6 +250,16 @@ const Header = () => {
                 >
                   Đặt chỗ
                 </Link>
+                
+                {/* Thêm nút Logout cho desktop menu nếu đã đăng nhập */}
+                {isLogin && (
+                  <div
+                    className="flex items-center text-black p-3 no-underline hover:bg-gray-200 cursor-pointer"
+                    onClick={handleLogout}
+                  >
+                    Đăng xuất
+                  </div>
+                )}
               </div>
             </div>
           </div>
