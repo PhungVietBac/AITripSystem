@@ -1,7 +1,7 @@
 'use client'
 import { FaChevronLeft, FaPen, FaXmark, FaCamera, FaUserCheck } from "react-icons/fa6";
 import { useRouter } from "next/navigation";
-import { useState, useRef, ChangeEvent, useEffect } from "react";
+import { useState, useRef, useEffect, ChangeEvent } from "react";
 import Image from "next/image";
 import useSWR, { mutate } from "swr"
 
@@ -9,15 +9,22 @@ interface ProfilePageProps {
   userID: string;
 }
 
-export default function ProfilePage({ userID = "US1b80" }: ProfilePageProps) {
+export default function ProfilePage({ userID = "US6b96" }: ProfilePageProps) {
   const [showEditModal, setShowEditModal] = useState(false);
   const [userEdit, setUserEdit] = useState<UserBase>();
   const [step, setStep] = useState(1);
   const router = useRouter();
   const [previewAvatar, setPreviewAvatar] = useState<string | null>(null);
+  const avatarFileRef = useRef<File | null>(null);
   const [isFriendRequestSent, setIsFriendRequestSent] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const accessToken = localStorage.getItem("token");
+  useEffect(() => {
+    if (!accessToken) {
+      router.push("/login");
+    }
+  }, []);
 
   // Get user info
   const fetcher = (url: string) => fetch(url, {
@@ -56,24 +63,29 @@ export default function ProfilePage({ userID = "US1b80" }: ProfilePageProps) {
     if (userData) {
       setUserEdit({ ...userData });
     }
+
+    console.log(`Currently saved image file: ${avatarFileRef.current}`);
+    console.log(`Preview avatar: ${previewAvatar}`);
+
     setPreviewAvatar(null);
+    avatarFileRef.current = null;
     setStep(1);
     setShowEditModal(true);
   }
 
   const handleAvatarUpload = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
-
     // Check valid image
-    if (!file.type.startsWith("image/")) {
+    if (!file || !file.type.startsWith("image/")) {
       return;
     }
 
-    if (file) {
-      const previewUrl = URL.createObjectURL(file);
-      setPreviewAvatar(previewUrl);
-    }
+    avatarFileRef.current = file;
+    const previewUrl = URL.createObjectURL(file);
+    setPreviewAvatar(previewUrl);
+
+    console.log(`Currently saved image file: ${avatarFileRef.current}`);
+    console.log(`Preview avatar: ${previewAvatar}`);
   }
 
   const handleNameChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -101,37 +113,61 @@ export default function ProfilePage({ userID = "US1b80" }: ProfilePageProps) {
   }
 
   const handleSaveBtn = async () => {
-    const payload = {
-      name: userEdit?.name,
-      gender: userEdit?.gender,
-      description: userEdit?.description
-    }
+    setIsSaving(true);
 
-    console.log(payload);
     try {
-      const res = await fetch(
+      // Cập nhật avatar nếu có
+      const fileUpdate = avatarFileRef.current;
+      if (fileUpdate) {
+        const formData = new FormData();
+        formData.append("file", fileUpdate);
+
+        console.log(`Update user (avatar) object: ${formData}`);
+        const avatarRes = await fetch(
+          `https://aitripsystem-api.onrender.com/api/v1/users/${userID}/avatar`,
+          {
+            method: "PATCH",
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+            body: formData,
+          }
+        );
+
+        if (!avatarRes.ok) throw new Error("Failed to upload avatar");
+        console.log("Cập nhật ảnh đại diện thành công");
+      }
+
+      // Cập nhật thông tin khác
+      const payload = {
+        name: userEdit?.name,
+        gender: userEdit?.gender,
+        description: userEdit?.description,
+      };
+
+      console.log(`Update user info object: ${payload}`);
+      const infoRes = await fetch(
         `https://aitripsystem-api.onrender.com/api/v1/users/${userID}`,
         {
-          method: 'PUT',
+          method: "PUT",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
             Authorization: `Bearer ${accessToken}`,
           },
           body: JSON.stringify(payload),
         }
       );
 
-      if (!res.ok) throw new Error('Failed to update user info.');
+      if (!infoRes.ok) throw new Error("Failed to update user info.");
+      console.log("Cập nhật dữ liệu người dùng thành công");
 
-      // Revalidate SWR to fetch the updated data
       await mutate(
         `https://aitripsystem-api.onrender.com/api/v1/users/idUser?lookup=${userID}`
       );
-
-      console.log("Cập nhật dữ liệu người dùng thành công");
     } catch (error) {
-      console.error("Error updating user info:", error);
+      console.error("Lỗi khi lưu dữ liệu:", error);
     } finally {
+      setIsSaving(false);
       setShowEditModal(false);
       setStep(1);
     }
@@ -407,8 +443,15 @@ export default function ProfilePage({ userID = "US1b80" }: ProfilePageProps) {
                   <div className="flex p-4 m-auto">
                     <button
                       onClick={handleSaveBtn}
-                      className="w-72 md:w-84 h-12 text-md font-bold rounded-4xl cursor-pointer text-white bg-gray-800 hover:bg-gray-900 dark:bg-gray-800 dark:hover:bg-gray-700 border-2 border-black dark:border-gray-600 transition-colors duration-200">
-                      Save
+                      disabled={isSaving}
+                      className={`w-72 md:w-84 h-12 text-md font-bold rounded-4xl cursor-pointer text-white bg-gray-800 hover:bg-gray-900 dark:bg-gray-800 dark:hover:bg-gray-700 border-2 border-black dark:border-gray-600 transition-colors duration-200 ${isSaving ? "opacity-50 cursor-not-allowed" : ""}`}>
+                      {isSaving ? (
+                        <>
+                          Saving...
+                        </>
+                      ) : (
+                        "Save"
+                      )}
                     </button>
                   </div>
                 </>
