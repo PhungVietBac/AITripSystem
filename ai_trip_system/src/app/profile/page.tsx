@@ -1,23 +1,31 @@
 'use client'
 import { FaChevronLeft, FaPen, FaXmark, FaCamera, FaUserCheck } from "react-icons/fa6";
 import { useRouter } from "next/navigation";
-import { useState, useRef, ChangeEvent, useEffect } from "react";
+import { useState, useRef, useEffect, ChangeEvent } from "react";
 import Image from "next/image";
 import useSWR, { mutate } from "swr"
+import { ToastContainer, Slide, toast } from "react-toastify";
 
 interface ProfilePageProps {
   userID: string;
 }
 
-export default function ProfilePage({ userID = "US1b80" }: ProfilePageProps) {
+export default function ProfilePage({ userID = "US7403" }: ProfilePageProps) {
   const [showEditModal, setShowEditModal] = useState(false);
   const [userEdit, setUserEdit] = useState<UserBase>();
   const [step, setStep] = useState(1);
   const router = useRouter();
   const [previewAvatar, setPreviewAvatar] = useState<string | null>(null);
+  const avatarFileRef = useRef<File | null>(null);
   const [isFriendRequestSent, setIsFriendRequestSent] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const accessToken = localStorage.getItem("token");
+  useEffect(() => {
+    if (!accessToken) {
+      router.push("/login");
+    }
+  }, []);
 
   // Get user info
   const fetcher = (url: string) => fetch(url, {
@@ -33,14 +41,30 @@ export default function ProfilePage({ userID = "US1b80" }: ProfilePageProps) {
       revalidateOnReconnect: false
     }
   )
-  console.log(userData);
-  if (error) return <div>Failed to load user data: {error.message}</div>
-  if (isLoading) return <div>Loading...</div>
+
+  // if (error) return <div>Failed to load user data: {error.message}</div>
+  // if (isLoading) return <div>Loading...</div>
+  useEffect(() => {
+    if (error) {
+      toast.error("Lấy dữ liệu không thành công");
+    }
+  }, [error]);
+
+  useEffect(() => {
+    if (isLoading) {
+      toast.warning("Đang tải dữ liệu người dùng");
+    }
+  }, [isLoading]);
+  useEffect(() => {
+    if (userData) {
+      toast.success("Lấy dữ liệu thành công");
+    }
+  }, [userData]);
 
   const genderOptions = [
-    { label: "Male", value: 0 },
-    { label: "Female", value: 1 },
-    { label: "Other", value: 2 }
+    { label: "Nam", value: 0 },
+    { label: "Nữ", value: 1 },
+    { label: "Khác", value: 2 }
   ]
 
   const renderGender = () => {
@@ -56,24 +80,23 @@ export default function ProfilePage({ userID = "US1b80" }: ProfilePageProps) {
     if (userData) {
       setUserEdit({ ...userData });
     }
+
     setPreviewAvatar(null);
+    avatarFileRef.current = null;
     setStep(1);
     setShowEditModal(true);
   }
 
   const handleAvatarUpload = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
-
     // Check valid image
-    if (!file.type.startsWith("image/")) {
+    if (!file || !file.type.startsWith("image/")) {
       return;
     }
 
-    if (file) {
-      const previewUrl = URL.createObjectURL(file);
-      setPreviewAvatar(previewUrl);
-    }
+    avatarFileRef.current = file;
+    const previewUrl = URL.createObjectURL(file);
+    setPreviewAvatar(previewUrl);
   }
 
   const handleNameChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -101,37 +124,58 @@ export default function ProfilePage({ userID = "US1b80" }: ProfilePageProps) {
   }
 
   const handleSaveBtn = async () => {
-    const payload = {
-      name: userEdit?.name,
-      gender: userEdit?.gender,
-      description: userEdit?.description
-    }
+    setIsSaving(true);
 
-    console.log(payload);
     try {
-      const res = await fetch(
+      // Cập nhật avatar nếu có
+      const fileUpdate = avatarFileRef.current;
+      if (fileUpdate) {
+        const formData = new FormData();
+        formData.append("file", fileUpdate);
+
+        const avatarRes = await fetch(
+          `https://aitripsystem-api.onrender.com/api/v1/users/${userID}/avatar`,
+          {
+            method: "PATCH",
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+            body: formData,
+          }
+        );
+
+        if (!avatarRes.ok) throw new Error("Failed to upload avatar");
+      }
+
+      // Cập nhật thông tin khác
+      const payload = {
+        name: userEdit?.name,
+        gender: userEdit?.gender,
+        description: userEdit?.description,
+      };
+
+      const infoRes = await fetch(
         `https://aitripsystem-api.onrender.com/api/v1/users/${userID}`,
         {
-          method: 'PUT',
+          method: "PUT",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
             Authorization: `Bearer ${accessToken}`,
           },
           body: JSON.stringify(payload),
         }
       );
 
-      if (!res.ok) throw new Error('Failed to update user info.');
+      if (!infoRes.ok) throw new Error("Failed to update user info.");
+      toast.success("Cập nhật dữ liệu thành công");
 
-      // Revalidate SWR to fetch the updated data
       await mutate(
         `https://aitripsystem-api.onrender.com/api/v1/users/idUser?lookup=${userID}`
       );
-
-      console.log("Cập nhật dữ liệu người dùng thành công");
     } catch (error) {
-      console.error("Error updating user info:", error);
+      console.error("Lỗi khi lưu dữ liệu:", error);
     } finally {
+      setIsSaving(false);
       setShowEditModal(false);
       setStep(1);
     }
@@ -182,7 +226,7 @@ export default function ProfilePage({ userID = "US1b80" }: ProfilePageProps) {
                 onClick={handleFriendRequestSent}
                 className="flex items-center justify-center w-32 h-12 font-bold rounded-lg text-md text-white bg-gray-800 hover:bg-gray-900 dark:bg-gray-800 dark:hover:bg-gray-700 dark:border-gray-700 cursor-pointer transition-colors duration-200"
               >
-                {isFriendRequestSent ? (<><FaUserCheck className="mr-2" /> Friend</>) : ("Add friend")}
+                {isFriendRequestSent ? (<><FaUserCheck className="mr-2" /> Bạn bè</>) : ("Thêm bạn")}
               </button>
             </div>
           </div>
@@ -193,18 +237,18 @@ export default function ProfilePage({ userID = "US1b80" }: ProfilePageProps) {
             >
               <li className="py-3 sm:py-4">
                 <div className="text-justify">
-                  <div className="font-bold text-lg">About me:</div>
+                  <div className="font-bold text-lg">Về bản thân:</div>
                   {userData?.description}
                 </div>
               </li>
               <li className="py-3 sm:py-4">
                 <div>
-                  <span className="font-bold text-lg">Phone number:</span> {userData?.phonenumber}
+                  <span className="font-bold text-lg">Liên hệ:</span> {userData?.phonenumber}
                 </div>
               </li>
               <li className="py-3 sm:py-4">
                 <div>
-                  <span className="font-bold text-lg">Gender:</span> {renderGender()}
+                  <span className="font-bold text-lg">Giới tính:</span> {renderGender()}
                 </div>
               </li>
             </ul>
@@ -222,7 +266,7 @@ export default function ProfilePage({ userID = "US1b80" }: ProfilePageProps) {
                 step === 1 &&
                 <>
                   <div className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-600">
-                    <h3 className="text-2xl font-semibold text-gray-900 dark:text-white">Choose your profile picture</h3>
+                    <h3 className="text-2xl font-semibold text-gray-900 dark:text-white">Chọn ảnh đại diện</h3>
                     <button
                       onClick={() => setShowEditModal(false)}
                       className="text-xl p-2 rounded-full hover:bg-gray-300 dark:hover:bg-gray-700 dark:text-white transition-colors duration-200 cursor-pointer">
@@ -262,7 +306,7 @@ export default function ProfilePage({ userID = "US1b80" }: ProfilePageProps) {
                       onClick={() => setStep(prev => prev + 1)}
                       className="w-full h-12 text-md font-bold rounded-4xl cursor-pointer text-white bg-gray-800 hover:bg-gray-900 dark:bg-gray-800 dark:hover:bg-gray-700 border-2 border-black dark:border-gray-600 transition-colors duration-200"
                     >
-                      Next
+                      Tiếp theo
                     </button>
                   </div>
                 </>
@@ -278,7 +322,7 @@ export default function ProfilePage({ userID = "US1b80" }: ProfilePageProps) {
                       className="p-2 mr-2 rounded-full hover:bg-gray-300 dark:hover:bg-gray-700 dark:text-white transition-colors duration-200 cursor-pointer">
                       <FaChevronLeft />
                     </button>
-                    <h3 className="text-2xl font-semibold text-gray-900 dark:text-white">Change your name?</h3>
+                    <h3 className="text-2xl font-semibold text-gray-900 dark:text-white">Cập nhật tên hiển thị</h3>
                     <button
                       onClick={() => setShowEditModal(false)}
                       className="text-xl p-2 ml-auto rounded-full hover:bg-gray-300 dark:hover:bg-gray-700 dark:text-white transition-colors duration-200 cursor-pointer">
@@ -292,7 +336,7 @@ export default function ProfilePage({ userID = "US1b80" }: ProfilePageProps) {
                       value={userEdit?.name}
                       className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                       onChange={handleNameChange}
-                      placeholder="Your name" />
+                      placeholder="Tên của bạn" />
                   </div>
 
                   <div className="flex p-4 mt-auto">
@@ -300,7 +344,7 @@ export default function ProfilePage({ userID = "US1b80" }: ProfilePageProps) {
                       onClick={() => setStep(prev => prev + 1)}
                       className="w-full h-12 text-md font-bold rounded-4xl cursor-pointer text-white bg-gray-800 hover:bg-gray-900 dark:bg-gray-800 dark:hover:bg-gray-700 border-2 border-black dark:border-gray-600 transition-colors duration-200"
                     >
-                      Next
+                      Tiếp theo
                     </button>
                   </div>
                 </>
@@ -316,7 +360,7 @@ export default function ProfilePage({ userID = "US1b80" }: ProfilePageProps) {
                       className="p-2 mr-2 rounded-full hover:bg-gray-300 dark:hover:bg-gray-700 dark:text-white transition-colors duration-200 cursor-pointer">
                       <FaChevronLeft />
                     </button>
-                    <h3 className="text-2xl font-semibold text-gray-900 dark:text-white">What's your gender?</h3>
+                    <h3 className="text-2xl font-semibold text-gray-900 dark:text-white">Chọn giới tính</h3>
                     <button
                       onClick={() => setShowEditModal(false)}
                       className="text-xl p-2 ml-auto rounded-full hover:bg-gray-300 dark:hover:bg-gray-700 dark:text-white transition-colors duration-200 cursor-pointer">
@@ -341,7 +385,7 @@ export default function ProfilePage({ userID = "US1b80" }: ProfilePageProps) {
                       onClick={() => setStep(prev => prev + 1)}
                       className="w-full h-12 text-md font-bold rounded-4xl cursor-pointer text-white bg-gray-800 hover:bg-gray-900 dark:bg-gray-800 dark:hover:bg-gray-700 border-2 border-black dark:border-gray-600 transition-colors duration-200"
                     >
-                      Next
+                      Tiếp theo
                     </button>
                   </div>
                 </>
@@ -357,7 +401,7 @@ export default function ProfilePage({ userID = "US1b80" }: ProfilePageProps) {
                       className="p-2 mr-2 rounded-full hover:bg-gray-300 dark:hover:bg-gray-700 dark:text-white transition-colors duration-200 cursor-pointer">
                       <FaChevronLeft />
                     </button>
-                    <h3 className="text-2xl font-semibold text-gray-900 dark:text-white">About you</h3>
+                    <h3 className="text-2xl font-semibold text-gray-900 dark:text-white">Giới thiệu bản thân</h3>
                     <button
                       onClick={() => { setShowEditModal(false); setStep(1) }}
                       className="text-xl p-2 ml-auto rounded-full hover:bg-gray-300 dark:hover:bg-gray-700 dark:text-white transition-colors duration-200 cursor-pointer">
@@ -368,7 +412,7 @@ export default function ProfilePage({ userID = "US1b80" }: ProfilePageProps) {
                   <div className="p-4 text-gray-700 dark:text-white">
                     <textarea
                       rows={6}
-                      placeholder="Write your bio here..."
+                      placeholder="Viết mô tả tại đây..."
                       value={userEdit?.description ?? ""}
                       onChange={handleDescriptionChange}
                       className="resize-none w-full p-2.5 text-sm rounded-lg border text-gray-900 bg-gray-50 border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 dark:focus:ring-blue-500 dark:focus:border-blue-500"
@@ -380,7 +424,7 @@ export default function ProfilePage({ userID = "US1b80" }: ProfilePageProps) {
                       onClick={() => setStep(prev => prev + 1)}
                       className="w-full h-12 text-md font-bold rounded-4xl cursor-pointer text-white bg-gray-800 hover:bg-gray-900 dark:bg-gray-800 dark:hover:bg-gray-700 border-2 border-black dark:border-gray-600 transition-colors duration-200"
                     >
-                      Next
+                      Tiếp theo
                     </button>
                   </div>
                 </>
@@ -396,7 +440,7 @@ export default function ProfilePage({ userID = "US1b80" }: ProfilePageProps) {
                       className="p-2 mr-2 rounded-full hover:bg-gray-300 dark:hover:bg-gray-700 dark:text-white transition-colors duration-200 cursor-pointer">
                       <FaChevronLeft />
                     </button>
-                    <h3 className="text-2xl font-semibold text-gray-900 dark:text-white">Click to save updates</h3>
+                    <h3 className="text-2xl font-semibold text-gray-900 dark:text-white">Lưu thay đổi</h3>
                     <button
                       onClick={() => { setShowEditModal(false); setStep(1) }}
                       className="text-xl p-2 ml-auto rounded-full hover:bg-gray-300 dark:hover:bg-gray-700 dark:text-white transition-colors duration-200 cursor-pointer">
@@ -407,8 +451,13 @@ export default function ProfilePage({ userID = "US1b80" }: ProfilePageProps) {
                   <div className="flex p-4 m-auto">
                     <button
                       onClick={handleSaveBtn}
-                      className="w-72 md:w-84 h-12 text-md font-bold rounded-4xl cursor-pointer text-white bg-gray-800 hover:bg-gray-900 dark:bg-gray-800 dark:hover:bg-gray-700 border-2 border-black dark:border-gray-600 transition-colors duration-200">
-                      Save
+                      disabled={isSaving}
+                      className={`w-72 md:w-84 h-12 text-md font-bold rounded-4xl cursor-pointer text-white bg-gray-800 hover:bg-gray-900 dark:bg-gray-800 dark:hover:bg-gray-700 border-2 border-black dark:border-gray-600 transition-colors duration-200 ${isSaving ? "opacity-50 cursor-not-allowed" : ""}`}>
+                      {isSaving ? (
+                        "Lưu thay đổi..."
+                      ) : (
+                        "Xác nhận"
+                      )}
                     </button>
                   </div>
                 </>
@@ -417,6 +466,19 @@ export default function ProfilePage({ userID = "US1b80" }: ProfilePageProps) {
           </div>
         )
       }
+      <ToastContainer
+        position="bottom-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+        transition={Slide}
+      />
     </div>
   );
 }
