@@ -152,7 +152,7 @@ const Map = () => {
 
       <div
         className="absolute"
-        style={{ top: "70%", left: "90%" }}
+        style={{ top: "70%", left: "50%" }}
         onMouseEnter={() => setHoveredLocation("post-office")}
         onMouseLeave={() => setHoveredLocation(null)}
       >
