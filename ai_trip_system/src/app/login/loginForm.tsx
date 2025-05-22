@@ -3,7 +3,7 @@
 import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { setCookie } from 'cookies-next';
+import { useAuth } from '@/context/AuthContext';
 
 export default function LoginForm() {
     const [username, setUsername] = useState('');
@@ -11,6 +11,7 @@ export default function LoginForm() {
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const router = useRouter();
+    const { login } = useAuth();
 
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -40,12 +41,13 @@ export default function LoginForm() {
 
             const data = await response.json();
 
-            // Store token in cookie
+            // Store token in cookie and update auth context
             if (data.access_token) {
-                setCookie('token', data.access_token, { maxAge: 60 * 60 * 24 }); // 1 day
-                
-                // Thay vì chuyển hướng bằng router.push, sử dụng window.location để reload trang
-                window.location.href = '/home';
+                // Use the login function from auth context
+                login(data.access_token, username);
+
+                // Redirect to home page using router
+                router.push('/home');
             } else {
                 throw new Error('Invalid login credentials.');
             }
