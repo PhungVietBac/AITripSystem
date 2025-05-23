@@ -1,8 +1,7 @@
 "use client";
-import SearchForm from "../../components/SearchForm";
-import FriendsList from "../../components/FriendsList";
-import DestinationCards from "../../components/DestinationCards";
 import dynamic from "next/dynamic";
+import ChatHistory from "../../components/ChatHistory";
+import ChatInterface from "../../components/ChatInterface";
 
 const MapView = dynamic(() => import("@/components/Map"), {
   ssr: false,
@@ -13,27 +12,27 @@ const Home = () => {
     <div className="min-h-screen flex flex-col">
       <main className="flex-grow">
         <div className="w-full px-8 py-8">
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            {/* Main content */}
-            <div className="lg:col-span-3 space-y-6">
-              <div className="text-center">
-                <h1 className="text-4xl font-lobster bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 text-transparent bg-clip-text">
-                  Chào mừng bạn đến với TravelGo! 🧳
-                </h1>
-                <p className="text-gray-600 mt-2 text-lg italic">
-                  Khám phá những điểm đến tuyệt vời và lên kế hoạch cho chuyến
-                  hành trình tiếp theo của bạn.
-                </p>
-              </div>
-
-              <MapView />
-              <SearchForm />
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* Lịch sử trò chuyện (bên trái) */}
+            <div className="lg:col-span-3">
+              <ChatHistory />
             </div>
 
-            {/* Sidebar */}
-            <div className="space-y-6">
-              <FriendsList />
-              <DestinationCards />
+            {/* Khung chat (ở giữa) */}
+            <div className="lg:col-span-5">
+              <ChatInterface />
+            </div>
+
+            {/* Bản đồ (bên phải) */}
+            <div className="lg:col-span-4">
+              <div className="h-[600px] bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
+                <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
+                  <h2 className="text-lg font-semibold">Bản đồ</h2>
+                </div>
+                <div className="h-[550px]">
+                  <MapView />
+                </div>
+              </div>
             </div>
           </div>
         </div>

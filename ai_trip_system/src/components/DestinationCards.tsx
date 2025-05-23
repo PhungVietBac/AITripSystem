@@ -7,25 +7,25 @@ const DestinationCards = () => {
       id: 1,
       name: "Vịnh Hạ Long",
       location: "Quảng Ninh",
-      image: "/destinations/halong.jpg",
+      image: "/images/destinations/halong.jpg",
     },
     {
       id: 2,
       name: "Phố cổ Hội An",
       location: "Quảng Nam",
-      image: "/destinations/hoian.jpg",
+      image: "/images/destinations/hoian.jpg",
     },
     {
       id: 3,
       name: "Sapa",
       location: "Lào Cai",
-      image: "/destinations/sapa.jpg",
+      image: "/images/destinations/sapa.jpg",
     },
     {
       id: 4,
       name: "Biển Nha Trang",
       location: "Khánh Hòa",
-      image: "/destinations/nhatrang.jpg",
+      image: "/images/destinations/nhatrang.jpg",
     },
   ];
 
@@ -52,7 +52,7 @@ const DestinationCards = () => {
                 className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                 onError={(e) => {
                   // Fallback image if the main image fails to load
-                  e.currentTarget.src = "/destinations/default.jpg";
+                  e.currentTarget.src = "/images/destinations/default.jpg";
                 }}
               />
             </div>

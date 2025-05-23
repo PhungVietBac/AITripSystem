@@ -1,5 +1,14 @@
 @import "tailwindcss";
 
+/* Custom Font */
+@font-face {
+  font-family: 'PlaywriteDKLoopet';
+  src: url('/fonts/PlaywriteDKLoopet/PlaywriteDKLoopet-VariableFont_wght.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* Floating animations */
 @keyframes float-slow {
   0% {
