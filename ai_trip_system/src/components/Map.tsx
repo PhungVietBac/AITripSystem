@@ -4,10 +4,7 @@ import Image from "next/image";
 import {
   FaUtensils,
   FaHotel,
-  FaCamera,
   FaLandmark,
-  FaRoute,
-  FaSearch,
   FaUmbrellaBeach,
   FaStar,
 } from "react-icons/fa";
@@ -43,13 +40,13 @@ const VisitIconPopup = () => {
 const Map = () => {
   const [hoveredLocation, setHoveredLocation] = useState<string | null>(null);
   return (
-    <div className="map-container relative">
+    <div className="map-container relative h-full">
       <MapContainer
         center={[10.87, 106.803]}
         zoom={16}
         scrollWheelZoom={true}
-        style={{ height: "500px", width: "100%" }}
-        className="map-view rounded-lg mt-4 z-0"
+        style={{ height: "100%", width: "100%" }}
+        className="map-view z-0"
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors'
@@ -185,23 +182,23 @@ const Map = () => {
       </div>
 
       {/* Chú thích bản đồ */}
-      <div className="absolute bottom-4 left-4 bg-white p-3 rounded-lg shadow-md">
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center gap-2">
-            <div className="w-5 h-5 rounded-full bg-red-500"></div>
-            <span className="text-sm text-gray-700">Nhà hàng</span>
+      <div className="absolute bottom-4 right-4 bg-white p-2 rounded-lg shadow-md">
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-1">
+            <div className="w-4 h-4 rounded-full bg-red-500"></div>
+            <span className="text-xs text-gray-700">Nhà hàng</span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-5 h-5 rounded-full bg-blue-500"></div>
-            <span className="text-sm text-gray-700">Khách sạn</span>
+          <div className="flex items-center gap-1">
+            <div className="w-4 h-4 rounded-full bg-blue-500"></div>
+            <span className="text-xs text-gray-700">Khách sạn</span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-5 h-5 rounded-full bg-green-500"></div>
-            <span className="text-sm text-gray-700">Đi chơi</span>
+          <div className="flex items-center gap-1">
+            <div className="w-4 h-4 rounded-full bg-green-500"></div>
+            <span className="text-xs text-gray-700">Đi chơi</span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-5 h-5 rounded-full bg-yellow-500"></div>
-            <span className="text-sm text-gray-700">Tham quan</span>
+          <div className="flex items-center gap-1">
+            <div className="w-4 h-4 rounded-full bg-yellow-500"></div>
+            <span className="text-xs text-gray-700">Tham quan</span>
           </div>
         </div>
       </div>

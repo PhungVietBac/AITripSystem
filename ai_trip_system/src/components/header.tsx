@@ -11,6 +11,8 @@ const Header = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [scrolled, setScrolled] = useState(false);
+  const [activeSection, setActiveSection] = useState<string | null>(null);
+  const [showScrollIndicator, setShowScrollIndicator] = useState(true);
 
   // Use the auth context for login status
   const { isLoggedIn, logout } = useAuth();
@@ -26,6 +28,9 @@ const Header = () => {
       e.preventDefault();
       e.stopPropagation();
     }
+
+    // Set the active section
+    setActiveSection(id);
 
     // Find the element and scroll to it
     const element = document.getElementById(id);
@@ -58,6 +63,8 @@ const Header = () => {
     }, 10);
   };
 
+
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -77,14 +84,49 @@ const Header = () => {
     };
   }, [isDropdownOpen]);
 
-  // Handle scroll effect for header shadow
+  // Handle scroll effect for header shadow and active section
   useEffect(() => {
     const handleScroll = () => {
+      const scrollY = window.scrollY;
+
       // Add shadow when scrolled down (e.g., 50px from top)
-      if (window.scrollY > 50) {
+      if (scrollY > 50) {
         setScrolled(true);
       } else {
         setScrolled(false);
+      }
+
+      // Update active section based on scroll position
+      const aboutSection = document.getElementById('about');
+      const featuresSection = document.getElementById('features');
+      const contactSection = document.getElementById('contact');
+
+      const scrollPosition = scrollY + 100; // Add offset for header height
+
+      if (aboutSection && featuresSection && contactSection) {
+        // Hide scroll indicator when we've scrolled deeper into the contact section
+        if (scrollPosition >= contactSection.offsetTop + 300) { // Add 300px offset to hide it later
+          setShowScrollIndicator(false);
+        } else {
+          setShowScrollIndicator(true);
+        }
+
+        // Update active section
+        if (
+          scrollPosition >= aboutSection.offsetTop &&
+          scrollPosition < featuresSection.offsetTop
+        ) {
+          setActiveSection('about');
+        } else if (
+          scrollPosition >= featuresSection.offsetTop &&
+          scrollPosition < contactSection.offsetTop
+        ) {
+          setActiveSection('features');
+        } else if (scrollPosition >= contactSection.offsetTop) {
+          setActiveSection('contact');
+        } else {
+          setActiveSection(null);
+        }
       }
     };
 
@@ -100,6 +142,22 @@ const Header = () => {
 
   return (
     <div className="w-full">
+      {/* Scroll down indicator - only shows when not at footer */}
+      {showScrollIndicator && (
+        <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-40 animate-bounce">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-10 w-10"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="#FFD700"
+            strokeWidth={2}
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+          </svg>
+        </div>
+      )}
+
       <header className={`bg-gradient-to-r from-[#000080] to-[#00BFFF] flex items-center h-[80px] fixed top-0 left-0 right-0 z-50 ${scrolled ? 'shadow-[0_4px_10px_rgba(0,0,0,0.5)] border-b border-black/30' : ''}`}>
         {/* Left side - Logo */}
         <div className="flex justify-start items-center p-4 gap-3 w-1/4">
@@ -113,7 +171,7 @@ const Header = () => {
               className="cursor-pointer"
             >
               <Image
-                src="/logo.png"
+                src="/images/logo.png"
                 width={70}
                 height={70}
                 alt="logo"
@@ -131,7 +189,7 @@ const Header = () => {
               }}
               className="cursor-pointer"
             >
-              <span className="text-white text-4xl font-[var(--font-playwrite)] tracking-wide">TravelGO!</span>
+              <span className="text-[#FFD700] text-4xl font-['PlaywriteDKLoopet'] tracking-wide">TravelGO!</span>
             </div>
           </div>
         </div>
@@ -143,30 +201,30 @@ const Header = () => {
             <div className="hidden md:flex items-center justify-center mx-auto gap-20">
               <button
                 onClick={(e) => scrollToSection('about', e)}
-                className="flex items-center no-underline text-white hover:opacity-70 transition-opacity duration-300"
+                className="flex items-center no-underline transition-all duration-300"
                 aria-label="About"
               >
-                <span className="text-lg text-white font-medium">
+                <span className={`text-lg font-medium ${activeSection === 'about' ? 'text-[#FFD700]' : 'text-white hover:opacity-70'}`}>
                   About
                 </span>
               </button>
 
               <button
                 onClick={(e) => scrollToSection('features', e)}
-                className="flex items-center no-underline text-white hover:opacity-70 transition-opacity duration-300"
+                className="flex items-center no-underline transition-all duration-300"
                 aria-label="Features"
               >
-                <span className="text-lg text-white font-medium">
+                <span className={`text-lg font-medium ${activeSection === 'features' ? 'text-[#FFD700]' : 'text-white hover:opacity-70'}`}>
                   Features
                 </span>
               </button>
 
               <button
                 onClick={(e) => scrollToSection('contact', e)}
-                className="flex items-center no-underline text-white hover:opacity-70 transition-opacity duration-300"
+                className="flex items-center no-underline transition-all duration-300"
                 aria-label="Contact"
               >
-                <span className="text-lg text-white font-medium">
+                <span className={`text-lg font-medium ${activeSection === 'contact' ? 'text-[#FFD700]' : 'text-white hover:opacity-70'}`}>
                   Contact
                 </span>
               </button>
@@ -229,7 +287,7 @@ const Header = () => {
                   e.stopPropagation();
                   router.push("/login");
                 }}
-                className="flex items-center no-underline text-white hover:opacity-70 transition-opacity duration-300 bg-transparent border border-white rounded-md px-5 py-2 cursor-pointer"
+                className="flex items-center no-underline text-black bg-[#FFD700] border-2 border-transparent rounded-md px-5 py-2 cursor-pointer transition-all duration-300 hover:bg-white hover:border-[#FFD700]"
                 aria-label="Login"
               >
                 <span className="text-base font-medium">
@@ -243,7 +301,7 @@ const Header = () => {
                   e.stopPropagation();
                   router.push("/register");
                 }}
-                className="flex items-center no-underline text-white hover:opacity-90 transition-opacity duration-300 bg-[#4B3DB5] rounded-md px-5 py-2 cursor-pointer"
+                className="flex items-center no-underline text-black bg-[#FFD700] border-2 border-transparent rounded-md px-5 py-2 cursor-pointer transition-all duration-300 hover:bg-white hover:border-[#FFD700]"
                 aria-label="Sign Up"
               >
                 <span className="text-base font-medium">
@@ -265,7 +323,7 @@ const Header = () => {
                 className="flex items-center no-underline text-white hover:opacity-70 transition-opacity duration-300 bg-transparent border border-white rounded-md px-5 py-2 cursor-pointer"
                 aria-label="Profile"
               >
-                <Image src="/profile.svg" width={24} height={24} alt="profile" className="mr-2" />
+                <Image src="/images/profile.svg" width={24} height={24} alt="profile" className="mr-2" />
                 <span className="text-base font-medium">
                   Profile
                 </span>
@@ -306,7 +364,7 @@ const Header = () => {
               aria-expanded={isDropdownOpen}
               aria-label="Menu"
             >
-              <Image src="/hamburger.svg" width={28} height={28} alt="menu" />
+              <Image src="/images/hamburger.svg" width={28} height={28} alt="menu" />
             </div>
             <div
               className={`absolute top-[80px] right-0 bg-white min-w-[200px] shadow-lg rounded-md z-50 opacity-0 transition-all duration-300 transform -translate-y-2 ${
@@ -320,7 +378,7 @@ const Header = () => {
                 {!isLoggedIn && (
                   <>
                     <button
-                      className="flex items-center text-black p-3 no-underline hover:bg-gray-200 w-full text-left"
+                      className={`flex items-center p-3 no-underline w-full text-left transition-all duration-300 ${activeSection === 'about' ? 'bg-[#FFD700] text-black' : 'text-black hover:bg-gray-200'}`}
                       onClick={(e) => {
                         // Close dropdown first
                         setIsDropdownOpen(false);
@@ -333,7 +391,7 @@ const Header = () => {
                       About
                     </button>
                     <button
-                      className="flex items-center text-black p-3 no-underline hover:bg-gray-200 w-full text-left"
+                      className={`flex items-center p-3 no-underline w-full text-left transition-all duration-300 ${activeSection === 'features' ? 'bg-[#FFD700] text-black' : 'text-black hover:bg-gray-200'}`}
                       onClick={(e) => {
                         // Close dropdown first
                         setIsDropdownOpen(false);
@@ -346,7 +404,7 @@ const Header = () => {
                       Features
                     </button>
                     <button
-                      className="flex items-center text-black p-3 no-underline hover:bg-gray-200 w-full text-left"
+                      className={`flex items-center p-3 no-underline w-full text-left transition-all duration-300 ${activeSection === 'contact' ? 'bg-[#FFD700] text-black' : 'text-black hover:bg-gray-200'}`}
                       onClick={(e) => {
                         // Close dropdown first
                         setIsDropdownOpen(false);
@@ -362,7 +420,7 @@ const Header = () => {
                     <Link
                       href="/login"
                       key="mobile-login"
-                      className="flex items-center text-black p-3 no-underline hover:bg-gray-200 w-full text-left"
+                      className="flex items-center text-black p-3 no-underline bg-[#FFD700] hover:bg-white hover:border-[#FFD700] hover:border-2 w-full text-left transition-all duration-300"
                       onClick={() => {
                         // Close dropdown first
                         setIsDropdownOpen(false);
@@ -375,7 +433,7 @@ const Header = () => {
                     <Link
                       href="/register"
                       key="mobile-signup"
-                      className="flex items-center text-white p-3 no-underline hover:bg-opacity-90 bg-[#4B3DB5] w-full text-left"
+                      className="flex items-center text-black p-3 no-underline bg-[#FFD700] hover:bg-white hover:border-[#FFD700] hover:border-2 w-full text-left transition-all duration-300"
                       onClick={() => {
                         // Close dropdown first
                         setIsDropdownOpen(false);
@@ -430,7 +488,7 @@ const Header = () => {
                     onClick={() => setIsDropdownOpen(false)}
                     prefetch={false}
                   >
-                    <Image src="/profile.svg" width={24} height={24} alt="profile" className="mr-2" />
+                    <Image src="/images/profile.svg" width={24} height={24} alt="profile" className="mr-2" />
                     Profile
                   </Link>
                 )}

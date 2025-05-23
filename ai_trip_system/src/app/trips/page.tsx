@@ -9,7 +9,7 @@ export default function MyTrips() {
   const router = useRouter();
   const { isLoggedIn } = useAuth();
   const [activeTab, setActiveTab] = useState('upcoming');
-  
+
   const [trips, setTrips] = useState({
     upcoming: [
       {
@@ -17,7 +17,7 @@ export default function MyTrips() {
         destination: 'Đà Lạt',
         startDate: '2024-07-15',
         endDate: '2024-07-20',
-        image: '/dalat.jpg',
+        image: '/images/dalat.jpg',
         status: 'confirmed',
       },
       {
@@ -25,7 +25,7 @@ export default function MyTrips() {
         destination: 'Phú Quốc',
         startDate: '2024-08-10',
         endDate: '2024-08-15',
-        image: '/phuquoc.jpg',
+        image: '/images/phuquoc.jpg',
         status: 'planning',
       },
     ],
@@ -35,7 +35,7 @@ export default function MyTrips() {
         destination: 'Hà Nội',
         startDate: '2024-01-05',
         endDate: '2024-01-10',
-        image: '/hanoi.jpg',
+        image: '/images/hanoi.jpg',
         status: 'completed',
       },
       {
@@ -43,7 +43,7 @@ export default function MyTrips() {
         destination: 'Đà Nẵng',
         startDate: '2023-11-20',
         endDate: '2023-11-25',
-        image: '/danang.jpg',
+        image: '/images/danang.jpg',
         status: 'completed',
       },
       {
@@ -51,7 +51,7 @@ export default function MyTrips() {
         destination: 'Nha Trang',
         startDate: '2023-09-15',
         endDate: '2023-09-20',
-        image: '/nhatrang.jpg',
+        image: '/images/nhatrang.jpg',
         status: 'completed',
       },
     ],
@@ -59,13 +59,13 @@ export default function MyTrips() {
       {
         id: 6,
         destination: 'Sapa',
-        image: '/sapa.jpg',
+        image: '/images/sapa.jpg',
         savedDate: '2024-05-01',
       },
       {
         id: 7,
         destination: 'Huế',
-        image: '/hue.jpg',
+        image: '/images/hue.jpg',
         savedDate: '2024-04-15',
       },
     ],

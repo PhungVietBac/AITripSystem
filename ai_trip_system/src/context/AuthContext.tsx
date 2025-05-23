@@ -2,6 +2,8 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { getCookie, setCookie, deleteCookie } from 'cookies-next';
+import { useSession, signIn, signOut } from 'next-auth/react';
+import { Session } from 'next-auth';
 
 // Define the shape of our context
 interface AuthContextType {
@@ -9,6 +11,8 @@ interface AuthContextType {
   username: string;
   login: (token: string, username: string) => void;
   logout: () => void;
+  socialLogin: (provider: string) => void;
+  session: Session | null;
 }
 
 // Create the context with a default value
@@ -17,14 +21,17 @@ const AuthContext = createContext<AuthContextType>({
   username: '',
   login: () => {},
   logout: () => {},
+  socialLogin: () => {},
+  session: null,
 });
 
 // Provider component
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [username, setUsername] = useState('');
+  const { data: session, status } = useSession();
 
-  // Simple login function
+  // Simple login function for traditional login
   const login = (token: string, username: string) => {
     // Set cookie
     setCookie('token', token);
@@ -38,7 +45,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUsername(username);
   };
 
-  // Simple logout function
+  // Function to handle social login
+  const socialLogin = (provider: string) => {
+    signIn(provider, { callbackUrl: '/home' });
+  };
+
+  // Logout function
   const logout = () => {
     // Clear cookie
     deleteCookie('token');
@@ -50,11 +62,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Update state
     setIsLoggedIn(false);
     setUsername('');
+
+    // Sign out from NextAuth
+    signOut({ callbackUrl: '/' });
   };
 
-  // Initialize state from localStorage on mount
+  // Initialize state from localStorage or session
   useEffect(() => {
-    // Check if we're in the browser
+    // First check NextAuth session
+    if (session && session.user) {
+      setIsLoggedIn(true);
+      setUsername(session.user.name || session.user.email || '');
+      return;
+    }
+
+    // If no NextAuth session, check localStorage (for traditional login)
     if (typeof window !== 'undefined') {
       const storedLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
       const storedUsername = localStorage.getItem('username') || '';
@@ -62,10 +84,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsLoggedIn(storedLoggedIn);
       setUsername(storedUsername);
     }
-  }, []);
+  }, [session]);
 
   return (
-    <AuthContext.Provider value={{ isLoggedIn, username, login, logout }}>
+    <AuthContext.Provider value={{
+      isLoggedIn,
+      username,
+      login,
+      logout,
+      socialLogin,
+      session
+    }}>
       {children}
     </AuthContext.Provider>
   );

@@ -14,14 +14,14 @@ export default function Dashboard() {
       destination: 'Đà Lạt',
       startDate: '2024-07-15',
       endDate: '2024-07-20',
-      image: '/dalat.jpg',
+      image: '/images/dalat.jpg',
     },
     {
       id: 2,
       destination: 'Phú Quốc',
       startDate: '2024-08-10',
       endDate: '2024-08-15',
-      image: '/phuquoc.jpg',
+      image: '/images/phuquoc.jpg',
     },
   ]);
 
@@ -68,7 +68,7 @@ export default function Dashboard() {
       <div className="mb-8">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-2xl font-bold text-gray-800">Chuyến đi sắp tới</h2>
-          <button 
+          <button
             onClick={() => router.push('/trips')}
             className="text-blue-600 hover:text-blue-800"
           >
@@ -91,7 +91,7 @@ export default function Dashboard() {
                 <p className="text-gray-600 mt-2">
                   {new Date(trip.startDate).toLocaleDateString('vi-VN')} - {new Date(trip.endDate).toLocaleDateString('vi-VN')}
                 </p>
-                <button 
+                <button
                   onClick={() => router.push(`/trips/${trip.id}`)}
                   className="mt-4 bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 transition-colors"
                 >
@@ -101,7 +101,7 @@ export default function Dashboard() {
             </div>
           ))}
           <div className="bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center p-6 h-full">
-            <button 
+            <button
               onClick={() => router.push('/trips/new')}
               className="text-blue-600 hover:text-blue-800 flex flex-col items-center"
             >
@@ -119,8 +119,8 @@ export default function Dashboard() {
         <h2 className="text-2xl font-bold text-gray-800 mb-4">Tìm kiếm gần đây</h2>
         <div className="flex flex-wrap gap-2">
           {recentSearches.map((search, index) => (
-            <div 
-              key={index} 
+            <div
+              key={index}
               className="bg-gray-100 rounded-full py-2 px-4 text-gray-700 hover:bg-gray-200 cursor-pointer"
               onClick={() => router.push(`/explore?q=${search}`)}
             >

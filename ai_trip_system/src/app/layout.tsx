@@ -4,8 +4,8 @@ import "@/styles/globals.css";
 import Header from "@/components/header";
 import Footer from "@/components/footer";
 import "leaflet/dist/leaflet.css";
-import { AuthProvider } from "@/context/AuthContext";
 import NoSSR from "@/components/NoSSR";
+import Providers from "@/components/Providers";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -38,7 +38,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${playwriteDKLoopet.variable} antialiased min-h-screen flex flex-col`}
       >
-        <AuthProvider>
+        <Providers>
           <NoSSR>
             <Header />
           </NoSSR>
@@ -46,7 +46,7 @@ export default function RootLayout({
             {children}
           </main>
           <Footer />
-        </AuthProvider>
+        </Providers>
       </body>
     </html>
   );
