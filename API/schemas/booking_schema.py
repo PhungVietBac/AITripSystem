@@ -4,7 +4,7 @@ from datetime import datetime
 class BookingBase(BaseModel):
     idPlace: str
     date: datetime
-    status: int = 0 #Pending, success, failed
+    status: str #Pending, success, failed
 
 class BookingResponse(BookingBase):
     idBooking: str
