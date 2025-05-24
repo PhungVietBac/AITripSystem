@@ -33,20 +33,17 @@ export default function RegisterForm() {
     setError("");
 
     try {
-      const response = await fetch(`https://aitripsystem-api.onrender.com/api/v1/register`, {
+      const response = await fetch(`https://aitripsystem-api.onrender.com/api/v1/register?username=${encodeURIComponent(formData.username)}&password=${encodeURIComponent(formData.password)}`, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
           "accept": "application/json",
-        },
-        body: JSON.stringify({
-          username: formData.username,
-          password: formData.password,
-        }),
+        }
       });
 
       if (!response.ok) {
-        throw new Error("Registration failed. Please try again. (Server do not response)");
+        const errorData = await response.json().catch(() => ({}));
+        console.error("Server error details:", errorData);
+        throw new Error(`Registration failed (${response.status}): ${errorData.detail || "Unknown error"}`);
       }
 
       const data = await response.json();
