@@ -63,12 +63,12 @@ const Modal: React.FC<ModalProps> = ({
   
   return (
     <div 
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 filter backdrop-blur-sm bg-white/30"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 filter backdrop-blur-sm bg-white/30 overflow-y-auto"
       onClick={handleOutsideClick}
     >
       <div 
         ref={modalRef}
-        className={`border-gray-700 bg-blue-100 my-auto filter backdrop-blur-sm p-4 overflow-hidden rounded-lg shadow-xl ${sizeClasses[size]} w-full transform transition-all duration-300 ease-in-out`}
+        className={`border-gray-700 bg-blue-100 my-8 filter backdrop-blur-sm p-4 overflow-hidden rounded-lg shadow-xl ${sizeClasses[size]} w-full transform transition-all duration-300 ease-in-out`}
       >
         <div className="flex justify-between items-center border-b p-4">
           <h3 className="font-semibold text-lg">{title}</h3>
@@ -80,7 +80,7 @@ const Modal: React.FC<ModalProps> = ({
           </button>
         </div>
         
-        <div className="p-6">
+        <div className="p-6 max-h-[70vh] overflow-y-auto">
           {children}
         </div>
       </div>
