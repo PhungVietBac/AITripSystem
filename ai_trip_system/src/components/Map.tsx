@@ -143,15 +143,7 @@ const Map = () => {
     );
   };
 
-  // Auto-request location when component mounts
-  useEffect(() => {
-    // Check permission and request location on component mount
-    const timer = setTimeout(() => {
-      checkLocationPermission();
-    }, 1000); // Small delay to ensure component is fully mounted
-
-    return () => clearTimeout(timer);
-  }, []); // Empty dependency array ensures this runs only once on mount
+  // No auto-request on mount - let user decide when to share location
 
   return (
     <div className="map-container relative h-full">
@@ -194,17 +186,19 @@ const Map = () => {
 
       {/* Map Controls */}
       <div className="absolute bottom-4 right-4 flex flex-col gap-2">
-        {/* Location button - always show to allow re-requesting location */}
+        {/* Location button - user clicks to request location */}
         <button
           onClick={checkLocationPermission}
           disabled={isLocating}
-          className="bg-white p-2 rounded-lg shadow-md hover:shadow-lg transition-shadow border border-gray-200 disabled:opacity-50"
-          title={isLocating ? "Đang lấy vị trí..." : "Yêu cầu vị trí hiện tại"}
+          className={`p-2 rounded-lg shadow-md hover:shadow-lg transition-shadow border border-gray-200 disabled:opacity-50 ${
+            userLocation ? 'bg-blue-500 text-white' : 'bg-white text-gray-600'
+          }`}
+          title={isLocating ? "Đang lấy vị trí..." : userLocation ? "Cập nhật vị trí" : "Chia sẻ vị trí của bạn"}
         >
           {isLocating ? (
-            <div className="w-4 h-4 border border-gray-600 border-t-transparent rounded-full animate-spin"></div>
+            <div className={`w-4 h-4 border ${userLocation ? 'border-white border-t-transparent' : 'border-gray-600 border-t-transparent'} rounded-full animate-spin`}></div>
           ) : (
-            <FaLocationArrow className="text-gray-600 w-4 h-4" />
+            <FaLocationArrow className="w-4 h-4" />
           )}
         </button>
 
@@ -234,7 +228,7 @@ const Map = () => {
           <div className="text-xs text-gray-500 mt-1">
             {userLocation
               ? 'Nhấp vào marker để xem chi tiết'
-              : 'Cho phép định vị để xem vị trí của bạn'
+              : 'Nhấp nút định vị để chia sẻ vị trí'
             }
           </div>
         </div>

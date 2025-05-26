@@ -3,73 +3,41 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import Image from 'next/image';
+import { FaMapMarkerAlt, FaUsers, FaCalendarAlt, FaDollarSign, FaPlane, FaHeart, FaRobot } from 'react-icons/fa';
 
-export default function MyTrips() {
+export default function AITripPlanner() {
   const router = useRouter();
   const { isLoggedIn } = useAuth();
-  const [activeTab, setActiveTab] = useState('upcoming');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [trips, setTrips] = useState({
-    upcoming: [
-      {
-        id: 1,
-        destination: 'Đà Lạt',
-        startDate: '2024-07-15',
-        endDate: '2024-07-20',
-        image: '/images/dalat.jpg',
-        status: 'confirmed',
-      },
-      {
-        id: 2,
-        destination: 'Phú Quốc',
-        startDate: '2024-08-10',
-        endDate: '2024-08-15',
-        image: '/images/phuquoc.jpg',
-        status: 'planning',
-      },
-    ],
-    past: [
-      {
-        id: 3,
-        destination: 'Hà Nội',
-        startDate: '2024-01-05',
-        endDate: '2024-01-10',
-        image: '/images/hanoi.jpg',
-        status: 'completed',
-      },
-      {
-        id: 4,
-        destination: 'Đà Nẵng',
-        startDate: '2023-11-20',
-        endDate: '2023-11-25',
-        image: '/images/danang.jpg',
-        status: 'completed',
-      },
-      {
-        id: 5,
-        destination: 'Nha Trang',
-        startDate: '2023-09-15',
-        endDate: '2023-09-20',
-        image: '/images/nhatrang.jpg',
-        status: 'completed',
-      },
-    ],
-    saved: [
-      {
-        id: 6,
-        destination: 'Sapa',
-        image: '/images/sapa.jpg',
-        savedDate: '2024-05-01',
-      },
-      {
-        id: 7,
-        destination: 'Huế',
-        image: '/images/hue.jpg',
-        savedDate: '2024-04-15',
-      },
-    ],
+  const [formData, setFormData] = useState({
+    departure: '',
+    destination: '',
+    startDate: '',
+    endDate: '',
+    travelers: 1,
+    budget: '',
+    travelStyle: '',
+    interests: [],
+    accommodation: '',
+    transportation: ''
   });
+
+  const travelStyles = [
+    { id: 'budget', label: 'Tiết kiệm', icon: '💰' },
+    { id: 'comfort', label: 'Thoải mái', icon: '🏨' },
+    { id: 'luxury', label: 'Sang trọng', icon: '✨' },
+    { id: 'adventure', label: 'Phiêu lưu', icon: '🏔️' }
+  ];
+
+  const interestOptions = [
+    { id: 'culture', label: 'Văn hóa', icon: '🏛️' },
+    { id: 'food', label: 'Ẩm thực', icon: '🍜' },
+    { id: 'nature', label: 'Thiên nhiên', icon: '🌿' },
+    { id: 'beach', label: 'Biển', icon: '🏖️' },
+    { id: 'shopping', label: 'Mua sắm', icon: '🛍️' },
+    { id: 'nightlife', label: 'Giải trí', icon: '🌃' }
+  ];
 
   // Redirect if not logged in
   useEffect(() => {
@@ -83,219 +51,298 @@ export default function MyTrips() {
     return null;
   }
 
-  const getStatusBadge = (status) => {
-    switch (status) {
-      case 'confirmed':
-        return <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded">Đã xác nhận</span>;
-      case 'planning':
-        return <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">Đang lên kế hoạch</span>;
-      case 'completed':
-        return <span className="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded">Đã hoàn thành</span>;
-      default:
-        return null;
-    }
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleInterestToggle = (interestId: string) => {
+    setFormData(prev => ({
+      ...prev,
+      interests: prev.interests.includes(interestId)
+        ? prev.interests.filter(id => id !== interestId)
+        : [...prev.interests, interestId]
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    // Simulate API call
+    setTimeout(() => {
+      // Navigate to suggestions page with form data
+      const queryParams = new URLSearchParams({
+        departure: formData.departure,
+        destination: formData.destination,
+        startDate: formData.startDate,
+        endDate: formData.endDate,
+        travelers: formData.travelers.toString(),
+        budget: formData.budget,
+        travelStyle: formData.travelStyle,
+        interests: formData.interests.join(','),
+        accommodation: formData.accommodation,
+        transportation: formData.transportation
+      });
+
+      router.push(`/trips/suggestions?${queryParams.toString()}`);
+      setIsSubmitting(false);
+    }, 2000);
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-800">Chuyến đi của tôi</h1>
-        <p className="text-gray-600 mt-2">Quản lý tất cả các chuyến đi của bạn</p>
-      </div>
-
-      {/* Tabs */}
-      <div className="border-b border-gray-200 mb-6">
-        <ul className="flex flex-wrap -mb-px">
-          <li className="mr-2">
-            <button
-              className={`inline-block py-4 px-4 text-sm font-medium ${
-                activeTab === 'upcoming'
-                  ? 'text-blue-600 border-b-2 border-blue-600'
-                  : 'text-gray-500 hover:text-gray-700 border-b-2 border-transparent hover:border-gray-300'
-              }`}
-              onClick={() => setActiveTab('upcoming')}
-            >
-              Sắp tới
-            </button>
-          </li>
-          <li className="mr-2">
-            <button
-              className={`inline-block py-4 px-4 text-sm font-medium ${
-                activeTab === 'past'
-                  ? 'text-blue-600 border-b-2 border-blue-600'
-                  : 'text-gray-500 hover:text-gray-700 border-b-2 border-transparent hover:border-gray-300'
-              }`}
-              onClick={() => setActiveTab('past')}
-            >
-              Đã qua
-            </button>
-          </li>
-          <li>
-            <button
-              className={`inline-block py-4 px-4 text-sm font-medium ${
-                activeTab === 'saved'
-                  ? 'text-blue-600 border-b-2 border-blue-600'
-                  : 'text-gray-500 hover:text-gray-700 border-b-2 border-transparent hover:border-gray-300'
-              }`}
-              onClick={() => setActiveTab('saved')}
-            >
-              Đã lưu
-            </button>
-          </li>
-        </ul>
-      </div>
-
-      {/* Create New Trip Button */}
-      <div className="flex justify-end mb-6">
-        <button
-          onClick={() => router.push('/trips/new')}
-          className="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 flex items-center"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
-          </svg>
-          Tạo chuyến đi mới
-        </button>
-      </div>
-
-      {/* Trip Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {activeTab === 'upcoming' && trips.upcoming.length === 0 && (
-          <div className="col-span-3 text-center py-12">
-            <p className="text-gray-500">Bạn chưa có chuyến đi nào sắp tới.</p>
-            <button
-              onClick={() => router.push('/trips/new')}
-              className="mt-4 bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
-            >
-              Tạo chuyến đi mới
-            </button>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 py-8">
+      <div className="container mx-auto px-4">
+        {/* Header */}
+        <div className="text-center mb-12">
+          <div className="flex items-center justify-center mb-4">
+            <FaRobot className="text-4xl text-blue-600 mr-3" />
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              Lộ trình AI
+            </h1>
           </div>
-        )}
+          <p className="text-gray-600 text-lg max-w-2xl mx-auto">
+            Để AI tạo ra lộ trình du lịch hoàn hảo dành riêng cho bạn
+          </p>
+        </div>
 
-        {activeTab === 'upcoming' &&
-          trips.upcoming.map((trip) => (
-            <div key={trip.id} className="bg-white rounded-lg shadow-md overflow-hidden">
-              <div className="relative h-48 w-full">
-                <Image
-                  src={trip.image}
-                  alt={trip.destination}
-                  fill
-                  style={{ objectFit: 'cover' }}
-                />
-              </div>
-              <div className="p-4">
-                <div className="flex justify-between items-start mb-2">
-                  <h3 className="text-xl font-semibold text-gray-800">{trip.destination}</h3>
-                  {getStatusBadge(trip.status)}
+        {/* Form */}
+        <div className="max-w-4xl mx-auto">
+          <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-xl p-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+              {/* Left Column */}
+              <div className="space-y-6">
+                {/* Departure */}
+                <div className="group">
+                  <label className="flex items-center text-sm font-semibold text-gray-700 mb-3">
+                    <FaPlane className="mr-2 text-blue-500" />
+                    Điểm khởi hành
+                  </label>
+                  <input
+                    type="text"
+                    name="departure"
+                    value={formData.departure}
+                    onChange={handleInputChange}
+                    placeholder="Ví dụ: Hồ Chí Minh, Hà Nội..."
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 group-hover:border-blue-300"
+                    required
+                  />
                 </div>
-                <p className="text-gray-600">
-                  {new Date(trip.startDate).toLocaleDateString('vi-VN')} - {new Date(trip.endDate).toLocaleDateString('vi-VN')}
-                </p>
-                <div className="mt-4 flex justify-between">
-                  <button
-                    onClick={() => router.push(`/trips/${trip.id}`)}
-                    className="text-blue-600 hover:text-blue-800"
-                  >
-                    Chi tiết
-                  </button>
-                  <button
-                    onClick={() => router.push(`/trips/${trip.id}/edit`)}
-                    className="text-gray-600 hover:text-gray-800"
-                  >
-                    Chỉnh sửa
-                  </button>
+
+                {/* Destination */}
+                <div className="group">
+                  <label className="flex items-center text-sm font-semibold text-gray-700 mb-3">
+                    <FaMapMarkerAlt className="mr-2 text-red-500" />
+                    Điểm đến
+                  </label>
+                  <input
+                    type="text"
+                    name="destination"
+                    value={formData.destination}
+                    onChange={handleInputChange}
+                    placeholder="Ví dụ: Đà Lạt, Phú Quốc, Sapa..."
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 group-hover:border-blue-300"
+                    required
+                  />
+                </div>
+
+                {/* Dates */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="group">
+                    <label className="flex items-center text-sm font-semibold text-gray-700 mb-3">
+                      <FaCalendarAlt className="mr-2 text-green-500" />
+                      Ngày đi
+                    </label>
+                    <input
+                      type="date"
+                      name="startDate"
+                      value={formData.startDate}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 group-hover:border-blue-300"
+                      required
+                    />
+                  </div>
+                  <div className="group">
+                    <label className="flex items-center text-sm font-semibold text-gray-700 mb-3">
+                      <FaCalendarAlt className="mr-2 text-green-500" />
+                      Ngày về
+                    </label>
+                    <input
+                      type="date"
+                      name="endDate"
+                      value={formData.endDate}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 group-hover:border-blue-300"
+                      required
+                    />
+                  </div>
+                </div>
+
+                {/* Travelers and Budget */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="group">
+                    <label className="flex items-center text-sm font-semibold text-gray-700 mb-3">
+                      <FaUsers className="mr-2 text-purple-500" />
+                      Số người
+                    </label>
+                    <input
+                      type="number"
+                      name="travelers"
+                      value={formData.travelers}
+                      onChange={handleInputChange}
+                      min="1"
+                      max="20"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 group-hover:border-blue-300"
+                      required
+                    />
+                  </div>
+                  <div className="group">
+                    <label className="flex items-center text-sm font-semibold text-gray-700 mb-3">
+                      <FaDollarSign className="mr-2 text-yellow-500" />
+                      Ngân sách (VNĐ)
+                    </label>
+                    <select
+                      name="budget"
+                      value={formData.budget}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 group-hover:border-blue-300"
+                      required
+                    >
+                      <option value="">Chọn ngân sách</option>
+                      <option value="under-5m">Dưới 5 triệu</option>
+                      <option value="5m-10m">5 - 10 triệu</option>
+                      <option value="10m-20m">10 - 20 triệu</option>
+                      <option value="20m-50m">20 - 50 triệu</option>
+                      <option value="over-50m">Trên 50 triệu</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Column */}
+              <div className="space-y-6">
+                {/* Travel Style */}
+                <div>
+                  <label className="flex items-center text-sm font-semibold text-gray-700 mb-4">
+                    <FaHeart className="mr-2 text-pink-500" />
+                    Phong cách du lịch
+                  </label>
+                  <div className="grid grid-cols-2 gap-3">
+                    {travelStyles.map((style) => (
+                      <button
+                        key={style.id}
+                        type="button"
+                        onClick={() => setFormData(prev => ({ ...prev, travelStyle: style.id }))}
+                        className={`p-4 rounded-xl border-2 transition-all duration-200 hover:scale-105 ${
+                          formData.travelStyle === style.id
+                            ? 'border-blue-500 bg-blue-50 text-blue-700'
+                            : 'border-gray-200 hover:border-blue-300'
+                        }`}
+                      >
+                        <div className="text-2xl mb-2">{style.icon}</div>
+                        <div className="text-sm font-medium">{style.label}</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Interests */}
+                <div>
+                  <label className="flex items-center text-sm font-semibold text-gray-700 mb-4">
+                    <FaHeart className="mr-2 text-pink-500" />
+                    Sở thích (chọn nhiều)
+                  </label>
+                  <div className="grid grid-cols-3 gap-3">
+                    {interestOptions.map((interest) => (
+                      <button
+                        key={interest.id}
+                        type="button"
+                        onClick={() => handleInterestToggle(interest.id)}
+                        className={`p-3 rounded-xl border-2 transition-all duration-200 hover:scale-105 ${
+                          formData.interests.includes(interest.id)
+                            ? 'border-purple-500 bg-purple-50 text-purple-700'
+                            : 'border-gray-200 hover:border-purple-300'
+                        }`}
+                      >
+                        <div className="text-lg mb-1">{interest.icon}</div>
+                        <div className="text-xs font-medium">{interest.label}</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Accommodation & Transportation */}
+                <div className="grid grid-cols-1 gap-4">
+                  <div className="group">
+                    <label className="flex items-center text-sm font-semibold text-gray-700 mb-3">
+                      🏨 Loại chỗ ở
+                    </label>
+                    <select
+                      name="accommodation"
+                      value={formData.accommodation}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 group-hover:border-blue-300"
+                    >
+                      <option value="">Chọn loại chỗ ở</option>
+                      <option value="hotel">Khách sạn</option>
+                      <option value="resort">Resort</option>
+                      <option value="homestay">Homestay</option>
+                      <option value="hostel">Hostel</option>
+                      <option value="villa">Villa</option>
+                    </select>
+                  </div>
+                  <div className="group">
+                    <label className="flex items-center text-sm font-semibold text-gray-700 mb-3">
+                      🚗 Phương tiện di chuyển
+                    </label>
+                    <select
+                      name="transportation"
+                      value={formData.transportation}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 group-hover:border-blue-300"
+                    >
+                      <option value="">Chọn phương tiện</option>
+                      <option value="plane">Máy bay</option>
+                      <option value="car">Ô tô</option>
+                      <option value="bus">Xe khách</option>
+                      <option value="train">Tàu hỏa</option>
+                      <option value="motorbike">Xe máy</option>
+                    </select>
+                  </div>
                 </div>
               </div>
             </div>
-          ))}
 
-        {activeTab === 'past' && trips.past.length === 0 && (
-          <div className="col-span-3 text-center py-12">
-            <p className="text-gray-500">Bạn chưa có chuyến đi nào đã qua.</p>
-          </div>
-        )}
-
-        {activeTab === 'past' &&
-          trips.past.map((trip) => (
-            <div key={trip.id} className="bg-white rounded-lg shadow-md overflow-hidden">
-              <div className="relative h-48 w-full">
-                <Image
-                  src={trip.image}
-                  alt={trip.destination}
-                  fill
-                  style={{ objectFit: 'cover' }}
-                />
-              </div>
-              <div className="p-4">
-                <div className="flex justify-between items-start mb-2">
-                  <h3 className="text-xl font-semibold text-gray-800">{trip.destination}</h3>
-                  {getStatusBadge(trip.status)}
-                </div>
-                <p className="text-gray-600">
-                  {new Date(trip.startDate).toLocaleDateString('vi-VN')} - {new Date(trip.endDate).toLocaleDateString('vi-VN')}
-                </p>
-                <div className="mt-4 flex justify-between">
-                  <button
-                    onClick={() => router.push(`/trips/${trip.id}`)}
-                    className="text-blue-600 hover:text-blue-800"
-                  >
-                    Chi tiết
-                  </button>
-                  <button
-                    className="text-gray-600 hover:text-gray-800"
-                  >
-                    Đánh giá
-                  </button>
-                </div>
-              </div>
+            {/* Submit Button */}
+            <div className="mt-8 text-center">
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className={`px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 ${
+                  isSubmitting
+                    ? 'bg-gray-400 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl'
+                }`}
+              >
+                {isSubmitting ? (
+                  <div className="flex items-center">
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
+                    AI đang tạo lộ trình...
+                  </div>
+                ) : (
+                  <div className="flex items-center">
+                    <FaRobot className="mr-3" />
+                    Tạo lộ trình AI
+                  </div>
+                )}
+              </button>
             </div>
-          ))}
-
-        {activeTab === 'saved' && trips.saved.length === 0 && (
-          <div className="col-span-3 text-center py-12">
-            <p className="text-gray-500">Bạn chưa lưu chuyến đi nào.</p>
-            <button
-              onClick={() => router.push('/explore')}
-              className="mt-4 bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
-            >
-              Khám phá điểm đến
-            </button>
-          </div>
-        )}
-
-        {activeTab === 'saved' &&
-          trips.saved.map((trip) => (
-            <div key={trip.id} className="bg-white rounded-lg shadow-md overflow-hidden">
-              <div className="relative h-48 w-full">
-                <Image
-                  src={trip.image}
-                  alt={trip.destination}
-                  fill
-                  style={{ objectFit: 'cover' }}
-                />
-              </div>
-              <div className="p-4">
-                <h3 className="text-xl font-semibold text-gray-800 mb-2">{trip.destination}</h3>
-                <p className="text-gray-600">
-                  Đã lưu vào: {new Date(trip.savedDate).toLocaleDateString('vi-VN')}
-                </p>
-                <div className="mt-4 flex justify-between">
-                  <button
-                    onClick={() => router.push(`/explore/${trip.id}`)}
-                    className="text-blue-600 hover:text-blue-800"
-                  >
-                    Xem chi tiết
-                  </button>
-                  <button
-                    onClick={() => router.push(`/trips/new?destination=${trip.destination}`)}
-                    className="text-gray-600 hover:text-gray-800"
-                  >
-                    Lên kế hoạch
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
+          </form>
+        </div>
       </div>
     </div>
   );

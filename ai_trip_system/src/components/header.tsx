@@ -2,21 +2,59 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/context/AuthContext";
 
+// Add custom styles for shimmer animation
+const shimmerStyles = `
+  @keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+  .animate-shimmer {
+    animation: shimmer 1.5s infinite;
+  }
+`;
+
 const Header = () => {
   const router = useRouter();
+  const pathname = usePathname();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [scrolled, setScrolled] = useState(false);
   const [activeSection, setActiveSection] = useState<string | null>(null);
   const [showScrollIndicator, setShowScrollIndicator] = useState(true);
   const [isMounted, setIsMounted] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
 
   // Use the auth context for login status
   const { isLoggedIn, logout } = useAuth();
+
+  // Helper function to check if a route is active
+  const isActiveRoute = (route: string) => {
+    return pathname === route;
+  };
+
+  // Handle navigation with loading state
+  const handleNavigation = (route: string, e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
+    if (pathname === route) return; // Don't navigate if already on the route
+
+    setIsNavigating(true);
+    setIsDropdownOpen(false);
+
+    // Add a small delay for visual feedback
+    setTimeout(() => {
+      router.push(route);
+      // Reset navigation state after a delay
+      setTimeout(() => setIsNavigating(false), 500);
+    }, 150);
+  };
 
   // Set mounted state to true after component mounts
   useEffect(() => {
@@ -154,6 +192,9 @@ const Header = () => {
 
   return (
     <div className="w-full">
+      {/* Inject custom styles */}
+      <style jsx>{shimmerStyles}</style>
+
       {/* Scroll down indicator - only shows when not at footer and component is mounted */}
       {isMounted && showScrollIndicator && (
         <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-40 animate-bounce">
@@ -170,17 +211,20 @@ const Header = () => {
         </div>
       )}
 
-      <header className={`bg-gradient-to-r from-[#000080] to-[#00BFFF] flex items-center h-[80px] fixed top-0 left-0 right-0 z-50 ${scrolled ? 'shadow-[0_4px_10px_rgba(0,0,0,0.5)] border-b border-black/30' : ''}`}>
+      <header className={`bg-gradient-to-r from-[#000080] to-[#00BFFF] flex items-center h-[80px] fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'shadow-[0_4px_10px_rgba(0,0,0,0.5)] border-b border-black/30' : ''} ${isNavigating ? 'opacity-90' : ''}`}>
+
+        {/* Navigation Loading Indicator */}
+        {isNavigating && (
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#FFD700] to-[#FFA500] animate-pulse">
+            <div className="h-full bg-gradient-to-r from-transparent via-white to-transparent animate-shimmer"></div>
+          </div>
+        )}
         {/* Left side - Logo */}
         <div className="flex justify-start items-center p-4 gap-3 w-1/4">
           <div className="flex items-center justify-center">
             <div
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                router.push(isLoggedIn ? "/home" : "/");
-              }}
-              className="cursor-pointer"
+              onClick={(e) => handleNavigation(isLoggedIn ? "/home" : "/", e)}
+              className="cursor-pointer transition-transform duration-300 hover:scale-110"
             >
               <Image
                 src="/images/logo.png"
@@ -194,12 +238,8 @@ const Header = () => {
           </div>
           <div>
             <div
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                router.push(isLoggedIn ? "/home" : "/");
-              }}
-              className="cursor-pointer"
+              onClick={(e) => handleNavigation(isLoggedIn ? "/home" : "/", e)}
+              className="cursor-pointer transition-all duration-300 hover:scale-105"
             >
               <span className="text-[#FFD700] text-4xl font-['PlaywriteDKLoopet'] tracking-wide">TravelGO!</span>
             </div>
@@ -247,41 +287,50 @@ const Header = () => {
           {isLoggedIn && (
             <div className="hidden md:flex items-center justify-center mx-auto gap-20">
               <div
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  router.push("/home");
-                }}
-                className="flex items-center no-underline text-white hover:opacity-70 transition-opacity duration-300 cursor-pointer"
+                onClick={(e) => handleNavigation("/home", e)}
+                className={`flex items-center no-underline transition-all duration-300 cursor-pointer relative ${
+                  isActiveRoute("/home")
+                    ? "text-[#FFD700] scale-105"
+                    : "text-white hover:opacity-70 hover:scale-105"
+                }`}
               >
-                <span className="text-lg text-white font-medium">
-                  Home
+                <span className="text-lg font-medium relative">
+                  Trang chủ
+                  {isActiveRoute("/home") && (
+                    <div className="absolute -bottom-1 left-0 right-0 h-0.5 bg-[#FFD700] rounded-full"></div>
+                  )}
                 </span>
               </div>
 
               <div
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  router.push("/trips");
-                }}
-                className="flex items-center no-underline text-white hover:opacity-70 transition-opacity duration-300 cursor-pointer"
+                onClick={(e) => handleNavigation("/trips", e)}
+                className={`flex items-center no-underline transition-all duration-300 cursor-pointer relative ${
+                  isActiveRoute("/trips")
+                    ? "text-[#FFD700] scale-105"
+                    : "text-white hover:opacity-70 hover:scale-105"
+                }`}
               >
-                <span className="text-lg text-white font-medium">
-                  My Trips
+                <span className="text-lg font-medium relative">
+                  Lộ trình AI
+                  {isActiveRoute("/trips") && (
+                    <div className="absolute -bottom-1 left-0 right-0 h-0.5 bg-[#FFD700] rounded-full"></div>
+                  )}
                 </span>
               </div>
 
               <div
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  router.push("/explore");
-                }}
-                className="flex items-center no-underline text-white hover:opacity-70 transition-opacity duration-300 cursor-pointer"
+                onClick={(e) => handleNavigation("/explore", e)}
+                className={`flex items-center no-underline transition-all duration-300 cursor-pointer relative ${
+                  isActiveRoute("/explore")
+                    ? "text-[#FFD700] scale-105"
+                    : "text-white hover:opacity-70 hover:scale-105"
+                }`}
               >
-                <span className="text-lg text-white font-medium">
-                  Explore
+                <span className="text-lg font-medium relative">
+                  Khám phá
+                  {isActiveRoute("/explore") && (
+                    <div className="absolute -bottom-1 left-0 right-0 h-0.5 bg-[#FFD700] rounded-full"></div>
+                  )}
                 </span>
               </div>
             </div>
@@ -460,35 +509,35 @@ const Header = () => {
                 {/* Menu items for logged in users */}
                 {isLoggedIn && (
                   <>
-                    <Link
-                      href="/home"
-                      key="mobile-home"
-                      className="flex items-center text-black p-3 no-underline hover:bg-gray-200 w-full text-left"
-                      onClick={() => setIsDropdownOpen(false)}
-                      prefetch={false}
+                    <div
+                      onClick={(e) => handleNavigation("/home", e)}
+                      className={`flex items-center text-black p-3 no-underline hover:bg-gray-200 w-full text-left cursor-pointer transition-all duration-200 ${
+                        isActiveRoute("/home") ? "bg-blue-50 border-l-4 border-[#FFD700] font-semibold" : ""
+                      }`}
                     >
-                      Home
-                    </Link>
+                      Trang chủ
+                      {isActiveRoute("/home") && <span className="ml-auto text-[#FFD700]">●</span>}
+                    </div>
 
-                    <Link
-                      href="/trips"
-                      key="mobile-trips"
-                      className="flex items-center text-black p-3 no-underline hover:bg-gray-200 w-full text-left"
-                      onClick={() => setIsDropdownOpen(false)}
-                      prefetch={false}
+                    <div
+                      onClick={(e) => handleNavigation("/trips", e)}
+                      className={`flex items-center text-black p-3 no-underline hover:bg-gray-200 w-full text-left cursor-pointer transition-all duration-200 ${
+                        isActiveRoute("/trips") ? "bg-blue-50 border-l-4 border-[#FFD700] font-semibold" : ""
+                      }`}
                     >
-                      My Trips
-                    </Link>
+                      Lộ trình AI
+                      {isActiveRoute("/trips") && <span className="ml-auto text-[#FFD700]">●</span>}
+                    </div>
 
-                    <Link
-                      href="/explore"
-                      key="mobile-explore"
-                      className="flex items-center text-black p-3 no-underline hover:bg-gray-200 w-full text-left"
-                      onClick={() => setIsDropdownOpen(false)}
-                      prefetch={false}
+                    <div
+                      onClick={(e) => handleNavigation("/explore", e)}
+                      className={`flex items-center text-black p-3 no-underline hover:bg-gray-200 w-full text-left cursor-pointer transition-all duration-200 ${
+                        isActiveRoute("/explore") ? "bg-blue-50 border-l-4 border-[#FFD700] font-semibold" : ""
+                      }`}
                     >
-                      Explore
-                    </Link>
+                      Khám phá
+                      {isActiveRoute("/explore") && <span className="ml-auto text-[#FFD700]">●</span>}
+                    </div>
                   </>
                 )}
 

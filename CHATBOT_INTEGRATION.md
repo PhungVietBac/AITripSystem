@@ -12,7 +12,7 @@ Dự án này bao gồm hai services chính:
 ┌─────────────────────┐    API Proxy    ┌─────────────────────┐
 │   AI Trip System    │ ──────────────► │   Chatbot Service   │
 │   (Next.js)         │                 │   (Node.js)         │
-│   Port: 3000        │                 │   Port: 3001        │
+│   Port: 3000        │                 │   Port: 5000        │
 └─────────────────────┘                 └─────────────────────┘
 ```
 
