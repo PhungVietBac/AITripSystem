@@ -13,9 +13,15 @@ const Header = () => {
   const [scrolled, setScrolled] = useState(false);
   const [activeSection, setActiveSection] = useState<string | null>(null);
   const [showScrollIndicator, setShowScrollIndicator] = useState(true);
+  const [isMounted, setIsMounted] = useState(false);
 
   // Use the auth context for login status
   const { isLoggedIn, logout } = useAuth();
+
+  // Set mounted state to true after component mounts
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
@@ -28,6 +34,9 @@ const Header = () => {
       e.preventDefault();
       e.stopPropagation();
     }
+
+    // Check if we're in the browser environment
+    if (typeof window === 'undefined' || typeof document === 'undefined') return;
 
     // Set the active section
     setActiveSection(id);
@@ -86,6 +95,9 @@ const Header = () => {
 
   // Handle scroll effect for header shadow and active section
   useEffect(() => {
+    // Check if we're in the browser environment
+    if (typeof window === 'undefined') return;
+
     const handleScroll = () => {
       const scrollY = window.scrollY;
 
@@ -142,8 +154,8 @@ const Header = () => {
 
   return (
     <div className="w-full">
-      {/* Scroll down indicator - only shows when not at footer */}
-      {showScrollIndicator && (
+      {/* Scroll down indicator - only shows when not at footer and component is mounted */}
+      {isMounted && showScrollIndicator && (
         <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-40 animate-bounce">
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -166,7 +178,7 @@ const Header = () => {
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                router.push(isLoggedIn ? "/dashboard" : "/");
+                router.push(isLoggedIn ? "/home" : "/");
               }}
               className="cursor-pointer"
             >
@@ -185,7 +197,7 @@ const Header = () => {
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                router.push(isLoggedIn ? "/dashboard" : "/");
+                router.push(isLoggedIn ? "/home" : "/");
               }}
               className="cursor-pointer"
             >
@@ -238,12 +250,12 @@ const Header = () => {
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  router.push("/dashboard");
+                  router.push("/home");
                 }}
                 className="flex items-center no-underline text-white hover:opacity-70 transition-opacity duration-300 cursor-pointer"
               >
                 <span className="text-lg text-white font-medium">
-                  Dashboard
+                  Home
                 </span>
               </div>
 
@@ -449,13 +461,13 @@ const Header = () => {
                 {isLoggedIn && (
                   <>
                     <Link
-                      href="/dashboard"
-                      key="mobile-dashboard"
+                      href="/home"
+                      key="mobile-home"
                       className="flex items-center text-black p-3 no-underline hover:bg-gray-200 w-full text-left"
                       onClick={() => setIsDropdownOpen(false)}
                       prefetch={false}
                     >
-                      Dashboard
+                      Home
                     </Link>
 
                     <Link

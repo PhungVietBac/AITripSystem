@@ -2,8 +2,8 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { getCookie, setCookie, deleteCookie } from 'cookies-next';
-import { useSession, signIn, signOut } from 'next-auth/react';
-import { Session } from 'next-auth';
+// import { useSession, signIn, signOut } from 'next-auth/react';
+// import { Session } from 'next-auth';
 
 // Define the shape of our context
 interface AuthContextType {
@@ -12,7 +12,7 @@ interface AuthContextType {
   login: (token: string, username: string) => void;
   logout: () => void;
   socialLogin: (provider: string) => void;
-  session: Session | null;
+  session: any | null; // Changed from Session to any
 }
 
 // Create the context with a default value
@@ -29,16 +29,20 @@ const AuthContext = createContext<AuthContextType>({
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [username, setUsername] = useState('');
-  const { data: session, status } = useSession();
+  const [isInitialized, setIsInitialized] = useState(false);
+  // const { data: session, status } = useSession();
+  const session = null; // Temporarily disabled
 
   // Simple login function for traditional login
   const login = (token: string, username: string) => {
     // Set cookie
     setCookie('token', token);
 
-    // Store in localStorage
-    localStorage.setItem('isLoggedIn', 'true');
-    localStorage.setItem('username', username);
+    // Store in localStorage (only if in browser)
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('isLoggedIn', 'true');
+      localStorage.setItem('username', username);
+    }
 
     // Update state
     setIsLoggedIn(true);
@@ -47,7 +51,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Function to handle social login
   const socialLogin = (provider: string) => {
-    signIn(provider, { callbackUrl: '/home' });
+    // signIn(provider, { callbackUrl: '/home' });
+    console.log('Social login temporarily disabled:', provider);
   };
 
   // Logout function
@@ -55,16 +60,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Clear cookie
     deleteCookie('token');
 
-    // Clear localStorage
-    localStorage.removeItem('isLoggedIn');
-    localStorage.removeItem('username');
+    // Clear localStorage (only if in browser)
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('isLoggedIn');
+      localStorage.removeItem('username');
+    }
 
     // Update state
     setIsLoggedIn(false);
     setUsername('');
 
     // Sign out from NextAuth
-    signOut({ callbackUrl: '/' });
+    // signOut({ callbackUrl: '/' });
+    console.log('NextAuth signOut temporarily disabled');
   };
 
   // Initialize state from localStorage or session
@@ -73,6 +81,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (session && session.user) {
       setIsLoggedIn(true);
       setUsername(session.user.name || session.user.email || '');
+      setIsInitialized(true);
       return;
     }
 
@@ -83,8 +92,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       setIsLoggedIn(storedLoggedIn);
       setUsername(storedUsername);
+      setIsInitialized(true);
     }
   }, [session]);
+
+  // Don't render children until auth is initialized to prevent hydration mismatch
+  if (!isInitialized) {
+    return null;
+  }
 
   return (
     <AuthContext.Provider value={{

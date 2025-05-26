@@ -1,5 +1,5 @@
 import Feature from "./Feature";
-import HeroSections from "./HeroSection";
+import HeroSections from "./herosection";
 import About from "./About";
 import Members from "./members";
 import Contact from "./Contact";

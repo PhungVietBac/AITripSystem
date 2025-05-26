@@ -1,11 +1,10 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Playwrite_DK_Loopet } from "next/font/google";
 import "@/styles/globals.css";
-import Header from "@/components/header";
 import Footer from "@/components/footer";
 import "leaflet/dist/leaflet.css";
-import NoSSR from "@/components/NoSSR";
-import Providers from "@/components/Providers";
+import ClientLayout from "@/components/ClientLayout";
+import NoSSRWrapper from "@/components/NoSSRWrapper";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -38,15 +37,12 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${playwriteDKLoopet.variable} antialiased min-h-screen flex flex-col`}
       >
-        <Providers>
-          <NoSSR>
-            <Header />
-          </NoSSR>
-          <main className="flex-grow pt-[80px]">
+        <NoSSRWrapper>
+          <ClientLayout>
             {children}
-          </main>
-          <Footer />
-        </Providers>
+          </ClientLayout>
+        </NoSSRWrapper>
+        <Footer />
       </body>
     </html>
   );

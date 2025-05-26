@@ -8,14 +8,14 @@ import IntroPage from './intro/page';
 export default function HomePage() {
   const router = useRouter();
 
-  // Redirect to dashboard if logged in
+  // Redirect to home if logged in
   useEffect(() => {
     // Check localStorage directly for immediate decision
     const isUserLoggedIn = typeof window !== 'undefined' &&
       localStorage.getItem('isLoggedIn') === 'true';
 
     if (isUserLoggedIn) {
-      router.replace('/dashboard');
+      router.replace('/home');
     }
   }, [router]);
 

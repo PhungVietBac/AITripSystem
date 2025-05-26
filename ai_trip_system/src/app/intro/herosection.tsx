@@ -9,51 +9,8 @@ export default function HeroSections() {
   const buttonRef = useRef<HTMLAnchorElement>(null);
 
   useEffect(() => {
-    // Use a regular function instead of async
-    if (buttonRef.current) {
-      try {
-        // Use CommonJS require with type assertion
-        // @ts-ignore
-        const anime = require('animejs') as AnimeFunction;
-
-        // Pulse animation for the button
-        anime({
-          targets: buttonRef.current,
-          scale: [1, 1.05, 1],
-          boxShadow: [
-            '0 4px 6px rgba(0, 0, 0, 0.1)',
-            '0 8px 15px rgba(255, 215, 0, 0.5)',
-            '0 4px 6px rgba(0, 0, 0, 0.1)'
-          ],
-          duration: 2000,
-          easing: 'easeInOutQuad',
-          loop: true
-        });
-
-        // Add border animation for hover state
-        buttonRef.current.addEventListener('mouseenter', () => {
-          anime({
-            targets: buttonRef.current,
-            borderWidth: [0, 2],
-            backgroundColor: ['#FFD700', '#FFFFFF'],
-            duration: 300,
-            easing: 'easeOutQuad'
-          });
-        });
-
-        buttonRef.current.addEventListener('mouseleave', () => {
-          anime({
-            targets: buttonRef.current,
-            borderWidth: [2, 0],
-            backgroundColor: ['#FFFFFF', '#FFD700'],
-            duration: 300,
-            easing: 'easeOutQuad'
-          });
-        });
-      } catch (error) {
-        console.error("Error loading anime.js:", error);
-      }
-    }
+    // Temporarily disabled anime.js animations
+    console.log("Anime.js animations temporarily disabled");
   }, []);
 
   return (

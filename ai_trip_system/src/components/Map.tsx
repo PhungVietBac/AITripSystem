@@ -1,16 +1,18 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
-import Image from "next/image";
+import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 import {
+  FaMapMarkerAlt,
+  FaTimes,
+  FaLocationArrow,
   FaUtensils,
   FaHotel,
   FaLandmark,
   FaUmbrellaBeach,
   FaStar,
 } from "react-icons/fa";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
 
 // Fix default icon issue in Leaflet when using with Webpack
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -20,30 +22,143 @@ L.Icon.Default.mergeOptions({
   shadowUrl: require("leaflet/dist/images/marker-shadow.png"),
 });
 
-const VisitIconPopup = () => {
-  const visitMarkerRef = useRef<any>(null);
-  const position: [number, number] = [10.870016383538559, 106.80303310089239];
+// Vietnam bounds for initial view
+const VIETNAM_CENTER: [number, number] = [14.0583, 108.2772];
+const VIETNAM_ZOOM = 6;
+
+// Custom user location icon
+const userLocationIcon = new L.Icon({
+  iconUrl: 'data:image/svg+xml;base64,' + btoa(`
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#3B82F6" width="24" height="24">
+      <circle cx="12" cy="12" r="8" fill="#3B82F6" stroke="#ffffff" stroke-width="2"/>
+      <circle cx="12" cy="12" r="3" fill="#ffffff"/>
+    </svg>
+  `),
+  iconSize: [24, 24],
+  iconAnchor: [12, 12],
+  popupAnchor: [0, -12],
+});
+
+// Component to handle map updates
+const MapUpdater = ({ center, zoom }: { center: [number, number], zoom: number }) => {
+  const map = useMap();
 
   useEffect(() => {
-    if (visitMarkerRef.current) {
-      visitMarkerRef.current.openPopup();
-    }
-  }, []);
+    map.setView(center, zoom);
+  }, [map, center, zoom]);
 
-  return (
-    <Marker position={position} ref={visitMarkerRef}>
-      <Popup>Trường Đại học Công nghệ Thông tin - UIT</Popup>
-    </Marker>
-  );
+  return null;
 };
 
+interface UserLocation {
+  lat: number;
+  lng: number;
+  accuracy?: number;
+}
+
 const Map = () => {
-  const [hoveredLocation, setHoveredLocation] = useState<string | null>(null);
+  const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
+  const [locationPermission, setLocationPermission] = useState<'prompt' | 'granted' | 'denied'>('prompt');
+  const [mapCenter, setMapCenter] = useState<[number, number]>(VIETNAM_CENTER);
+  const [mapZoom, setMapZoom] = useState(VIETNAM_ZOOM);
+  const [isLocating, setIsLocating] = useState(false);
+
+  // Check and request location permission
+  const checkLocationPermission = async () => {
+    if (!navigator.permissions) {
+      // Fallback for browsers that don't support Permissions API
+      requestLocation();
+      return;
+    }
+
+    try {
+      const permission = await navigator.permissions.query({ name: 'geolocation' });
+
+      if (permission.state === 'prompt') {
+        // Permission not yet decided, will show browser dialog
+        requestLocation();
+      } else if (permission.state === 'granted') {
+        // Permission already granted, but still request fresh location
+        requestLocation();
+      } else {
+        // Permission denied
+        setLocationPermission('denied');
+        alert('Quyền truy cập vị trí đã bị từ chối. Vui lòng bật lại trong cài đặt trình duyệt.');
+      }
+    } catch (error) {
+      // Fallback if permission query fails
+      requestLocation();
+    }
+  };
+
+  // Request user location using browser's native permission dialog
+  const requestLocation = async () => {
+    if (!navigator.geolocation) {
+      alert('Trình duyệt của bạn không hỗ trợ định vị.');
+      setLocationPermission('denied');
+      return;
+    }
+
+    setIsLocating(true);
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude, accuracy } = position.coords;
+        const newLocation: UserLocation = {
+          lat: latitude,
+          lng: longitude,
+          accuracy
+        };
+
+        setUserLocation(newLocation);
+        setMapCenter([latitude, longitude]);
+        setMapZoom(13); // Zoom closer to user location
+        setLocationPermission('granted');
+        setIsLocating(false);
+      },
+      (error) => {
+        console.error('Error getting location:', error);
+        setLocationPermission('denied');
+        setIsLocating(false);
+
+        let errorMessage = 'Không thể lấy vị trí của bạn.';
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            errorMessage = 'Bạn đã từ chối chia sẻ vị trí. Vui lòng bật lại trong cài đặt trình duyệt.';
+            break;
+          case error.POSITION_UNAVAILABLE:
+            errorMessage = 'Thông tin vị trí không khả dụng.';
+            break;
+          case error.TIMEOUT:
+            errorMessage = 'Yêu cầu vị trí đã hết thời gian.';
+            break;
+        }
+        alert(errorMessage);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0 // Always request fresh location, don't use cached data
+      }
+    );
+  };
+
+  // Auto-request location when component mounts
+  useEffect(() => {
+    // Check permission and request location on component mount
+    const timer = setTimeout(() => {
+      checkLocationPermission();
+    }, 1000); // Small delay to ensure component is fully mounted
+
+    return () => clearTimeout(timer);
+  }, []); // Empty dependency array ensures this runs only once on mount
+
   return (
     <div className="map-container relative h-full">
+
       <MapContainer
-        center={[10.87, 106.803]}
-        zoom={16}
+        center={VIETNAM_CENTER}
+        zoom={VIETNAM_ZOOM}
         scrollWheelZoom={true}
         style={{ height: "100%", width: "100%" }}
         className="map-view z-0"
@@ -52,153 +167,75 @@ const Map = () => {
           attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        <VisitIconPopup />
+
+        {/* Map updater to handle center and zoom changes */}
+        <MapUpdater center={mapCenter} zoom={mapZoom} />
+
+        {/* User location marker */}
+        {userLocation && (
+          <Marker
+            position={[userLocation.lat, userLocation.lng]}
+            icon={userLocationIcon}
+          >
+            <Popup>
+              <div className="text-center">
+                <FaMapMarkerAlt className="text-blue-500 mx-auto mb-1" />
+                <div className="font-semibold text-sm">Vị trí của bạn</div>
+                {userLocation.accuracy && (
+                  <div className="text-xs text-gray-600">
+                    Độ chính xác: ~{Math.round(userLocation.accuracy)}m
+                  </div>
+                )}
+              </div>
+            </Popup>
+          </Marker>
+        )}
       </MapContainer>
-      {/* Điểm đánh dấu mẫu */}
-      <div
-        className="absolute"
-        style={{ top: "30%", left: "40%" }}
-        onMouseEnter={() => setHoveredLocation("restaurant")}
-        onMouseLeave={() => setHoveredLocation(null)}
-      >
-        <div className="w-10 h-10 rounded-full bg-red-500 flex items-center justify-center">
-          <FaUtensils className="text-white w-5 h-5" />
-        </div>
-        {/* Tooltip hiển thị khi hover */}
-        {hoveredLocation === "restaurant" && (
-          <div className="absolute top-0 left-12 bg-white p-3 rounded-lg shadow-md w-60 z-10">
-            <Image
-              src="/images/restaurant.jpg" // Đường dẫn ảnh placeholder
-              alt="Nhà hàng"
-              width={200}
-              height={100}
-              className="rounded-lg"
-            />
-            <h4 className="text-sm font-semibold text-gray-800 mt-2">
-              Nhà hàng Phố Cổ
-            </h4>
-            <p className="text-xs text-gray-600 flex items-center">
-              <FaStar className="text-yellow-400 mr-1" /> 4.5 (200+ đánh giá)
-            </p>
-            <p className="text-xs text-gray-600 mt-1">
-              🕒 Mở cửa: 7:00 - 22:00
-            </p>
-          </div>
-        )}
+
+      {/* Map Controls */}
+      <div className="absolute bottom-4 right-4 flex flex-col gap-2">
+        {/* Location button - always show to allow re-requesting location */}
+        <button
+          onClick={checkLocationPermission}
+          disabled={isLocating}
+          className="bg-white p-2 rounded-lg shadow-md hover:shadow-lg transition-shadow border border-gray-200 disabled:opacity-50"
+          title={isLocating ? "Đang lấy vị trí..." : "Yêu cầu vị trí hiện tại"}
+        >
+          {isLocating ? (
+            <div className="w-4 h-4 border border-gray-600 border-t-transparent rounded-full animate-spin"></div>
+          ) : (
+            <FaLocationArrow className="text-gray-600 w-4 h-4" />
+          )}
+        </button>
+
+        {/* Reset view button */}
+        <button
+          onClick={() => {
+            setMapCenter(VIETNAM_CENTER);
+            setMapZoom(VIETNAM_ZOOM);
+          }}
+          className="bg-white p-2 rounded-lg shadow-md hover:shadow-lg transition-shadow border border-gray-200"
+          title="Xem toàn bộ Việt Nam"
+        >
+          <FaMapMarkerAlt className="text-gray-600 w-4 h-4" />
+        </button>
       </div>
 
-      <div
-        className="absolute"
-        style={{ top: "45%", left: "60%" }}
-        onMouseEnter={() => setHoveredLocation("park")}
-        onMouseLeave={() => setHoveredLocation(null)}
-      >
-        <div className="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center">
-          <FaUmbrellaBeach className="text-white w-5 h-5" />
-        </div>
-        {hoveredLocation === "park" && (
-          <div className="absolute top-0 left-12 bg-white p-3 rounded-lg shadow-md w-60 z-10">
-            <Image
-              src="/images/park.jpg" // Đường dẫn ảnh placeholder
-              alt="Công viên"
-              width={200}
-              height={100}
-              className="rounded-lg"
-            />
-            <h4 className="text-sm font-semibold text-gray-800 mt-2">
-              Công viên Thống Nhất
-            </h4>
-            <p className="text-xs text-gray-600 flex items-center">
-              <FaStar className="text-yellow-400 mr-1" /> 4.8 (500+ đánh giá)
-            </p>
-            <p className="text-xs text-gray-600 mt-1">
-              🌳 Không gian xanh trong lòng thành phố
-            </p>
-          </div>
-        )}
-      </div>
-
-      <div
-        className="absolute"
-        style={{ top: "25%", left: "70%" }}
-        onMouseEnter={() => setHoveredLocation("hotel")}
-        onMouseLeave={() => setHoveredLocation(null)}
-      >
-        <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center">
-          <FaHotel className="text-white w-5 h-5" />
-        </div>
-        {hoveredLocation === "hotel" && (
-          <div className="absolute top-0 left-12 bg-white p-3 rounded-lg shadow-md w-60 z-10">
-            <Image
-              src="/images/hotel.jpg" // Đường dẫn ảnh placeholder
-              alt="Khách sạn"
-              width={200}
-              height={100}
-              className="rounded-lg"
-            />
-            <h4 className="text-sm font-semibold text-gray-800 mt-2">
-              Khách sạn Hoàng Gia
-            </h4>
-            <p className="text-xs text-gray-600 flex items-center">
-              <FaStar className="text-yellow-400 mr-1" /> 4.7 (300+ đánh giá)
-            </p>
-            <p className="text-xs text-gray-600 mt-1">💰 2,000,000 VND/đêm</p>
-          </div>
-        )}
-      </div>
-
-      <div
-        className="absolute"
-        style={{ top: "70%", left: "50%" }}
-        onMouseEnter={() => setHoveredLocation("post-office")}
-        onMouseLeave={() => setHoveredLocation(null)}
-      >
-        <div className="w-10 h-10 rounded-full bg-yellow-500 flex items-center justify-center">
-          <FaLandmark className="text-white w-5 h-5" />
-        </div>
-        {hoveredLocation === "post-office" && (
-          <div className="absolute top-0 left-12 bg-white p-3 rounded-lg shadow-md w-60 z-10">
-            <Image
-              src="https://bcp.cdnchinhphu.vn/334894974524682240/2023/6/5/bd-tphcm-16859383704441853568656.png" // Đường dẫn ảnh placeholder
-              alt="Bưu điện thành phố"
-              width={200}
-              height={100}
-              className="rounded-lg"
-            />
-            <h4 className="text-sm font-semibold text-gray-800 mt-2">
-              Bưu điện thành phố
-            </h4>
-            <p className="text-xs text-gray-600 flex items-center">
-              <FaStar className="text-yellow-400 mr-1" /> 5.0 (750+ đánh giá)
-            </p>
-            <p className="text-xs text-gray-600 mt-1">
-              Tòa nhà Bưu điện Thành phố Hồ Chí Minh
-            </p>
-            <p className="text-xs text-gray-600 mt-1">
-              🕒 Mở cửa: 7:00 - 22:00
-            </p>
-          </div>
-        )}
-      </div>
-
-      {/* Chú thích bản đồ */}
-      <div className="absolute bottom-4 right-4 bg-white p-2 rounded-lg shadow-md">
+      {/* Map Legend */}
+      <div className="absolute bottom-4 left-4 bg-white p-3 rounded-lg shadow-md border border-gray-200">
+        <h4 className="text-xs font-semibold text-gray-800 mb-2">Bản đồ Việt Nam</h4>
         <div className="flex flex-col gap-1">
-          <div className="flex items-center gap-1">
-            <div className="w-4 h-4 rounded-full bg-red-500"></div>
-            <span className="text-xs text-gray-700">Nhà hàng</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="w-4 h-4 rounded-full bg-blue-500"></div>
-            <span className="text-xs text-gray-700">Khách sạn</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="w-4 h-4 rounded-full bg-green-500"></div>
-            <span className="text-xs text-gray-700">Đi chơi</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="w-4 h-4 rounded-full bg-yellow-500"></div>
-            <span className="text-xs text-gray-700">Tham quan</span>
+          {userLocation && (
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-blue-500 border-2 border-white shadow-sm"></div>
+              <span className="text-xs text-gray-700">Vị trí của bạn</span>
+            </div>
+          )}
+          <div className="text-xs text-gray-500 mt-1">
+            {userLocation
+              ? 'Nhấp vào marker để xem chi tiết'
+              : 'Cho phép định vị để xem vị trí của bạn'
+            }
           </div>
         </div>
       </div>
