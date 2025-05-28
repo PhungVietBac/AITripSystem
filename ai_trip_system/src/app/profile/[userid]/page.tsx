@@ -6,12 +6,9 @@ import Image from "next/image";
 import useSWR, { mutate } from "swr"
 import { ToastContainer, Slide, toast } from "react-toastify";
 import { getCookie } from "cookies-next";
+import { use } from "react";
 
-interface ProfilePageProps {
-  userid: string;
-}
-
-export default function ProfilePage({ userid = "US7403" }: ProfilePageProps) {
+export default function ProfilePage({ params }: { params: Promise<{ userid: string }> }) {
   const [showEditModal, setShowEditModal] = useState(false);
   const [userEdit, setUserEdit] = useState<UserBase>();
   const [step, setStep] = useState(1);
@@ -19,13 +16,14 @@ export default function ProfilePage({ userid = "US7403" }: ProfilePageProps) {
   const [isFriendRequestSent, setIsFriendRequestSent] = useState(false);
   const [isFriend, setIsFriend] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isSending, setIsSending] = useState(false);
 
   const avatarFileRef = useRef<File | null>(null);
   const router = useRouter();
 
+  const { userid: userID } = use(params);
   const accessToken = getCookie("token");
-  let userID = userid;
-  const currentUserID = "US9583";
+  const currentUserID = localStorage.getItem("current_user_id");
 
   useEffect(() => {
     if (!accessToken) {
@@ -34,7 +32,6 @@ export default function ProfilePage({ userid = "US7403" }: ProfilePageProps) {
     }
   }, []);
 
-  // Get user info
   const fetcher = (url: string) => fetch(url, {
     headers: {
       Authorization: `Bearer ${accessToken}`,
@@ -53,7 +50,8 @@ export default function ProfilePage({ userid = "US7403" }: ProfilePageProps) {
     {
       revalidateIfStale: false,
       revalidateOnFocus: false,
-      revalidateOnReconnect: false
+      revalidateOnReconnect: false,
+      refreshInterval: 3000
     }
   );
 
@@ -104,7 +102,7 @@ export default function ProfilePage({ userid = "US7403" }: ProfilePageProps) {
   }
 
   const handleBtnBack = () => {
-    router.push("/");
+    router.push("/home");
   };
 
   const openEditModal = () => {
@@ -166,7 +164,6 @@ export default function ProfilePage({ userid = "US7403" }: ProfilePageProps) {
 
   const handleSaveBtn = async () => {
     setIsSaving(true);
-
     try {
       // Cập nhật avatar nếu có
       const fileUpdate = avatarFileRef.current;
@@ -224,10 +221,11 @@ export default function ProfilePage({ userid = "US7403" }: ProfilePageProps) {
   };
 
   const handleFriendRequestSent = async () => {
+    setIsSending(true);
     try {
       if (isFriendRequestSent || isFriend) {
         const cancelRes = await fetch(
-          `https://aitripsystem-api.onrender.com/api/v1/friends?id_self=${encodeURIComponent(currentUserID)}&id_friend=${encodeURIComponent(userID)}`,
+          `https://aitripsystem-api.onrender.com/api/v1/friends?id_self=${encodeURIComponent(currentUserID ?? "")}&id_friend=${encodeURIComponent(userID ?? "")}`,
           {
             method: "DELETE",
             headers: {
@@ -239,11 +237,7 @@ export default function ProfilePage({ userid = "US7403" }: ProfilePageProps) {
         if (!cancelRes.ok) throw new Error("Failed to cancel friend request.");
         setIsFriend(false);
         setIsFriendRequestSent(false);
-
-        await Promise.all([
-          mutate(`https://aitripsystem-api.onrender.com/api/v1/users/${userID}/friend_requests_to`),
-          mutate(`https://aitripsystem-api.onrender.com/api/v1/users/${userID}/friends`)
-        ]);
+        await mutate(`https://aitripsystem-api.onrender.com/api/v1/users/${userID}/friend_requests_to`);
       } else {
         const payload = {
           idself: currentUserID,
@@ -263,10 +257,13 @@ export default function ProfilePage({ userid = "US7403" }: ProfilePageProps) {
         );
 
         if (!addFriendRes.ok) throw new Error("Failed to send friend request.");
+        setIsFriendRequestSent(false);
         await mutate(`https://aitripsystem-api.onrender.com/api/v1/users/${userID}/friend_requests_to`);
       }
     } catch (error) {
       console.error("Lỗi khi gửi thông tin kết bạn:", error);
+    } finally {
+      setIsSending(false);
     }
   }
 
@@ -279,7 +276,7 @@ export default function ProfilePage({ userid = "US7403" }: ProfilePageProps) {
             className="p-2 rounded-full hover:bg-gray-300 dark:hover:bg-gray-700 dark:text-white transition-colors duration-200 cursor-pointer">
             <FaChevronLeft />
           </button>
-          <h1 className="text-2xl font-bold text-black dark:text-white">{userData?.name}</h1>
+          <h1 className="text-2xl font-bold text-black dark:text-white"></h1>
         </div>
         <div className="flex-grow flex-col bg-white rounded-lg p-6 mx-auto shadow-sm dark:bg-transparent text-black dark:text-white dark:border-2 border-gray-700">
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 text-center sm:text-left">
@@ -301,20 +298,25 @@ export default function ProfilePage({ userid = "US7403" }: ProfilePageProps) {
               </p>
             </div>
             <div className="flex gap-2 sm:ml-auto justify-center">
-              <button
-                onClick={openEditModal}
-                className="flex items-center justify-center w-16 h-12 font-bold rounded-lg text-white bg-gray-800 hover:bg-gray-900 dark:bg-gray-800 dark:hover:bg-gray-700 dark:border-gray-700 cursor-pointer transition-colors duration-200"
-              >
-                <FaPen />
-              </button>
-              <button
-                onClick={handleFriendRequestSent}
-                className="flex items-center justify-center w-32 h-12 font-bold rounded-lg text-md text-white bg-gray-800 hover:bg-gray-900 dark:bg-gray-800 dark:hover:bg-gray-700 dark:border-gray-700 cursor-pointer transition-colors duration-200"
-              >
-                {isFriend ? (<><FaUserCheck className="mr-2" />Bạn bè</>) :
-                  (isFriendRequestSent ? (<><FaUserXmark className="mr-2" /> Hủy lời mời</>) :
-                    (<><FaUserPlus className="mr-2" />Thêm bạn</>))}
-              </button>
+              {currentUserID == userID && (
+                <button
+                  onClick={openEditModal}
+                  className="flex items-center justify-center w-16 h-12 font-bold rounded-lg text-white bg-gray-800 hover:bg-gray-900 dark:bg-gray-800 dark:hover:bg-gray-700 dark:border-gray-700 cursor-pointer transition-colors duration-200"
+                >
+                  <FaPen />
+                </button>
+              )}
+              {currentUserID !== userID && (
+                <button
+                  onClick={handleFriendRequestSent}
+                  disabled={isSending}
+                  className="flex items-center justify-center w-32 h-12 font-bold rounded-lg text-md text-white bg-gray-800 hover:bg-gray-900 dark:bg-gray-800 dark:hover:bg-gray-700 dark:border-gray-700 cursor-pointer transition-colors duration-200"
+                >
+                  {isFriend ? (<><FaUserCheck className="mr-2" />Bạn bè</>) :
+                    (isFriendRequestSent ? (<><FaUserXmark className="mr-2" /> Hủy lời mời</>) :
+                      (<><FaUserPlus className="mr-2" />Thêm bạn</>))}
+                </button>
+              )}
             </div>
           </div>
           <div className="flex-grow mt-8">
