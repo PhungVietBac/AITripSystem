@@ -1,12 +1,11 @@
+'use client';
+
 import { Metadata } from "next";
 import AllBookings from "./AllBookings";
+// import withAuth from "@/components/withAuth";
 
-export const metadata: Metadata = {
-  title: "Lịch sử Booking",
-  description: "Xem tất cả các đặt chỗ của người dùng",
-};
 
-export default function AllBookingsPage() {
+function AllBookingsPage() {
   return (
     <div className="min-h-screen ">
       <header className="bg-white shadow-sm">
@@ -34,3 +33,5 @@ export default function AllBookingsPage() {
     </div>
   );
 }
+
+export default (AllBookingsPage);
