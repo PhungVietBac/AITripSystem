@@ -81,16 +81,16 @@ export default function LoginForm() {
                     <form onSubmit={handleSubmit} className="space-y-5">
                         <div>
                             <label htmlFor="username" className="block text-xs font-medium text-gray-700 mb-1">
-                                Email
+                                Tên đăng nhập
                             </label>
                             <div className="relative">
                                 <input
                                     id="username"
-                                    type="email"
+                                    type="text"
                                     value={username}
                                     onChange={(e) => setUsername(e.target.value)}
                                     className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
-                                    placeholder="Điền email của bạn"
+                                    placeholder="Điền tên đăng nhập của bạn"
                                     required
                                     disabled={isLoading}
                                 />

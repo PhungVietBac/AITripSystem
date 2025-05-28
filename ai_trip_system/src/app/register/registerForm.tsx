@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 
 export default function RegisterForm() {
   const [formData, setFormData] = useState({
-    email: "",
+    username: "",
     password: "",
     confirmPassword: "",
   });
@@ -27,8 +27,13 @@ export default function RegisterForm() {
     e.preventDefault();
 
     // Validate form
-    if (!formData.email || !formData.password || !formData.confirmPassword) {
+    if (!formData.username || !formData.password || !formData.confirmPassword) {
       setError("Vui lòng điền đầy đủ thông tin.");
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      setError("Mật khẩu phải có ít nhất 6 ký tự.");
       return;
     }
 
@@ -36,19 +41,12 @@ export default function RegisterForm() {
       setError("Mật khẩu không khớp. Vui lòng kiểm tra lại.");
       return;
     }
-
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email)) {
-      setError("Email không hợp lệ.");
-      return;
-    }
-
+    
     setIsLoading(true);
     setError("");
 
     try {
-      const response = await fetch(`https://aitripsystem-api.onrender.com/api/v1/register?username=${encodeURIComponent(formData.email)}&password=${encodeURIComponent(formData.password)}`, {
+      const response = await fetch(`https://aitripsystem-api.onrender.com/api/v1/register?username=${encodeURIComponent(formData.username)}&password=${encodeURIComponent(formData.password)}`, {
         method: "POST",
         headers: {
           "accept": "application/json",
@@ -100,18 +98,18 @@ export default function RegisterForm() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label htmlFor="email" className="block text-xs font-medium text-gray-700 mb-1">
-                Email
+              <label htmlFor="username" className="block text-xs font-medium text-gray-700 mb-1">
+                Tên đăng nhập
               </label>
               <div className="relative">
                 <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  value={formData.email}
+                  id="username"
+                  name="username"
+                  type="text"
+                  value={formData.username}
                   onChange={handleChange}
                   className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
-                  placeholder="Nhập email của bạn"
+                  placeholder="Nhập tên đăng nhập của bạn"
                   required
                   disabled={isLoading}
                 />
