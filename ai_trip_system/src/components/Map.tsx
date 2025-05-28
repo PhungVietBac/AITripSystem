@@ -28,7 +28,9 @@ const VIETNAM_ZOOM = 6;
 
 // Custom user location icon
 const userLocationIcon = new L.Icon({
-  iconUrl: 'data:image/svg+xml;base64,' + btoa(`
+  iconUrl:
+    "data:image/svg+xml;base64," +
+    btoa(`
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#3B82F6" width="24" height="24">
       <circle cx="12" cy="12" r="8" fill="#3B82F6" stroke="#ffffff" stroke-width="2"/>
       <circle cx="12" cy="12" r="3" fill="#ffffff"/>
@@ -40,7 +42,13 @@ const userLocationIcon = new L.Icon({
 });
 
 // Component to handle map updates
-const MapUpdater = ({ center, zoom }: { center: [number, number], zoom: number }) => {
+const MapUpdater = ({
+  center,
+  zoom,
+}: {
+  center: [number, number];
+  zoom: number;
+}) => {
   const map = useMap();
 
   useEffect(() => {
@@ -58,12 +66,16 @@ interface UserLocation {
 
 const MapComponent = () => {
   const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
-  const [locationPermission, setLocationPermission] = useState<'prompt' | 'granted' | 'denied'>('prompt');
+  const [locationPermission, setLocationPermission] = useState<
+    "prompt" | "granted" | "denied"
+  >("prompt");
   const [mapCenter, setMapCenter] = useState<[number, number]>(VIETNAM_CENTER);
   const [mapZoom, setMapZoom] = useState(VIETNAM_ZOOM);
   const [isLocating, setIsLocating] = useState(false);
   const mapRef = useRef<L.Map | null>(null);
-  const [mapKey, setMapKey] = useState(() => Math.random().toString(36).substr(2, 9));
+  const [mapKey, setMapKey] = useState(() =>
+    Math.random().toString(36).substr(2, 9)
+  );
 
   // Check and request location permission
   const checkLocationPermission = async () => {
@@ -74,18 +86,22 @@ const MapComponent = () => {
     }
 
     try {
-      const permission = await navigator.permissions.query({ name: 'geolocation' });
+      const permission = await navigator.permissions.query({
+        name: "geolocation",
+      });
 
-      if (permission.state === 'prompt') {
+      if (permission.state === "prompt") {
         // Permission not yet decided, will show browser dialog
         requestLocation();
-      } else if (permission.state === 'granted') {
+      } else if (permission.state === "granted") {
         // Permission already granted, but still request fresh location
         requestLocation();
       } else {
         // Permission denied
-        setLocationPermission('denied');
-        alert('Quyền truy cập vị trí đã bị từ chối. Vui lòng bật lại trong cài đặt trình duyệt.');
+        setLocationPermission("denied");
+        alert(
+          "Quyền truy cập vị trí đã bị từ chối. Vui lòng bật lại trong cài đặt trình duyệt."
+        );
       }
     } catch (error) {
       // Fallback if permission query fails
@@ -96,8 +112,8 @@ const MapComponent = () => {
   // Request user location using browser's native permission dialog
   const requestLocation = async () => {
     if (!navigator.geolocation) {
-      alert('Trình duyệt của bạn không hỗ trợ định vị.');
-      setLocationPermission('denied');
+      alert("Trình duyệt của bạn không hỗ trợ định vị.");
+      setLocationPermission("denied");
       return;
     }
 
@@ -109,30 +125,31 @@ const MapComponent = () => {
         const newLocation: UserLocation = {
           lat: latitude,
           lng: longitude,
-          accuracy
+          accuracy,
         };
 
         setUserLocation(newLocation);
         setMapCenter([latitude, longitude]);
         setMapZoom(13); // Zoom closer to user location
-        setLocationPermission('granted');
+        setLocationPermission("granted");
         setIsLocating(false);
       },
       (error) => {
-        console.error('Error getting location:', error);
-        setLocationPermission('denied');
+        console.error("Error getting location:", error);
+        setLocationPermission("denied");
         setIsLocating(false);
 
-        let errorMessage = 'Không thể lấy vị trí của bạn.';
+        let errorMessage = "Không thể lấy vị trí của bạn.";
         switch (error.code) {
           case error.PERMISSION_DENIED:
-            errorMessage = 'Bạn đã từ chối chia sẻ vị trí. Vui lòng bật lại trong cài đặt trình duyệt.';
+            errorMessage =
+              "Bạn đã từ chối chia sẻ vị trí. Vui lòng bật lại trong cài đặt trình duyệt.";
             break;
           case error.POSITION_UNAVAILABLE:
-            errorMessage = 'Thông tin vị trí không khả dụng.';
+            errorMessage = "Thông tin vị trí không khả dụng.";
             break;
           case error.TIMEOUT:
-            errorMessage = 'Yêu cầu vị trí đã hết thời gian.';
+            errorMessage = "Yêu cầu vị trí đã hết thời gian.";
             break;
         }
         alert(errorMessage);
@@ -140,7 +157,7 @@ const MapComponent = () => {
       {
         enableHighAccuracy: true,
         timeout: 10000,
-        maximumAge: 0 // Always request fresh location, don't use cached data
+        maximumAge: 0, // Always request fresh location, don't use cached data
       }
     );
   };
@@ -200,12 +217,24 @@ const MapComponent = () => {
           onClick={checkLocationPermission}
           disabled={isLocating}
           className={`p-2 rounded-lg shadow-md hover:shadow-lg transition-shadow border border-gray-200 disabled:opacity-50 ${
-            userLocation ? 'bg-blue-500 text-white' : 'bg-white text-gray-600'
+            userLocation ? "bg-blue-500 text-white" : "bg-white text-gray-600"
           }`}
-          title={isLocating ? "Đang lấy vị trí..." : userLocation ? "Cập nhật vị trí" : "Chia sẻ vị trí của bạn"}
+          title={
+            isLocating
+              ? "Đang lấy vị trí..."
+              : userLocation
+              ? "Cập nhật vị trí"
+              : "Chia sẻ vị trí của bạn"
+          }
         >
           {isLocating ? (
-            <div className={`w-4 h-4 border ${userLocation ? 'border-white border-t-transparent' : 'border-gray-600 border-t-transparent'} rounded-full animate-spin`}></div>
+            <div
+              className={`w-4 h-4 border ${
+                userLocation
+                  ? "border-white border-t-transparent"
+                  : "border-gray-600 border-t-transparent"
+              } rounded-full animate-spin`}
+            ></div>
           ) : (
             <FaLocationArrow className="w-4 h-4" />
           )}
@@ -226,7 +255,9 @@ const MapComponent = () => {
 
       {/* Map Legend */}
       <div className="absolute bottom-4 left-4 bg-white p-3 rounded-lg shadow-md border border-gray-200">
-        <h4 className="text-xs font-semibold text-gray-800 mb-2">Bản đồ Việt Nam</h4>
+        <h4 className="text-xs font-semibold text-gray-800 mb-2">
+          Bản đồ Việt Nam
+        </h4>
         <div className="flex flex-col gap-1">
           {userLocation && (
             <div className="flex items-center gap-2">
@@ -236,9 +267,8 @@ const MapComponent = () => {
           )}
           <div className="text-xs text-gray-500 mt-1">
             {userLocation
-              ? 'Nhấp vào marker để xem chi tiết'
-              : 'Nhấp nút định vị để chia sẻ vị trí'
-            }
+              ? "Nhấp vào marker để xem chi tiết"
+              : "Nhấp nút định vị để chia sẻ vị trí"}
           </div>
         </div>
       </div>
