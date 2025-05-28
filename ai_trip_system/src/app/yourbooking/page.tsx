@@ -1,8 +1,6 @@
 'use client';
 
-import { Metadata } from "next";
 import AllBookings from "./AllBookings";
-// import withAuth from "@/components/withAuth";
 
 
 function AllBookingsPage() {
@@ -34,4 +32,4 @@ function AllBookingsPage() {
   );
 }
 
-export default (AllBookingsPage);
+export default AllBookingsPage;
