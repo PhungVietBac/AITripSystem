@@ -27,7 +27,7 @@ const Header = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [isLogin, setIsLogin] = useState(false);
-  const [currentUser, setCurrentUser] = useState("");
+  const [currentUser, setCurrentUser] = useState(localStorage.getItem("current_user_id"));
   const router = useRouter();
 
   const toggleDropdown = () => {
@@ -192,7 +192,7 @@ const Header = () => {
           {isLogin && (
             <div className="hidden md:flex items-center">
               <Link
-                href="/profile"
+                href={`/profile/${currentUser}`}
                 className="flex items-center no-underline text-white hover:opacity-70 transition-opacity duration-300 mx-3"
                 aria-label="Profile"
               >
@@ -215,11 +215,10 @@ const Header = () => {
               <Image src="/hamburger.svg" width={24} height={24} alt="menu" />
             </div>
             <div
-              className={`absolute top-[60px] right-0 bg-white min-w-[200px] shadow-lg rounded-md z-50 opacity-0 transition-all duration-300 transform -translate-y-2 ${
-                isDropdownOpen
+              className={`absolute top-[60px] right-0 bg-white min-w-[200px] shadow-lg rounded-md z-50 opacity-0 transition-all duration-300 transform -translate-y-2 ${isDropdownOpen
                   ? "block opacity-100 translate-y-0"
                   : "hidden"
-              }`}
+                }`}
             >
               <div className="flex flex-col md:hidden">
                 <Link
