@@ -432,7 +432,7 @@ const Header = () => {
                 isDropdownOpen
                   ? "block opacity-100 translate-y-0"
                   : "hidden"
-              }`}
+                }`}
             >
               <div className="flex flex-col md:hidden">
                 {/* Menu items for non-logged in users */}

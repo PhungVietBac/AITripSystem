@@ -38,7 +38,6 @@ export default function LoginForm() {
             if (!response.ok) {
                 throw new Error('Server did not respond. Please try again.');
             }
-
             const data = await response.json();
 
             // Store token in cookie and update auth context
@@ -51,7 +50,6 @@ export default function LoginForm() {
             } else {
                 throw new Error('Invalid login credentials.');
             }
-
         } catch (err: any) {
             setError(err.message || 'An unknown error occurred.');
             console.error(err);
