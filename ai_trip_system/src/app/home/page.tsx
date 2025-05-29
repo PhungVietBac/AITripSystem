@@ -6,6 +6,9 @@ import ConversationSidebar from "../../components/ConversationSidebar";
 
 const MapView = dynamic(() => import("@/components/Map"), {
   ssr: false,
+  loading: () => <div className="h-full flex items-center justify-center bg-gray-50">
+    <div className="text-gray-500">Đang tải bản đồ...</div>
+  </div>
 });
 
 const Home = () => {
@@ -48,7 +51,7 @@ const Home = () => {
             {/* Bản đồ (bên phải) */}
             <div className="w-80 flex-shrink-0">
               <div className="h-[600px] bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
-                <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
+                <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-100 text-gray-800">
                   <h2 className="text-lg font-semibold">Bản đồ</h2>
                 </div>
                 <div className="h-[550px]">

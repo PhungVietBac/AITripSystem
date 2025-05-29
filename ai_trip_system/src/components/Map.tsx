@@ -56,12 +56,14 @@ interface UserLocation {
   accuracy?: number;
 }
 
-const Map = () => {
+const MapComponent = () => {
   const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
   const [locationPermission, setLocationPermission] = useState<'prompt' | 'granted' | 'denied'>('prompt');
   const [mapCenter, setMapCenter] = useState<[number, number]>(VIETNAM_CENTER);
   const [mapZoom, setMapZoom] = useState(VIETNAM_ZOOM);
   const [isLocating, setIsLocating] = useState(false);
+  const mapRef = useRef<L.Map | null>(null);
+  const [mapKey, setMapKey] = useState(() => Math.random().toString(36).substr(2, 9));
 
   // Check and request location permission
   const checkLocationPermission = async () => {
@@ -143,17 +145,24 @@ const Map = () => {
     );
   };
 
-  // No auto-request on mount - let user decide when to share location
+  // Cleanup effect to prevent map container reuse
+  useEffect(() => {
+    return () => {
+      // Force re-render of map on unmount
+      setMapKey(Math.random().toString(36).substr(2, 9));
+    };
+  }, []);
 
   return (
     <div className="map-container relative h-full">
-
       <MapContainer
+        key={mapKey}
         center={VIETNAM_CENTER}
         zoom={VIETNAM_ZOOM}
         scrollWheelZoom={true}
         style={{ height: "100%", width: "100%" }}
         className="map-view z-0"
+        ref={mapRef}
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors'
@@ -235,6 +244,25 @@ const Map = () => {
       </div>
     </div>
   );
+};
+
+// Wrapper component to handle SSR and prevent map container conflicts
+const Map = () => {
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  if (!isMounted) {
+    return (
+      <div className="h-full w-full flex items-center justify-center bg-gray-100">
+        <div className="text-gray-500">Đang tải bản đồ...</div>
+      </div>
+    );
+  }
+
+  return <MapComponent />;
 };
 
 export default Map;

@@ -1,10 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { 
-  PlusIcon, 
-  ChatBubbleLeftIcon, 
-  TrashIcon, 
+import {
+  PlusIcon,
+  ChatBubbleLeftIcon,
+  TrashIcon,
   PencilIcon,
   ChevronDownIcon,
   ChevronRightIcon
@@ -49,11 +49,11 @@ export default function ConversationSidebar({
 
   const loadConversations = async () => {
     if (!user?.id) return;
-    
+
     try {
       setIsLoading(true);
       const response = await fetch(`/api/conversations?userId=${user.id}&limit=50`);
-      
+
       if (response.ok) {
         const data = await response.json();
         setConversations(data);
@@ -94,7 +94,7 @@ export default function ConversationSidebar({
 
   const handleDeleteConversation = async (conversationId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    
+
     if (!user?.id || !confirm('Bạn có chắc muốn xóa cuộc trò chuyện này?')) return;
 
     try {
@@ -104,7 +104,7 @@ export default function ConversationSidebar({
 
       if (response.ok) {
         setConversations(prev => prev.filter(conv => conv.id !== conversationId));
-        
+
         // If deleting current conversation, create new one
         if (conversationId === currentConversationId) {
           onNewConversation();
@@ -132,9 +132,9 @@ export default function ConversationSidebar({
       });
 
       if (response.ok) {
-        setConversations(prev => 
-          prev.map(conv => 
-            conv.id === conversationId 
+        setConversations(prev =>
+          prev.map(conv =>
+            conv.id === conversationId
               ? { ...conv, title: newTitle.trim() }
               : conv
           )
@@ -167,7 +167,7 @@ export default function ConversationSidebar({
 
   const groupConversationsByDate = (conversations: Conversation[]) => {
     const groups: { [key: string]: Conversation[] } = {};
-    
+
     conversations.forEach(conv => {
       const dateKey = formatDate(conv.updatedAt);
       if (!groups[dateKey]) {
@@ -183,18 +183,18 @@ export default function ConversationSidebar({
 
   if (isCollapsed) {
     return (
-      <div className={`w-16 bg-gray-900 text-white flex flex-col ${className}`}>
+      <div className={`w-16 bg-gradient-to-b from-blue-50 to-indigo-100 text-gray-700 flex flex-col border-r border-gray-200 ${className}`}>
         <button
           onClick={() => setIsCollapsed(false)}
-          className="p-4 hover:bg-gray-800 transition-colors"
+          className="p-4 hover:bg-blue-100 transition-colors rounded-lg m-2"
           title="Mở rộng sidebar"
         >
           <ChevronRightIcon className="h-5 w-5" />
         </button>
-        
+
         <button
           onClick={handleNewConversation}
-          className="p-4 hover:bg-gray-800 transition-colors"
+          className="p-4 hover:bg-blue-100 transition-colors rounded-lg m-2"
           title="Cuộc trò chuyện mới"
         >
           <PlusIcon className="h-5 w-5" />
@@ -204,23 +204,23 @@ export default function ConversationSidebar({
   }
 
   return (
-    <div className={`w-80 bg-gray-900 text-white flex flex-col ${className}`}>
+    <div className={`w-80 bg-gradient-to-b from-blue-50 to-indigo-100 text-gray-700 flex flex-col border-r border-gray-200 ${className}`}>
       {/* Header */}
-      <div className="p-4 border-b border-gray-700">
+      <div className="p-4 border-b border-blue-200">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-semibold">Conversations</h2>
+          <h2 className="text-lg font-semibold text-gray-800">Conversations</h2>
           <button
             onClick={() => setIsCollapsed(true)}
-            className="p-1 hover:bg-gray-800 rounded transition-colors"
+            className="p-1 hover:bg-blue-100 rounded transition-colors"
             title="Thu gọn sidebar"
           >
             <ChevronDownIcon className="h-4 w-4" />
           </button>
         </div>
-        
+
         <button
           onClick={handleNewConversation}
-          className="w-full flex items-center gap-3 p-3 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors"
+          className="w-full flex items-center gap-3 p-3 bg-blue-100 hover:bg-blue-200 rounded-lg transition-colors text-gray-700"
         >
           <PlusIcon className="h-5 w-5" />
           <span>New Conversation</span>
@@ -233,12 +233,12 @@ export default function ConversationSidebar({
           <div className="p-4">
             <div className="space-y-3">
               {[...Array(5)].map((_, i) => (
-                <div key={i} className="h-12 bg-gray-800 rounded animate-pulse" />
+                <div key={i} className="h-12 bg-blue-200 rounded animate-pulse" />
               ))}
             </div>
           </div>
         ) : conversations.length === 0 ? (
-          <div className="p-4 text-center text-gray-400">
+          <div className="p-4 text-center text-gray-500">
             <ChatBubbleLeftIcon className="h-12 w-12 mx-auto mb-3 opacity-50" />
             <p>Chưa có cuộc trò chuyện nào</p>
             <p className="text-sm mt-1">Bắt đầu chat để tạo cuộc trò chuyện đầu tiên</p>
@@ -247,7 +247,7 @@ export default function ConversationSidebar({
           <div className="p-2">
             {Object.entries(conversationGroups).map(([dateGroup, groupConversations]) => (
               <div key={dateGroup} className="mb-4">
-                <h3 className="text-xs font-medium text-gray-400 px-3 py-2 uppercase tracking-wider">
+                <h3 className="text-xs font-medium text-gray-600 px-3 py-2 uppercase tracking-wider">
                   {dateGroup}
                 </h3>
                 <div className="space-y-1">
@@ -257,8 +257,8 @@ export default function ConversationSidebar({
                       onClick={() => onConversationSelect(conversation.id)}
                       className={`group relative p-3 rounded-lg cursor-pointer transition-colors ${
                         conversation.id === currentConversationId
-                          ? 'bg-gray-700'
-                          : 'hover:bg-gray-800'
+                          ? 'bg-blue-200 border border-blue-300'
+                          : 'hover:bg-blue-100'
                       }`}
                     >
                       {editingId === conversation.id ? (
@@ -274,40 +274,40 @@ export default function ConversationSidebar({
                               setEditingId(null);
                             }
                           }}
-                          className="w-full bg-gray-600 text-white px-2 py-1 rounded text-sm"
+                          className="w-full bg-white border border-blue-300 text-gray-700 px-2 py-1 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                           autoFocus
                           onClick={(e) => e.stopPropagation()}
                         />
                       ) : (
                         <>
                           <div className="flex items-start justify-between">
-                            <h4 className="text-sm font-medium truncate pr-2 flex-1">
+                            <h4 className="text-sm font-medium truncate pr-2 flex-1 text-gray-800">
                               {conversation.title}
                             </h4>
                             <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                               <button
                                 onClick={(e) => startEditing(conversation, e)}
-                                className="p-1 hover:bg-gray-600 rounded"
+                                className="p-1 hover:bg-blue-200 rounded text-gray-600"
                                 title="Đổi tên"
                               >
                                 <PencilIcon className="h-3 w-3" />
                               </button>
                               <button
                                 onClick={(e) => handleDeleteConversation(conversation.id, e)}
-                                className="p-1 hover:bg-gray-600 rounded text-red-400"
+                                className="p-1 hover:bg-red-100 rounded text-red-500"
                                 title="Xóa"
                               >
                                 <TrashIcon className="h-3 w-3" />
                               </button>
                             </div>
                           </div>
-                          
+
                           {conversation.lastMessage && (
-                            <p className="text-xs text-gray-400 mt-1 truncate">
+                            <p className="text-xs text-gray-500 mt-1 truncate">
                               {conversation.lastMessage}
                             </p>
                           )}
-                          
+
                           <div className="flex items-center justify-between mt-2 text-xs text-gray-500">
                             <span>{conversation.messageCount} tin nhắn</span>
                             {conversation.lastMessageAt && (
