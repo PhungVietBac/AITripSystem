@@ -1,15 +1,24 @@
-import Contents from "@/components/contents";
-import HeroSections from "@/app/intro/herosection";
-import Features from "@/components/features";
-import Members from "@/components/members";
+'use client';
 
-export default function IntroPage() {
-  return (
-    <div className="bg-gradient-to-r from-[#000080] to-[#00BFFF] min-h-screen">
-      <HeroSections />
-      <Features />
-      <Contents />
-      <Members />
-    </div>
-  );
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import IntroPage from './intro/page';
+
+// Main page with auth check
+export default function HomePage() {
+  const router = useRouter();
+
+  // Redirect to home if logged in
+  useEffect(() => {
+    // Check localStorage directly for immediate decision
+    const isUserLoggedIn = typeof window !== 'undefined' &&
+      localStorage.getItem('isLoggedIn') === 'true';
+
+    if (isUserLoggedIn) {
+      router.replace('/home');
+    }
+  }, [router]);
+
+  // Show intro page while checking or if not logged in
+  return <IntroPage />;
 }

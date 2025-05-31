@@ -3,6 +3,8 @@
 import { useState, FormEvent } from 'react';
 import Loading from '@/components/Loading';
 import Link from 'next/link';
+import { useAuth } from '@/context/AuthContext';
+import { useRouter } from 'next/navigation';
 import { setCookie } from 'cookies-next';
 import { FaEnvelope, FaLock } from 'react-icons/fa';
 
@@ -11,6 +13,9 @@ export default function LoginForm() {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const router = useRouter();
+    const { login, socialLogin } = useAuth();
+
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
@@ -36,19 +41,13 @@ export default function LoginForm() {
             }
             const data = await response.json();
 
+            // Store token in cookie and update auth context
             if (data.access_token) {
-                setCookie('token', data.access_token, { maxAge: 60 * 60 * 24 }); // 1 day
+                // Use the login function from auth context
+                login(data.access_token, username);
 
-                const profileRes = await fetch(`/api/profile`, {
-                    headers: {
-                        Authorization: `Bearer ${data.access_token}`,
-                    },
-                });
-                if (profileRes.ok) {
-                    const profileData = await profileRes.json();
-                    localStorage.setItem("current_user_id", profileData.userId);
-                }
-                window.location.href = '/home';
+                // Redirect to home page using router
+                router.push('/home');
             } else {
                 throw new Error('Thông tin đăng nhập không hợp lệ.');
             }
@@ -139,6 +138,7 @@ export default function LoginForm() {
                     <div className="mt-6">
                         <button
                             type="button"
+                            onClick={() => socialLogin('google')}
                             className="w-full flex items-center justify-center py-3 px-4 border border-gray-300 rounded-xl hover:bg-gray-50 transition duration-200"
                         >
                             <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24">
