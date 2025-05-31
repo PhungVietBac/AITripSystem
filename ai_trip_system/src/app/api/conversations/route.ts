@@ -1,169 +1,240 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Pool } from 'pg';
-import { createClient } from 'redis';
 
 // Database connection
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
 });
 
-// Redis connection
-const redis = createClient({
-  url: process.env.REDIS_URL || 'redis://localhost:6379'
-});
-
-// Initialize Redis connection
-if (!redis.isOpen) {
-  redis.connect().catch(console.error);
+// Types
+interface Conversation {
+  id: string;
+  user_id: string;
+  title: string;
+  created_at: string;
+  updated_at: string;
+  is_archived: boolean;
 }
 
-// GET /api/conversations - Get user's conversations
+interface ConversationCreate {
+  user_id: string;
+  title: string;
+}
+
+interface ConversationUpdate {
+  title?: string;
+  is_archived?: boolean;
+}
+
+// GET /api/conversations - Lấy danh sách conversations hoặc conversation cụ thể
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
-    const limit = parseInt(searchParams.get('limit') || '20');
-    const offset = parseInt(searchParams.get('offset') || '0');
+    const conversationId = searchParams.get('id');
 
     if (!userId) {
       return NextResponse.json(
-        { error: 'User ID is required' },
+        { error: 'userId is required' },
         { status: 400 }
       );
     }
 
-    // Try to get from Redis cache first
-    const cacheKey = `conversations:${userId}:${limit}:${offset}`;
-    const cached = await redis.get(cacheKey);
-    
-    if (cached) {
-      return NextResponse.json(JSON.parse(cached));
+    // Nếu có conversationId, lấy conversation cụ thể
+    if (conversationId) {
+      const query = `
+        SELECT id, user_id, title, created_at, updated_at, is_archived
+        FROM conversations
+        WHERE id = $1 AND user_id = $2
+      `;
+
+      const result = await pool.query(query, [conversationId, userId]);
+
+      if (result.rows.length === 0) {
+        return NextResponse.json(
+          { error: 'Conversation not found' },
+          { status: 404 }
+        );
+      }
+
+      return NextResponse.json(result.rows[0]);
     }
 
-    // Query database
-    const query = `
-      SELECT 
-        id,
-        title,
-        created_at,
-        updated_at,
-        message_count,
-        last_message_at,
-        last_message
-      FROM conversation_summaries 
-      WHERE user_id = $1 AND is_archived = FALSE
-      ORDER BY updated_at DESC
-      LIMIT $2 OFFSET $3
+    // Lấy danh sách conversations
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '20');
+    const includeArchived = searchParams.get('includeArchived') === 'true';
+    const search = searchParams.get('search');
+
+    const offset = (page - 1) * limit;
+
+    // Build query
+    let query = `
+      SELECT id, user_id, title, created_at, updated_at, is_archived
+      FROM conversations
+      WHERE user_id = $1
     `;
+    const params: any[] = [userId];
+    let paramIndex = 2;
 
-    const result = await pool.query(query, [userId, limit, offset]);
+    if (!includeArchived) {
+      query += ` AND is_archived = false`;
+    }
 
-    const conversations = result.rows.map(row => ({
-      id: row.id,
-      title: row.title,
-      createdAt: row.created_at,
-      updatedAt: row.updated_at,
-      messageCount: row.message_count,
-      lastMessageAt: row.last_message_at,
-      lastMessage: row.last_message
-    }));
+    if (search) {
+      query += ` AND title ILIKE $${paramIndex}`;
+      params.push(`%${search}%`);
+      paramIndex++;
+    }
 
-    // Cache for 5 minutes
-    await redis.setEx(cacheKey, 300, JSON.stringify(conversations));
+    // Count total
+    const countQuery = query.replace(
+      'SELECT id, user_id, title, created_at, updated_at, is_archived',
+      'SELECT COUNT(*)'
+    );
+    const countResult = await pool.query(countQuery, params);
+    const total = parseInt(countResult.rows[0].count);
 
-    return NextResponse.json(conversations);
+    // Get conversations with pagination
+    query += ` ORDER BY updated_at DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
+    params.push(limit, offset);
+
+    const result = await pool.query(query, params);
+    const conversations: Conversation[] = result.rows;
+
+    return NextResponse.json({
+      conversations,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+        hasNext: page * limit < total,
+        hasPrev: page > 1
+      }
+    });
 
   } catch (error) {
     console.error('Error fetching conversations:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch conversations' },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }
 }
 
-// POST /api/conversations - Create new conversation
+// POST /api/conversations - Tạo conversation mới
 export async function POST(request: NextRequest) {
   try {
-    const { userId, title, firstMessage } = await request.json();
+    const body: ConversationCreate = await request.json();
+    const { user_id, title } = body;
 
-    if (!userId) {
+    if (!user_id || !title) {
       return NextResponse.json(
-        { error: 'User ID is required' },
+        { error: 'user_id and title are required' },
         { status: 400 }
       );
     }
 
-    const client = await pool.connect();
-    
-    try {
-      await client.query('BEGIN');
+    // Generate ID
+    const id = `conv_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
 
-      // Create conversation
-      const conversationQuery = `
-        INSERT INTO conversations (user_id, title)
-        VALUES ($1, $2)
-        RETURNING id, created_at
-      `;
-      
-      const conversationResult = await client.query(conversationQuery, [
-        userId,
-        title || 'New Conversation'
-      ]);
+    const query = `
+      INSERT INTO conversations (id, user_id, title, created_at, updated_at, is_archived)
+      VALUES ($1, $2, $3, NOW(), NOW(), false)
+      RETURNING id, user_id, title, created_at, updated_at, is_archived
+    `;
 
-      const conversationId = conversationResult.rows[0].id;
+    const result = await pool.query(query, [id, user_id, title]);
+    const conversation: Conversation = result.rows[0];
 
-      // Add first message if provided
-      if (firstMessage) {
-        const messageQuery = `
-          INSERT INTO messages (conversation_id, content, role)
-          VALUES ($1, $2, 'user')
-        `;
-        await client.query(messageQuery, [conversationId, firstMessage]);
-
-        // Auto-generate title from first message if not provided
-        if (!title) {
-          const titleQuery = `
-            UPDATE conversations 
-            SET title = generate_conversation_title($1)
-            WHERE id = $1
-          `;
-          await client.query(titleQuery, [conversationId]);
-        }
-      }
-
-      await client.query('COMMIT');
-
-      // Clear user's conversation cache
-      const cachePattern = `conversations:${userId}:*`;
-      const keys = await redis.keys(cachePattern);
-      if (keys.length > 0) {
-        await redis.del(keys);
-      }
-
-      return NextResponse.json({
-        id: conversationId,
-        createdAt: conversationResult.rows[0].created_at
-      });
-
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw error;
-    } finally {
-      client.release();
-    }
+    return NextResponse.json(conversation, { status: 201 });
 
   } catch (error) {
     console.error('Error creating conversation:', error);
     return NextResponse.json(
-      { error: 'Failed to create conversation' },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }
 }
 
-// DELETE /api/conversations - Archive conversation
+// PUT /api/conversations - Cập nhật conversation
+export async function PUT(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const conversationId = searchParams.get('id');
+    const body: ConversationUpdate & { userId: string } = await request.json();
+    const { userId, title, is_archived } = body;
+
+    if (!conversationId || !userId) {
+      return NextResponse.json(
+        { error: 'conversationId and userId are required' },
+        { status: 400 }
+      );
+    }
+
+    // Check if conversation exists and belongs to user
+    const checkQuery = `
+      SELECT id FROM conversations
+      WHERE id = $1 AND user_id = $2
+    `;
+    const checkResult = await pool.query(checkQuery, [conversationId, userId]);
+
+    if (checkResult.rows.length === 0) {
+      return NextResponse.json(
+        { error: 'Conversation not found' },
+        { status: 404 }
+      );
+    }
+
+    // Build update query dynamically
+    const updates: string[] = [];
+    const params: any[] = [];
+    let paramIndex = 1;
+
+    if (title !== undefined) {
+      updates.push(`title = $${paramIndex}`);
+      params.push(title);
+      paramIndex++;
+    }
+
+    if (is_archived !== undefined) {
+      updates.push(`is_archived = $${paramIndex}`);
+      params.push(is_archived);
+      paramIndex++;
+    }
+
+    if (updates.length === 0) {
+      return NextResponse.json(
+        { error: 'No fields to update' },
+        { status: 400 }
+      );
+    }
+
+    updates.push(`updated_at = NOW()`);
+    params.push(conversationId, userId);
+
+    const query = `
+      UPDATE conversations
+      SET ${updates.join(', ')}
+      WHERE id = $${paramIndex} AND user_id = $${paramIndex + 1}
+      RETURNING id, user_id, title, created_at, updated_at, is_archived
+    `;
+
+    const result = await pool.query(query, params);
+    return NextResponse.json(result.rows[0]);
+
+  } catch (error) {
+    console.error('Error updating conversation:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+
+// DELETE /api/conversations - Soft delete (archive) conversation
 export async function DELETE(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -172,15 +243,15 @@ export async function DELETE(request: NextRequest) {
 
     if (!conversationId || !userId) {
       return NextResponse.json(
-        { error: 'Conversation ID and User ID are required' },
+        { error: 'conversationId and userId are required' },
         { status: 400 }
       );
     }
 
-    // Archive conversation (soft delete)
+    // Soft delete by setting is_archived = true
     const query = `
-      UPDATE conversations 
-      SET is_archived = TRUE, updated_at = CURRENT_TIMESTAMP
+      UPDATE conversations
+      SET is_archived = true, updated_at = NOW()
       WHERE id = $1 AND user_id = $2
       RETURNING id
     `;
@@ -194,22 +265,12 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // Clear user's conversation cache
-    const cachePattern = `conversations:${userId}:*`;
-    const keys = await redis.keys(cachePattern);
-    if (keys.length > 0) {
-      await redis.del(keys);
-    }
-
-    // Clear conversation messages cache
-    await redis.del(`messages:${conversationId}`);
-
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ message: 'Conversation archived successfully' });
 
   } catch (error) {
-    console.error('Error archiving conversation:', error);
+    console.error('Error deleting conversation:', error);
     return NextResponse.json(
-      { error: 'Failed to archive conversation' },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }
