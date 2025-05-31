@@ -3,7 +3,7 @@
 import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { setCookie } from 'cookies-next';
+import { useAuth } from '@/context/AuthContext';
 
 export default function LoginForm() {
     const [username, setUsername] = useState('');
@@ -11,6 +11,7 @@ export default function LoginForm() {
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const router = useRouter();
+    const { login, socialLogin } = useAuth();
 
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -39,20 +40,13 @@ export default function LoginForm() {
             }
             const data = await response.json();
 
-            // Store token in cookie
+            // Store token in cookie and update auth context
             if (data.access_token) {
-                setCookie('token', data.access_token, { maxAge: 60 * 60 * 24 }); // 1 day
+                // Use the login function from auth context
+                login(data.access_token, username);
 
-                const profileRes = await fetch(`/api/profile`, {
-                    headers: {
-                        Authorization: `Bearer ${data.access_token}`,
-                    },
-                });
-                if (profileRes.ok) {
-                    const profileData = await profileRes.json();
-                    localStorage.setItem("current_user_id", profileData.userId);
-                }
-                window.location.href = '/home';
+                // Redirect to home page using router
+                router.push('/home');
             } else {
                 throw new Error('Invalid login credentials.');
             }
@@ -142,24 +136,16 @@ export default function LoginForm() {
                         </div>
                     </div>
 
-                    <div className="mt-6 grid grid-cols-2 gap-3">
+                    <div className="mt-6 flex justify-center">
                         <button
                             type="button"
-                            className="w-full flex items-center justify-center py-2 px-4 border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                            onClick={() => socialLogin('google')}
+                            className="w-1/2 flex items-center justify-center py-2 px-4 border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-cyan-500"
                         >
                             <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
                                 <path d="M20.283 10.356h-8.327v3.451h4.792c-.446 2.193-2.313 3.453-4.792 3.453a5.27 5.27 0 0 1-5.279-5.28 5.27 5.27 0 0 1 5.279-5.279c1.259 0 2.397.447 3.29 1.178l2.6-2.599c-1.584-1.381-3.615-2.233-5.89-2.233a8.908 8.908 0 0 0-8.934 8.934 8.907 8.907 0 0 0 8.934 8.934c4.467 0 8.529-3.249 8.529-8.934 0-.528-.081-1.097-.202-1.625z"></path>
                             </svg>
                             <span className="ml-2">Google</span>
-                        </button>
-                        <button
-                            type="button"
-                            className="w-full flex items-center justify-center py-2 px-4 border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                        >
-                            <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M13.397 20.997v-8.196h2.765l.411-3.209h-3.176V7.548c0-.926.258-1.56 1.587-1.56h1.684V3.127A22.336 22.336 0 0 0 14.201 3c-2.444 0-4.122 1.492-4.122 4.231v2.355H7.332v3.209h2.753v8.202h3.312z"></path>
-                            </svg>
-                            <span className="ml-2">Facebook</span>
                         </button>
                     </div>
                 </div>
