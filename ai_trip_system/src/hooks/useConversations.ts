@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
+import useSWR from 'swr';
 
 interface Conversation {
   id: string;
@@ -19,34 +20,34 @@ interface Message {
   metadata?: any;
 }
 
+// Fetcher function for SWR
+const fetcher = (url: string) => fetch(url).then(res => {
+  if (!res.ok) throw new Error('Failed to fetch');
+  return res.json();
+});
+
 export function useConversations() {
   const { user } = useAuth();
-  const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const loadConversations = useCallback(async () => {
-    if (!user?.id) return;
-
-    try {
-      setIsLoading(true);
-      setError(null);
-      
-      const response = await fetch(`/api/conversations?userId=${user.id}&limit=50`);
-      
-      if (response.ok) {
-        const data = await response.json();
-        setConversations(data);
-      } else {
-        throw new Error('Failed to load conversations');
+  // Use SWR for data fetching
+  const { data: conversations, error: swrError, isLoading, mutate } = useSWR(
+    user?.id ? `/api/conversations?userId=${user.id}&limit=50` : null,
+    fetcher,
+    {
+      revalidateOnFocus: false,
+      revalidateOnReconnect: true,
+      dedupingInterval: 30000, // 30 seconds
+      onError: (err) => {
+        setError(err.message || 'Failed to load conversations');
+        console.error('Error loading conversations:', err);
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
-      console.error('Error loading conversations:', err);
-    } finally {
-      setIsLoading(false);
     }
-  }, [user?.id]);
+  );
+
+  const loadConversations = useCallback(async () => {
+    await mutate(); // Trigger revalidation
+  }, [mutate]);
 
   const createConversation = useCallback(async (title?: string, firstMessage?: string) => {
     if (!user?.id) return null;
@@ -66,7 +67,7 @@ export function useConversations() {
 
       if (response.ok) {
         const newConversation = await response.json();
-        await loadConversations(); // Refresh list
+        await mutate(); // Revalidate SWR cache
         return newConversation;
       } else {
         throw new Error('Failed to create conversation');
@@ -76,7 +77,7 @@ export function useConversations() {
       console.error('Error creating conversation:', err);
       return null;
     }
-  }, [user?.id, loadConversations]);
+  }, [user?.id, mutate]);
 
   const deleteConversation = useCallback(async (conversationId: string) => {
     if (!user?.id) return false;
@@ -87,7 +88,7 @@ export function useConversations() {
       });
 
       if (response.ok) {
-        setConversations(prev => prev.filter(conv => conv.id !== conversationId));
+        await mutate(); // Revalidate SWR cache
         return true;
       } else {
         throw new Error('Failed to delete conversation');
@@ -97,7 +98,7 @@ export function useConversations() {
       console.error('Error deleting conversation:', err);
       return false;
     }
-  }, [user?.id]);
+  }, [user?.id, mutate]);
 
   const updateConversationTitle = useCallback(async (conversationId: string, newTitle: string) => {
     if (!user?.id) return false;
@@ -189,26 +190,18 @@ export function useConversations() {
     }
   }, [user?.id, loadConversations]);
 
-  // Load conversations when user changes
-  useEffect(() => {
-    if (user?.id) {
-      loadConversations();
-    } else {
-      setConversations([]);
-    }
-  }, [user?.id, loadConversations]);
-
   return {
-    conversations,
+    conversations: conversations || [],
     isLoading,
-    error,
+    error: error || swrError?.message,
     loadConversations,
     createConversation,
     deleteConversation,
     updateConversationTitle,
     loadConversationMessages,
     addMessageToConversation,
-    clearError: () => setError(null)
+    clearError: () => setError(null),
+    mutate // Expose mutate for manual revalidation
   };
 }
 
