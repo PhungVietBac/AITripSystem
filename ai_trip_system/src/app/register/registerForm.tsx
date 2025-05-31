@@ -72,22 +72,22 @@ export default function RegisterForm() {
   };
 
   return (
-    <div className="max-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="w-full max-w-md">
-        <div className="rounded-2xl shadow-xl filter backdrop-blur-md bg-[rgba(0, 0, 0, 0.1)] p-8">
+    <div className="min-h-screen flex items-center justify-center py-4 sm:py-8 md:py-12 px-4 sm:px-6 lg:px-8 overflow-y-auto">
+      <div className="w-full max-w-md my-4">
+        <div className="rounded-2xl shadow-xl filter backdrop-blur-md bg-[rgba(0, 0, 0, 0.1)] p-4 sm:p-6 md:p-8">
           {/* Logo */}
-          <div className="flex justify-center mb-6">
-            <div className="w-16 h-16 bg-cyan-100 rounded-lg flex items-center justify-center">
-              <svg className="w-10 h-10 text-cyan-500" viewBox="0 0 24 24" fill="currentColor">
+          <div className="flex justify-center mb-4 sm:mb-6">
+            <div className="w-12 h-12 sm:w-16 sm:h-16 bg-cyan-100 rounded-lg flex items-center justify-center">
+              <svg className="w-8 h-8 sm:w-10 sm:h-10 text-cyan-500" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M12 2L2 7v10l10 5 10-5V7L12 2zm0 2.236L20 9l-8 4-8-4 8-4.764zM4 9.618v6L12 20l8-4.382v-6L12 14 4 9.618z" />
               </svg>
             </div>
           </div>
 
           {/* Welcome Text */}
-          <div className="text-center mb-8">
-            <h2 className="text-2xl font-bold text-gray-800">Đăng ký tài khoản mới 👋</h2>
-            <p className="text-gray-500 text-sm mt-1">Tham gia cùng EXPLAVUE ngay hôm nay!</p>
+          <div className="text-center mb-6">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-800">Đăng ký tài khoản mới 👋</h2>
+            <p className="text-gray-500 text-xs sm:text-sm mt-1">Tham gia cùng EXPLAVUE ngay hôm nay!</p>
           </div>
 
           {error && (
