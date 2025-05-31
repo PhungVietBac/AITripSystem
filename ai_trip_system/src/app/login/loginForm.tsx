@@ -5,12 +5,16 @@ import Loading from '@/components/Loading';
 import Link from 'next/link';
 import { setCookie } from 'cookies-next';
 import { FaEnvelope, FaLock } from 'react-icons/fa';
+import { useAuth } from '@/context/AuthContext';
 
 export default function LoginForm() {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const router = useRouter();
+    const { login, socialLogin } = useAuth();
+
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
@@ -36,19 +40,13 @@ export default function LoginForm() {
             }
             const data = await response.json();
 
+            // Store token in cookie and update auth context
             if (data.access_token) {
-                setCookie('token', data.access_token, { maxAge: 60 * 60 * 24 }); // 1 day
+                // Use the login function from auth context
+                login(data.access_token, username);
 
-                const profileRes = await fetch(`/api/profile`, {
-                    headers: {
-                        Authorization: `Bearer ${data.access_token}`,
-                    },
-                });
-                if (profileRes.ok) {
-                    const profileData = await profileRes.json();
-                    localStorage.setItem("current_user_id", profileData.userId);
-                }
-                window.location.href = '/home';
+                // Redirect to home page using router
+                router.push('/home');
             } else {
                 throw new Error('Thông tin đăng nhập không hợp lệ.');
             }
@@ -134,6 +132,7 @@ export default function LoginForm() {
                         >
                             {isLoading ? <Loading message='Đang kiểm tra thông tin đăng nhập!'/> : 'Đăng nhập'}
                         </button>
+                      
                     </form>
 
                     <div className="mt-6">
@@ -147,6 +146,7 @@ export default function LoginForm() {
                             </svg>
                             Đăng nhập với Google
                         </button>
+                        
                     </div>
 
                     <div className="mt-6 text-center text-sm">
