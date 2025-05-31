@@ -34,18 +34,24 @@ export default function LoginForm() {
             if (!response.ok) {
                 throw new Error('Đăng nhập không thành công. Vui lòng kiểm tra thông tin đăng nhập.');
             }
-
             const data = await response.json();
 
             if (data.access_token) {
                 setCookie('token', data.access_token, { maxAge: 60 * 60 * 24 }); // 1 day
-                
-                // Reload page to activate middleware
+
+                const profileRes = await fetch(`/api/profile`, {
+                    headers: {
+                        Authorization: `Bearer ${data.access_token}`,
+                    },
+                });
+                if (profileRes.ok) {
+                    const profileData = await profileRes.json();
+                    localStorage.setItem("current_user_id", profileData.userId);
+                }
                 window.location.href = '/home';
             } else {
                 throw new Error('Thông tin đăng nhập không hợp lệ.');
             }
-
         } catch (err: any) {
             setError(err.message || 'Đã có lỗi xảy ra.');
             console.error(err);

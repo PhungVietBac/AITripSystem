@@ -1,40 +1,61 @@
 'use client'
-import { FaChevronLeft, FaPen, FaXmark, FaCamera, FaUserCheck } from "react-icons/fa6";
+import { FaChevronLeft, FaPen, FaXmark, FaCamera, FaUserCheck, FaUserXmark, FaUserPlus } from "react-icons/fa6";
 import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect, ChangeEvent } from "react";
 import Image from "next/image";
 import useSWR, { mutate } from "swr"
 import { ToastContainer, Slide, toast } from "react-toastify";
+import { getCookie } from "cookies-next";
+import { use } from "react";
 
-interface ProfilePageProps {
-  userID: string;
-}
-
-export default function ProfilePage({ userID = "US7403" }: ProfilePageProps) {
+export default function ProfilePage({ params }: { params: Promise<{ userid: string }> }) {
   const [showEditModal, setShowEditModal] = useState(false);
   const [userEdit, setUserEdit] = useState<UserBase>();
   const [step, setStep] = useState(1);
-  const router = useRouter();
   const [previewAvatar, setPreviewAvatar] = useState<string | null>(null);
-  const avatarFileRef = useRef<File | null>(null);
   const [isFriendRequestSent, setIsFriendRequestSent] = useState(false);
+  const [isFriend, setIsFriend] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isSending, setIsSending] = useState(false);
 
-  const accessToken = localStorage.getItem("token");
+  const avatarFileRef = useRef<File | null>(null);
+  const router = useRouter();
+
+  const { userid: userID } = use(params);
+  const accessToken = getCookie("token");
+  const currentUserID = localStorage.getItem("current_user_id");
+
   useEffect(() => {
     if (!accessToken) {
       router.push("/login");
+      return;
     }
   }, []);
 
-  // Get user info
   const fetcher = (url: string) => fetch(url, {
     headers: {
       Authorization: `Bearer ${accessToken}`,
       'Content-Type': 'application/json',
     }
   }).then(res => res.json())
-  const { data: userData, error, isLoading } = useSWR<UserResponse>(`https://aitripsystem-api.onrender.com/api/v1/users/idUser?lookup=${userID}`, fetcher,
+
+  const { data: userData, error: userError, isLoading: userLoading } = useSWR<UserResponse>(`https://aitripsystem-api.onrender.com/api/v1/users/idUser?lookup=${userID}`, fetcher,
+    {
+      revalidateIfStale: false,
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false
+    }
+  );
+  const { data: friendsData, error: friendsError, isLoading: friendsLoading } = useSWR<UserResponse[]>(`https://aitripsystem-api.onrender.com/api/v1/users/${userID}/friends`, fetcher,
+    {
+      revalidateIfStale: false,
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false,
+      refreshInterval: 3000
+    }
+  );
+
+  const { data: friendRequestData, error: friendRequestError, isLoading: friendRequestLoading } = useSWR<UserResponse[]>(`https://aitripsystem-api.onrender.com/api/v1/users/${userID}/friend_requests_to`, fetcher,
     {
       revalidateIfStale: false,
       revalidateOnFocus: false,
@@ -42,24 +63,32 @@ export default function ProfilePage({ userID = "US7403" }: ProfilePageProps) {
     }
   )
 
-  // if (error) return <div>Failed to load user data: {error.message}</div>
-  // if (isLoading) return <div>Loading...</div>
   useEffect(() => {
-    if (error) {
-      toast.error("Lấy dữ liệu không thành công");
+    if (friendRequestData && Array.isArray(friendRequestData)) {
+      const requestExists = friendRequestData.some(
+        request => request.iduser === currentUserID
+      );
+      setIsFriendRequestSent(requestExists);
     }
-  }, [error]);
+  }, [friendRequestData, currentUserID]);
 
   useEffect(() => {
-    if (isLoading) {
-      toast.warning("Đang tải dữ liệu người dùng");
+    if (friendsData && Array.isArray(friendsData)) {
+      const requestExists = friendsData.some(
+        request => request.iduser === currentUserID
+      );
+      setIsFriend(requestExists);
     }
-  }, [isLoading]);
-  useEffect(() => {
-    if (userData) {
-      toast.success("Lấy dữ liệu thành công");
-    }
-  }, [userData]);
+  }, [friendsData, currentUserID]);
+
+  if (userError) return <div>Failed to load user data: {userError.message}</div>
+  if (userLoading) return <div>Loading...</div>
+  if (friendsError) return console.log(friendsError.message);
+  if (friendsLoading) return console.log("Loading friend list...");
+  if (friendRequestError) return console.log(friendsError.message);
+  if (friendRequestLoading) return console.log("Loading friend request to list...");
+
+  const friendsCount = friendsData?.length ?? 0;
 
   const genderOptions = [
     { label: "Nam", value: 0 },
@@ -73,7 +102,7 @@ export default function ProfilePage({ userID = "US7403" }: ProfilePageProps) {
   }
 
   const handleBtnBack = () => {
-    router.push("/");
+    router.push("/home");
   };
 
   const openEditModal = () => {
@@ -115,6 +144,16 @@ export default function ProfilePage({ userID = "US7403" }: ProfilePageProps) {
     }))
   };
 
+  const handlePhonenumberChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    if (value === '' || /^\+?\d*$/.test(value)) {
+      setUserEdit(prev => ({
+        ...prev!,
+        phonenumber: value
+      }));
+    }
+  };
+
   const handleDescriptionChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;
     setUserEdit(prev => ({
@@ -125,7 +164,6 @@ export default function ProfilePage({ userID = "US7403" }: ProfilePageProps) {
 
   const handleSaveBtn = async () => {
     setIsSaving(true);
-
     try {
       // Cập nhật avatar nếu có
       const fileUpdate = avatarFileRef.current;
@@ -151,6 +189,7 @@ export default function ProfilePage({ userID = "US7403" }: ProfilePageProps) {
       const payload = {
         name: userEdit?.name,
         gender: userEdit?.gender,
+        phonenumber: userEdit?.phonenumber,
         description: userEdit?.description,
       };
 
@@ -181,8 +220,51 @@ export default function ProfilePage({ userID = "US7403" }: ProfilePageProps) {
     }
   };
 
-  const handleFriendRequestSent = () => {
-    setIsFriendRequestSent(true);
+  const handleFriendRequestSent = async () => {
+    setIsSending(true);
+    try {
+      if (isFriendRequestSent || isFriend) {
+        const cancelRes = await fetch(
+          `https://aitripsystem-api.onrender.com/api/v1/friends?id_self=${encodeURIComponent(currentUserID ?? "")}&id_friend=${encodeURIComponent(userID ?? "")}`,
+          {
+            method: "DELETE",
+            headers: {
+              Authorization: `Bearer ${accessToken}`
+            },
+          }
+        );
+
+        if (!cancelRes.ok) throw new Error("Failed to cancel friend request.");
+        setIsFriend(false);
+        setIsFriendRequestSent(false);
+        await mutate(`https://aitripsystem-api.onrender.com/api/v1/users/${userID}/friend_requests_to`);
+      } else {
+        const payload = {
+          idself: currentUserID,
+          idfriend: userID
+        };
+
+        const addFriendRes = await fetch(
+          `https://aitripsystem-api.onrender.com/api/v1/friends/`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${accessToken}`,
+            },
+            body: JSON.stringify(payload),
+          }
+        );
+
+        if (!addFriendRes.ok) throw new Error("Failed to send friend request.");
+        setIsFriendRequestSent(false);
+        await mutate(`https://aitripsystem-api.onrender.com/api/v1/users/${userID}/friend_requests_to`);
+      }
+    } catch (error) {
+      console.error("Lỗi khi gửi thông tin kết bạn:", error);
+    } finally {
+      setIsSending(false);
+    }
   }
 
   return (
@@ -194,7 +276,7 @@ export default function ProfilePage({ userID = "US7403" }: ProfilePageProps) {
             className="p-2 rounded-full hover:bg-gray-300 dark:hover:bg-gray-700 dark:text-white transition-colors duration-200 cursor-pointer">
             <FaChevronLeft />
           </button>
-          <h1 className="text-2xl font-bold text-black dark:text-white">{userData?.name}</h1>
+          <h1 className="text-2xl font-bold text-black dark:text-white"></h1>
         </div>
         <div className="flex-grow flex-col bg-white rounded-lg p-6 mx-auto shadow-sm dark:bg-transparent text-black dark:text-white dark:border-2 border-gray-700">
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 text-center sm:text-left">
@@ -211,23 +293,30 @@ export default function ProfilePage({ userID = "US7403" }: ProfilePageProps) {
             <div className="flex flex-col">
               <h2 className="text-2xl font-bold">{userData?.name}</h2>
               <p>{userData?.email}</p>
-              {/* <p>
-                <span className="font-bold">{userData?.friends}</span> Friends
-              </p> */}
+              <p>
+                <span>{friendsCount}</span> người bạn
+              </p>
             </div>
             <div className="flex gap-2 sm:ml-auto justify-center">
-              <button
-                onClick={openEditModal}
-                className="flex items-center justify-center w-16 h-12 font-bold rounded-lg text-white bg-gray-800 hover:bg-gray-900 dark:bg-gray-800 dark:hover:bg-gray-700 dark:border-gray-700 cursor-pointer transition-colors duration-200"
-              >
-                <FaPen />
-              </button>
-              <button
-                onClick={handleFriendRequestSent}
-                className="flex items-center justify-center w-32 h-12 font-bold rounded-lg text-md text-white bg-gray-800 hover:bg-gray-900 dark:bg-gray-800 dark:hover:bg-gray-700 dark:border-gray-700 cursor-pointer transition-colors duration-200"
-              >
-                {isFriendRequestSent ? (<><FaUserCheck className="mr-2" /> Bạn bè</>) : ("Thêm bạn")}
-              </button>
+              {currentUserID == userID && (
+                <button
+                  onClick={openEditModal}
+                  className="flex items-center justify-center w-16 h-12 font-bold rounded-lg text-white bg-gray-800 hover:bg-gray-900 dark:bg-gray-800 dark:hover:bg-gray-700 dark:border-gray-700 cursor-pointer transition-colors duration-200"
+                >
+                  <FaPen />
+                </button>
+              )}
+              {currentUserID !== userID && (
+                <button
+                  onClick={handleFriendRequestSent}
+                  disabled={isSending}
+                  className="flex items-center justify-center w-32 h-12 font-bold rounded-lg text-md text-white bg-gray-800 hover:bg-gray-900 dark:bg-gray-800 dark:hover:bg-gray-700 dark:border-gray-700 cursor-pointer transition-colors duration-200"
+                >
+                  {isFriend ? (<><FaUserCheck className="mr-2" />Bạn bè</>) :
+                    (isFriendRequestSent ? (<><FaUserXmark className="mr-2" /> Hủy lời mời</>) :
+                      (<><FaUserPlus className="mr-2" />Thêm bạn</>))}
+                </button>
+              )}
             </div>
           </div>
           <div className="flex-grow mt-8">
@@ -391,9 +480,47 @@ export default function ProfilePage({ userID = "US7403" }: ProfilePageProps) {
                 </>
               }
 
-              {/* {Description update modal} */}
+              {/* {Phone number update modal} */}
               {
                 step === 4 &&
+                <>
+                  <div className="flex items-center p-4 border-b border-gray-200 dark:border-gray-600">
+                    <button
+                      onClick={() => setStep(prev => prev - 1)}
+                      className="p-2 mr-2 rounded-full hover:bg-gray-300 dark:hover:bg-gray-700 dark:text-white transition-colors duration-200 cursor-pointer">
+                      <FaChevronLeft />
+                    </button>
+                    <h3 className="text-2xl font-semibold text-gray-900 dark:text-white">Thông tin liên hệ</h3>
+                    <button
+                      onClick={() => setShowEditModal(false)}
+                      className="text-xl p-2 ml-auto rounded-full hover:bg-gray-300 dark:hover:bg-gray-700 dark:text-white transition-colors duration-200 cursor-pointer">
+                      <FaXmark />
+                    </button>
+                  </div>
+
+                  <div className="p-4 text-gray-700 dark:text-white">
+                    <input
+                      type="tel"
+                      value={userEdit?.phonenumber}
+                      className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                      onChange={handlePhonenumberChange}
+                      placeholder="Số điện thoại" />
+                  </div>
+
+                  <div className="flex p-4 mt-auto">
+                    <button
+                      onClick={() => setStep(prev => prev + 1)}
+                      className="w-full h-12 text-md font-bold rounded-4xl cursor-pointer text-white bg-gray-800 hover:bg-gray-900 dark:bg-gray-800 dark:hover:bg-gray-700 border-2 border-black dark:border-gray-600 transition-colors duration-200"
+                    >
+                      Tiếp theo
+                    </button>
+                  </div>
+                </>
+              }
+
+              {/* {Description update modal} */}
+              {
+                step === 5 &&
                 <>
                   <div className="flex items-center p-4 border-b border-gray-200 dark:border-gray-600">
                     <button
@@ -432,7 +559,7 @@ export default function ProfilePage({ userID = "US7403" }: ProfilePageProps) {
 
               {/* {Save update modal} */}
               {
-                step === 5 &&
+                step === 6 &&
                 <>
                   <div className="flex items-center p-4 border-b border-gray-200 dark:border-gray-600">
                     <button
