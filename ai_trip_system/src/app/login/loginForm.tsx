@@ -6,6 +6,7 @@ import Link from "next/link";
 import { setCookie } from "cookies-next";
 import { FaEnvelope, FaLock } from "react-icons/fa";
 import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "next/navigation";
 
 export default function LoginForm() {
   const [username, setUsername] = useState("");
@@ -28,7 +29,7 @@ export default function LoginForm() {
 
     try {
       const response = await fetch(
-        "https://aitripsystem-api.onrender.com/api/v1/login",
+        "https://aitripsystem-api.onrender.com/api/v1/auth/login",
         {
           method: "POST",
           headers: {

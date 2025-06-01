@@ -47,7 +47,7 @@ export default function RegisterForm() {
 
     try {
       const response = await fetch(
-        `https://aitripsystem-api.onrender.com/api/v1/register?username=${encodeURIComponent(
+        `https://aitripsystem-api.onrender.com/api/v1/auth/register?username=${encodeURIComponent(
           formData.username
         )}&password=${encodeURIComponent(formData.password)}`,
         {
