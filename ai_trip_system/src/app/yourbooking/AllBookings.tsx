@@ -20,11 +20,11 @@ export default function AllBookings() {
         setIsLoading(true);
 
         try {
-            let url = 'https://aitripsystem-api.onrender.com/api/v1/bookings/';
+            let url = 'http://127.0.0.1:8000/api/v1/bookings/';
 
             // Nếu có filter
             if (filters.select !== 'all' && filters.lookup) {
-                url = `https://aitripsystem-api.onrender.com/api/v1/bookings/${filters.select}?lookup=${encodeURIComponent(filters.lookup)}`;
+                url = `http://127.0.0.1:8000/api/v1/bookings/${filters.select}?lookup=${encodeURIComponent(filters.lookup)}`;
             }
 
             const response = await fetch(url, {

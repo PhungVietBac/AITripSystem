@@ -152,9 +152,9 @@ export default function Filter({ onFilterChange }: FilterProps) {
                   className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500"
                 >
                   <option value="">-- Chọn trạng thái --</option>
-                  <option value="1">Đã xác nhận</option>
-                  <option value="0">Đang chờ xác nhận</option>
-                  <option value="2">Đã hủy</option>
+                  <option value="CONFIRMED">Đã xác nhận</option>
+                  <option value="PENDING">Đang chờ xác nhận</option>
+                  <option value="CANCELLED">Đã hủy</option>
                 </select>
               ) : filterOptions.select === 'date' ? (
                 <input

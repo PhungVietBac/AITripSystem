@@ -4,13 +4,11 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 const Result = () => {
-  const [showInfo, setShowInfo] = useState<boolean>(false);
-  const [hasVisited, setHasVisited] = useState<boolean>(false);
+  const [showInfo, setShowInfo] = useState<boolean>(true);
   const router = useRouter();
 
   const handleClick = (): void => {
     setShowInfo((prev) => !prev);
-    setHasVisited(true);
   };
 
   const handleOnPlan = (): void => {
@@ -30,14 +28,12 @@ const Result = () => {
           >
             Ngày 1 (13/4/2025)
           </span>
-          {hasVisited && (
-            <div className={showInfo ? "block" : "hidden"}>
-              <Carousel quantity={10} />
-            </div>
-          )}
+          <div className={showInfo ? "block" : "hidden"}>
+            <Carousel quantity={10} />
+          </div>
         </div>
 
-        <div className="flex flex-wrap gap-20 justify-center">
+        <div className="flex flex-wrap gap-20 justify-center mb-10">
           <button
             className="text-green-700 border hover:bg-green-700 hover:text-white font-medium rounded-lg text-lg px-5 py-2.5"
             onClick={handleOnPlan}

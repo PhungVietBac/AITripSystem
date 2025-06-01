@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Playwrite_DK_Loopet } from "next/font/google";
 import "@/styles/globals.css";
 import Footer from "@/components/footer";
 import "leaflet/dist/leaflet.css";
+import Background from "@/components/background";
 
 import ClientLayout from "@/components/ClientLayout";
 import NoSSRWrapper from "@/components/NoSSRWrapper";
@@ -38,6 +39,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${playwriteDKLoopet.variable} antialiased min-h-screen flex flex-col`}
       >
+        <Background />
         <NoSSRWrapper>
           <ClientLayout>
             {children}

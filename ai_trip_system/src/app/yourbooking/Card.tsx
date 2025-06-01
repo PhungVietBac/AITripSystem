@@ -13,7 +13,7 @@ import Toast from '@/components/Toast';
 interface BookingCardProps {
   idBooking: string;
   idPlace: number;
-  status: number;
+  status: string;
   date: string;
   placeName?: string;
   placeImage?: string;
@@ -59,7 +59,7 @@ export default function BookingCard({
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(`https://aitripsystem-api.onrender.com/api/v1/bookings?idBooking=${idBooking}`, {
+      const response = await fetch(`http://127.0.0.1:8000/api/v1/bookings?idBooking=${idBooking}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -89,7 +89,7 @@ export default function BookingCard({
   const fetchUserInfo = async () => {
     setLoadingUser(true);
     try {
-      const response = await fetch(`https://aitripsystem-api.onrender.com/api/v1/bookings/${idBooking}/users/`, {
+      const response = await fetch(`http://127.0.0.1:8000/api/v1/bookings/${idBooking}/users/`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -132,7 +132,7 @@ export default function BookingCard({
 
     setIsLoading(true);
     try {
-      const response = await fetch(`https://aitripsystem-api.onrender.com/api/v1/bookings/?idBooking=${idBooking}`, {
+      const response = await fetch(`http://127.0.0.1:8000/api/v1/bookings/?idBooking=${idBooking}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -152,11 +152,11 @@ export default function BookingCard({
       const updatedData = await response.json();
       setData(updatedData);
       setIsEditingBooking(false);
-      showToast('Thay đổi đã được lưu thành công!', 'success');
     } catch (error) {
       showToast(`Lỗi khi lưu thay đổi: ${error}`, 'error');
     } finally {
       setIsLoading(false);
+      showToast('Thay đổi đã được lưu thành công!', 'success');
     }
   };
 
@@ -201,13 +201,12 @@ export default function BookingCard({
           <h3 className="font-semibold text-lg">
             {data.placeName || `Địa điểm #${data.idPlace} (nhét link tới trang chi tiết địa điểm chỗ này)`} {/* Add link to place details here*/}
           </h3>
-          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-            data.status === 1 ? 'bg-green-100 text-green-800' : 
-            data.status === 0 ? 'bg-yellow-100 text-yellow-800' :
-            'bg-red-100 text-red-800'
-          }`}>
-            {data.status === 1 ? 'CONFIRMED' : 
-             data.status === 0 ? 'PENDING' : 'CANCELED'}
+          <span className={`px-2 py-1 rounded-full text-xs font-medium ${data.status === "CONFIRMED" ? 'bg-green-100 text-green-800' :
+            data.status === "PENDING" ? 'bg-yellow-100 text-yellow-800' :
+              'bg-red-100 text-red-800'
+            }`}>
+            {data.status === "CONFIRMED" ? 'CONFIRMED' :
+              data.status === "PENDING" ? 'PENDING' : 'CANCELED'}
           </span>
         </div>
 
@@ -246,12 +245,12 @@ export default function BookingCard({
 
         {/* Status indicator */}
         <div className="flex items-center">
-          {data.status === 1 ? (
+          {data.status === "CONFIRMED" ? (
             <>
               <FaCheckCircle className="text-green-500 mr-2" />
               <span className="text-sm text-green-600">Đã xác nhận đặt chỗ của bạn</span>
             </>
-          ) : data.status === 0 ? (
+          ) : data.status === "PENDING" ? (
             <>
               <FaHourglass className="text-yellow-500 mr-2" />
               <span className="text-sm text-yellow-600">Đang chờ xác nhận</span>

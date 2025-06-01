@@ -22,7 +22,10 @@ const nextConfig: NextConfig = {
         pathname: "/storage/v1/object/public/avatars/**",
       },
     ],
-  },
+  },  
+};
+module.exports = {
+  allowedDevOrigins: ['local-origin.dev', '*.local-origin.dev'],
 };
 
 export default nextConfig;

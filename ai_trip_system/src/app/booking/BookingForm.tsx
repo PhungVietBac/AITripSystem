@@ -18,7 +18,7 @@ const BookingForm: React.FC = () => {
 
     return (
         <div className="max-w-md mx-auto p-4 bg-white rounded-lg shadow-md">
-            <h2 className="text-2xl font-bold text-center text-blue-900">Đặt Lịch</h2>
+            <h2 className="text-2xl font-bold text-center text-cyan-900">Đặt Lịch</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                     <label className="block text-sm font-medium text-gray-700">Họ và tên</label>
@@ -74,7 +74,7 @@ const BookingForm: React.FC = () => {
                 {error && <p className="text-red-500 text-sm">{error}</p>}
                 <button
                     type="submit"
-                    className="w-full bg-blue-900 text-white py-2 rounded-md hover:bg-blue-600"
+                    className="w-full bg-cyan-900 text-white py-2 rounded-md hover:bg-cyan-600"
                     
                 >
                     Đặt Lịch

@@ -6,13 +6,17 @@ import ConversationSidebar from "../../components/ConversationSidebar";
 
 const MapView = dynamic(() => import("@/components/Map"), {
   ssr: false,
-  loading: () => <div className="h-full flex items-center justify-center bg-gray-50">
-    <div className="text-gray-500">Đang tải bản đồ...</div>
-  </div>
+  loading: () => (
+    <div className="h-full flex items-center justify-center bg-gray-50">
+      <div className="text-gray-500">Đang tải bản đồ...</div>
+    </div>
+  ),
 });
 
 const Home = () => {
-  const [currentConversationId, setCurrentConversationId] = useState<string | undefined>();
+  const [currentConversationId, setCurrentConversationId] = useState<
+    string | undefined
+  >();
 
   const handleConversationSelect = (conversationId: string) => {
     setCurrentConversationId(conversationId);
@@ -29,7 +33,9 @@ const Home = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <main className="flex-grow">
-        <div className="flex h-[calc(100vh-80px)]"> {/* Adjust for header height */}
+        <div className="flex h-[calc(100vh-80px)]">
+          {" "}
+          {/* Adjust for header height */}
           {/* Conversation Sidebar */}
           <ConversationSidebar
             currentConversationId={currentConversationId}
@@ -37,7 +43,6 @@ const Home = () => {
             onNewConversation={handleNewConversation}
             className="flex-shrink-0"
           />
-
           {/* Main Content Area */}
           <div className="flex-1 flex gap-6 p-6">
             {/* AI Chatbot */}

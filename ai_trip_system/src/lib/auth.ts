@@ -10,7 +10,7 @@ interface JwtPayload {
   [key: string]: unknown;
 }
 
-export function verifyToken(token: string): JwtPayload | null {
+export async function verifyToken(token: string): Promise<JwtPayload | null> {
   try {
     const decoded = jwt.verify(token, SECRET_KEY) as JwtPayload;
     return decoded;
