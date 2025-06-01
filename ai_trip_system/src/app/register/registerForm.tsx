@@ -41,22 +41,31 @@ export default function RegisterForm() {
       setError("Mật khẩu không khớp. Vui lòng kiểm tra lại.");
       return;
     }
-    
+
     setIsLoading(true);
     setError("");
 
     try {
-      const response = await fetch(`https://aitripsystem-api.onrender.com/api/v1/register?username=${encodeURIComponent(formData.username)}&password=${encodeURIComponent(formData.password)}`, {
-        method: "POST",
-        headers: {
-          "accept": "application/json",
+      const response = await fetch(
+        `https://aitripsystem-api.onrender.com/api/v1/auth/register?username=${encodeURIComponent(
+          formData.username
+        )}&password=${encodeURIComponent(formData.password)}`,
+        {
+          method: "POST",
+          headers: {
+            accept: "application/json",
+          },
         }
-      });
+      );
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         console.error("Server error details:", errorData);
-        throw new Error(`Đăng ký thất bại! (${response.status}): ${errorData.detail || "Unknown error"}`);
+        throw new Error(
+          `Đăng ký thất bại! (${response.status}): ${
+            errorData.detail || "Unknown error"
+          }`
+        );
       }
 
       const data = await response.json();
@@ -78,7 +87,11 @@ export default function RegisterForm() {
           {/* Logo */}
           <div className="flex justify-center mb-4 sm:mb-6">
             <div className="w-12 h-12 sm:w-16 sm:h-16 bg-cyan-100 rounded-lg flex items-center justify-center">
-              <svg className="w-8 h-8 sm:w-10 sm:h-10 text-cyan-500" viewBox="0 0 24 24" fill="currentColor">
+              <svg
+                className="w-8 h-8 sm:w-10 sm:h-10 text-cyan-500"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
                 <path d="M12 2L2 7v10l10 5 10-5V7L12 2zm0 2.236L20 9l-8 4-8-4 8-4.764zM4 9.618v6L12 20l8-4.382v-6L12 14 4 9.618z" />
               </svg>
             </div>
@@ -86,8 +99,12 @@ export default function RegisterForm() {
 
           {/* Welcome Text */}
           <div className="text-center mb-6">
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-800">Đăng ký tài khoản mới 👋</h2>
-            <p className="text-gray-500 text-xs sm:text-sm mt-1">Tham gia cùng EXPLAVUE ngay hôm nay!</p>
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-800">
+              Đăng ký tài khoản mới 👋
+            </h2>
+            <p className="text-gray-500 text-xs sm:text-sm mt-1">
+              Tham gia cùng EXPLAVUE ngay hôm nay!
+            </p>
           </div>
 
           {error && (
@@ -98,7 +115,10 @@ export default function RegisterForm() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label htmlFor="username" className="block text-xs font-medium text-gray-700 mb-1">
+              <label
+                htmlFor="username"
+                className="block text-xs font-medium text-gray-700 mb-1"
+              >
                 Tên đăng nhập
               </label>
               <div className="relative">
@@ -120,7 +140,10 @@ export default function RegisterForm() {
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-xs font-medium text-gray-700 mb-1">
+              <label
+                htmlFor="password"
+                className="block text-xs font-medium text-gray-700 mb-1"
+              >
                 Mật khẩu
               </label>
               <div className="relative">
@@ -142,7 +165,10 @@ export default function RegisterForm() {
             </div>
 
             <div>
-              <label htmlFor="confirmPassword" className="block text-xs font-medium text-gray-700 mb-1">
+              <label
+                htmlFor="confirmPassword"
+                className="block text-xs font-medium text-gray-700 mb-1"
+              >
                 Xác nhận mật khẩu
               </label>
               <div className="relative">
@@ -190,7 +216,10 @@ export default function RegisterForm() {
           <div className="mt-6 text-center text-sm">
             <p className="text-gray-600">
               Bạn đã có tài khoản?{" "}
-              <Link href="/login" className="text-cyan-600 font-medium hover:text-cyan-500">
+              <Link
+                href="/login"
+                className="text-cyan-600 font-medium hover:text-cyan-500"
+              >
                 Đăng nhập
               </Link>
             </p>
