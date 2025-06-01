@@ -30,8 +30,6 @@ async def social_login(request: SocialLoginRequest, db: Session = Depends(get_db
     user_data = None
     if request.provider == "google":
         user_data = verify_google_token(request.token)
-    elif request.provider == "facebook":
-        user_data = verify_facebook_token(request.token)
     
     if not user_data:
         raise HTTPException(
@@ -79,20 +77,16 @@ def verify_google_token(token: str):
         )
         if response.status_code == 200:
             return response.json()
-        return None
-    except Exception:
-        return None
-
-def verify_facebook_token(token: str):
-    """
-    Verify Facebook token with Facebook API
-    """
-    try:
+            
         response = requests.get(
-            f"https://graph.facebook.com/me?fields=id,name,email&access_token={token}"
+            f"https://www.googleapis.com/oauth2/v3/userinfo",
+            headers={"Authorization": f"Bearer {token}"}
         )
         if response.status_code == 200:
             return response.json()
+            
         return None
-    except Exception:
+    except Exception as e:
+        print(f"Error verifying Google token: {e}")
         return None
+
