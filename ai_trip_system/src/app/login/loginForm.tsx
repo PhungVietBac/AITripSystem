@@ -1,5 +1,6 @@
 "use client";
 
+import { useGoogleLogin } from "@react-oauth/google";
 import { useState, FormEvent } from "react";
 import Loading from "@/components/Loading";
 import Link from "next/link";
@@ -29,7 +30,7 @@ export default function LoginForm() {
 
     try {
       const response = await fetch(
-        "https://aitripsystem-api.onrender.com/api/v1/auth/login",
+        "https://aitripsystem-api.onrender.com/api/v1/login",
         {
           method: "POST",
           headers: {
@@ -63,6 +64,43 @@ export default function LoginForm() {
       setIsLoading(false);
     }
   };
+
+  const handleGoogleLogin = useGoogleLogin({
+    onSuccess: async (codeResponse) => {
+      setIsLoading(true);
+      try {
+        // Gọi API backend với token nhận được từ Google
+        const response = await fetch("https://aitripsystem-api.onrender.com/api/v1/social-login", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            provider: "google",
+            token: codeResponse.access_token,
+          }),
+        });
+
+        if (!response.ok) throw new Error("Login failed");
+
+        const data = await response.json();
+
+        socialLogin("google", data);
+
+        // Chuyển hướng người dùng
+        router.push("/home");
+      } catch (error) {
+        console.error("Login error:", error);
+        // Hiển thị thông báo lỗi
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    onError: (error) => {
+      console.error("Google Login Error:", error);
+    },
+    scope: "email profile",
+  });
 
   return (
     <div className="min-h-screen flex items-center justify-center py-4 sm:py-8 md:py-12 px-4 sm:px-6 lg:px-8 overflow-y-auto">
@@ -161,6 +199,8 @@ export default function LoginForm() {
           <div className="mt-6">
             <button
               type="button"
+              onClick={() => handleGoogleLogin()}
+              disabled={isLoading}
               className="w-full flex items-center justify-center py-3 px-4 border border-gray-300 rounded-xl hover:bg-gray-50 transition duration-200"
             >
               <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24">
@@ -169,7 +209,7 @@ export default function LoginForm() {
                   fill="#4285F4"
                 />
               </svg>
-              Đăng nhập với Google
+              {isLoading ? "Đang xử lý..." : "Đăng nhập với Google"}
             </button>
           </div>
 

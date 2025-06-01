@@ -2,8 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { getCookie, setCookie, deleteCookie } from 'cookies-next';
-// import { useSession, signIn, signOut } from 'next-auth/react';
-// import { Session } from 'next-auth';
+import { useGoogleLogin } from '@react-oauth/google';
 
 // Define the shape of our context
 interface AuthContextType {
@@ -11,8 +10,9 @@ interface AuthContextType {
   username: string;
   login: (token: string, username: string) => void;
   logout: () => void;
-  socialLogin: (provider: string) => void;
-  session: any | null; // Changed from Session to any
+  socialLogin: (provider: string, token?: string) => Promise<void>;
+  isLoading: boolean;
+  error: string | null;
 }
 
 // Create the context with a default value
@@ -21,8 +21,9 @@ const AuthContext = createContext<AuthContextType>({
   username: '',
   login: () => {},
   logout: () => {},
-  socialLogin: () => {},
-  session: null,
+  socialLogin: async () => {},
+  isLoading: false,
+  error: null,
 });
 
 // Provider component
@@ -30,15 +31,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [username, setUsername] = useState('');
   const [isInitialized, setIsInitialized] = useState(false);
-  // const { data: session, status } = useSession();
-  const session = null; // Temporarily disabled
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // Simple login function for traditional login
+  // Traditional login function (username + password only)
   const login = (token: string, username: string) => {
     // Set cookie
     setCookie('token', token);
 
-    // Store in localStorage (only if in browser)
+    // Store in localStorage
     if (typeof window !== 'undefined') {
       localStorage.setItem('isLoggedIn', 'true');
       localStorage.setItem('username', username);
@@ -47,12 +48,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Update state
     setIsLoggedIn(true);
     setUsername(username);
+    setError(null);
   };
 
   // Function to handle social login
-  const socialLogin = (provider: string) => {
-    // signIn(provider, { callbackUrl: '/home' });
-    console.log('Social login temporarily disabled:', provider);
+  const socialLogin = async (provider: string, data: any) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      if (provider === 'google' && data) {
+        // Cập nhật trạng thái đăng nhập
+        login(data.access_token, data.username || 'User');
+      } else {
+        throw new Error(`Provider ${provider} không được hỗ trợ hoặc thiếu token`);
+      }
+    } catch (err: any) {
+      setError(err.message);
+      throw err; // Ném lỗi để component xử lý
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Logout function
@@ -60,7 +76,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Clear cookie
     deleteCookie('token');
 
-    // Clear localStorage (only if in browser)
+    // Clear localStorage
     if (typeof window !== 'undefined') {
       localStorage.removeItem('isLoggedIn');
       localStorage.removeItem('username');
@@ -69,32 +85,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Update state
     setIsLoggedIn(false);
     setUsername('');
-
-    // Sign out from NextAuth
-    // signOut({ callbackUrl: '/' });
-    console.log('NextAuth signOut temporarily disabled');
+    setError(null);
   };
 
-  // Initialize state from localStorage or session
+  // Initialize state from localStorage
   useEffect(() => {
-    // First check NextAuth session
-    if (session && session.user) {
-      setIsLoggedIn(true);
-      setUsername(session.user.name || session.user.email || '');
-      setIsInitialized(true);
-      return;
-    }
-
-    // If no NextAuth session, check localStorage (for traditional login)
     if (typeof window !== 'undefined') {
       const storedLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
       const storedUsername = localStorage.getItem('username') || '';
+      const token = getCookie('token');
 
-      setIsLoggedIn(storedLoggedIn);
+      // Only set logged in if both localStorage and token cookie exist
+      setIsLoggedIn(storedLoggedIn && !!token);
       setUsername(storedUsername);
       setIsInitialized(true);
     }
-  }, [session]);
+  }, []);
 
   // Don't render children until auth is initialized to prevent hydration mismatch
   if (!isInitialized) {
@@ -108,7 +114,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       login,
       logout,
       socialLogin,
-      session
+      isLoading,
+      error
     }}>
       {children}
     </AuthContext.Provider>

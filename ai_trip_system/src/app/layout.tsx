@@ -7,6 +7,7 @@ import Background from "@/components/background";
 
 import ClientLayout from "@/components/ClientLayout";
 import NoSSRWrapper from "@/components/NoSSRWrapper";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -39,13 +40,13 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${playwriteDKLoopet.variable} antialiased min-h-screen flex flex-col`}
       >
-        <Background />
-        <NoSSRWrapper>
-          <ClientLayout>
-            {children}
-          </ClientLayout>
-        </NoSSRWrapper>
-        <Footer />
+        <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ""}>
+          <Background />
+          <NoSSRWrapper>
+            <ClientLayout>{children}</ClientLayout>
+          </NoSSRWrapper>
+          <Footer />
+        </GoogleOAuthProvider>
       </body>
     </html>
   );
