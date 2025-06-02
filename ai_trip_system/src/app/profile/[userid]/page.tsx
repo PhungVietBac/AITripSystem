@@ -348,9 +348,9 @@ export default function ProfilePage({
               {currentUserID == userID && (
                 <button
                   onClick={openEditModal}
-                  className="flex items-center justify-center w-16 h-12 font-bold rounded-lg text-white bg-gray-800 hover:bg-gray-900 dark:bg-gray-800 dark:hover:bg-gray-700 dark:border-gray-700 cursor-pointer transition-colors duration-200"
+                  className="flex items-center justify-center py-3 px-4 font-bold rounded-lg text-white bg-gray-800 hover:bg-gray-900 dark:bg-gray-800 dark:hover:bg-gray-700 dark:border-gray-700 cursor-pointer transition-colors duration-200"
                 >
-                  <FaPen />
+                  <FaPen className="mr-2" /> Sửa hồ sơ
                 </button>
               )}
               {currentUserID !== userID && (
@@ -495,7 +495,7 @@ export default function ProfilePage({
                 <div className="p-4 text-gray-700 dark:text-white">
                   <input
                     type="text"
-                    value={userEdit?.name}
+                    value={userEdit?.name ?? ""}
                     className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                     onChange={handleNameChange}
                     placeholder="Tên của bạn"
@@ -536,7 +536,7 @@ export default function ProfilePage({
 
                 <div className="p-4 text-gray-700 dark:text-white">
                   <select
-                    value={userEdit?.gender}
+                    value={userEdit?.gender ?? 2}
                     onChange={handleGenderChange}
                     className="w-full px-3 py-3 rounded-lg border-2 text-md text-black bg-white focus:ring-blue-500 focus:border-blue-500 dark:bg-black dark:border-gray-600 dark:text-white"
                   >
@@ -583,7 +583,7 @@ export default function ProfilePage({
                 <div className="p-4 text-gray-700 dark:text-white">
                   <input
                     type="tel"
-                    value={userEdit?.phonenumber}
+                    value={userEdit?.phonenumber ?? ""}
                     className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                     onChange={handlePhonenumberChange}
                     placeholder="Số điện thoại"
