@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/context/AuthContext";
+import useSWR from "swr";
+import { getCookie } from "cookies-next";
 
 // Add custom styles for shimmer animation
 const shimmerStyles = `
@@ -30,6 +32,30 @@ const Header = () => {
 
   // Use the auth context for login status
   const { isLoggedIn, logout } = useAuth();
+
+  const userid = localStorage.getItem("current_user_id");
+  const access_token = getCookie("token") || "";
+  const fetcher = (url: string) =>
+    fetch(url, {
+      headers: {
+        Authorization: `Bearer ${access_token}`,
+        "Content-Type": "application/json",
+      },
+    }).then((res) => res.json());
+
+  const {
+    data: userData,
+    error: userError,
+    isLoading: userLoading,
+  } = useSWR<UserResponse>(
+    `https://aitripsystem-api.onrender.com/api/v1/users/idUser?lookup=${userid}`,
+    fetcher,
+    {
+      revalidateIfStale: false,
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false,
+    }
+  );
 
   // Helper function to check if a route is active
   const isActiveRoute = (route: string) => {
@@ -74,7 +100,8 @@ const Header = () => {
     }
 
     // Check if we're in the browser environment
-    if (typeof window === 'undefined' || typeof document === 'undefined') return;
+    if (typeof window === "undefined" || typeof document === "undefined")
+      return;
 
     // Set the active section
     setActiveSection(id);
@@ -84,7 +111,7 @@ const Header = () => {
     if (element) {
       // Use a small timeout to ensure the UI updates before scrolling
       setTimeout(() => {
-        element.scrollIntoView({ behavior: 'smooth' });
+        element.scrollIntoView({ behavior: "smooth" });
       }, 10);
     }
 
@@ -110,8 +137,6 @@ const Header = () => {
     }, 10);
   };
 
-
-
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -134,7 +159,7 @@ const Header = () => {
   // Handle scroll effect for header shadow and active section
   useEffect(() => {
     // Check if we're in the browser environment
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
 
     const handleScroll = () => {
       const scrollY = window.scrollY;
@@ -147,15 +172,16 @@ const Header = () => {
       }
 
       // Update active section based on scroll position
-      const aboutSection = document.getElementById('about');
-      const featuresSection = document.getElementById('features');
-      const contactSection = document.getElementById('contact');
+      const aboutSection = document.getElementById("about");
+      const featuresSection = document.getElementById("features");
+      const contactSection = document.getElementById("contact");
 
       const scrollPosition = scrollY + 100; // Add offset for header height
 
       if (aboutSection && featuresSection && contactSection) {
         // Hide scroll indicator when we've scrolled deeper into the contact section
-        if (scrollPosition >= contactSection.offsetTop + 300) { // Add 300px offset to hide it later
+        if (scrollPosition >= contactSection.offsetTop + 300) {
+          // Add 300px offset to hide it later
           setShowScrollIndicator(false);
         } else {
           setShowScrollIndicator(true);
@@ -166,27 +192,27 @@ const Header = () => {
           scrollPosition >= aboutSection.offsetTop &&
           scrollPosition < featuresSection.offsetTop
         ) {
-          setActiveSection('about');
+          setActiveSection("about");
         } else if (
           scrollPosition >= featuresSection.offsetTop &&
           scrollPosition < contactSection.offsetTop
         ) {
-          setActiveSection('features');
+          setActiveSection("features");
         } else if (scrollPosition >= contactSection.offsetTop) {
-          setActiveSection('contact');
+          setActiveSection("contact");
         } else {
           setActiveSection(null);
         }
       }
     };
 
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll);
 
     // Call once on mount to set initial state
     handleScroll();
 
     return () => {
-      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener("scroll", handleScroll);
     };
   }, []);
 
@@ -206,13 +232,22 @@ const Header = () => {
             stroke="#FFD700"
             strokeWidth={2}
           >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M19 14l-7 7m0 0l-7-7m7 7V3"
+            />
           </svg>
         </div>
       )}
 
-      <header className={`bg-gradient-to-r from-[#000080] to-[#00BFFF] flex items-center h-[80px] fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'shadow-[0_4px_10px_rgba(0,0,0,0.5)] border-b border-black/30' : ''} ${isNavigating ? 'opacity-90' : ''}`}>
-
+      <header
+        className={`bg-gradient-to-r from-[#000080] to-[#00BFFF] flex items-center h-[80px] fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+          scrolled
+            ? "shadow-[0_4px_10px_rgba(0,0,0,0.5)] border-b border-black/30"
+            : ""
+        } ${isNavigating ? "opacity-90" : ""}`}
+      >
         {/* Navigation Loading Indicator */}
         {isNavigating && (
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#FFD700] to-[#FFA500] animate-pulse">
@@ -241,7 +276,9 @@ const Header = () => {
               onClick={(e) => handleNavigation(isLoggedIn ? "/home" : "/", e)}
               className="cursor-pointer transition-all duration-300 hover:scale-105"
             >
-              <span className="text-[#FFD700] text-4xl font-['PlaywriteDKLoopet'] tracking-wide">TravelGO!</span>
+              <span className="text-[#FFD700] text-4xl font-['PlaywriteDKLoopet'] tracking-wide">
+                TravelGO!
+              </span>
             </div>
           </div>
         </div>
@@ -252,31 +289,49 @@ const Header = () => {
           {!isLoggedIn && (
             <div className="hidden md:flex items-center justify-center mx-auto gap-20">
               <button
-                onClick={(e) => scrollToSection('about', e)}
+                onClick={(e) => scrollToSection("about", e)}
                 className="flex items-center no-underline transition-all duration-300"
                 aria-label="About"
               >
-                <span className={`text-lg font-medium ${activeSection === 'about' ? 'text-[#FFD700]' : 'text-white hover:opacity-70'}`}>
+                <span
+                  className={`text-lg font-medium ${
+                    activeSection === "about"
+                      ? "text-[#FFD700]"
+                      : "text-white hover:opacity-70"
+                  }`}
+                >
                   About
                 </span>
               </button>
 
               <button
-                onClick={(e) => scrollToSection('features', e)}
+                onClick={(e) => scrollToSection("features", e)}
                 className="flex items-center no-underline transition-all duration-300"
                 aria-label="Features"
               >
-                <span className={`text-lg font-medium ${activeSection === 'features' ? 'text-[#FFD700]' : 'text-white hover:opacity-70'}`}>
+                <span
+                  className={`text-lg font-medium ${
+                    activeSection === "features"
+                      ? "text-[#FFD700]"
+                      : "text-white hover:opacity-70"
+                  }`}
+                >
                   Features
                 </span>
               </button>
 
               <button
-                onClick={(e) => scrollToSection('contact', e)}
+                onClick={(e) => scrollToSection("contact", e)}
                 className="flex items-center no-underline transition-all duration-300"
                 aria-label="Contact"
               >
-                <span className={`text-lg font-medium ${activeSection === 'contact' ? 'text-[#FFD700]' : 'text-white hover:opacity-70'}`}>
+                <span
+                  className={`text-lg font-medium ${
+                    activeSection === "contact"
+                      ? "text-[#FFD700]"
+                      : "text-white hover:opacity-70"
+                  }`}
+                >
                   Contact
                 </span>
               </button>
@@ -351,9 +406,7 @@ const Header = () => {
                 className="flex items-center no-underline text-black bg-[#FFD700] border-2 border-transparent rounded-md px-5 py-2 cursor-pointer transition-all duration-300 hover:bg-white hover:border-[#FFD700]"
                 aria-label="Login"
               >
-                <span className="text-base font-medium">
-                  Login
-                </span>
+                <span className="text-base font-medium">Login</span>
               </div>
 
               <div
@@ -365,9 +418,7 @@ const Header = () => {
                 className="flex items-center no-underline text-black bg-[#FFD700] border-2 border-transparent rounded-md px-5 py-2 cursor-pointer transition-all duration-300 hover:bg-white hover:border-[#FFD700]"
                 aria-label="Sign Up"
               >
-                <span className="text-base font-medium">
-                  Sign Up
-                </span>
+                <span className="text-base font-medium">Sign Up</span>
               </div>
             </div>
           )}
@@ -379,15 +430,26 @@ const Header = () => {
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  router.push("/profile");
+                  router.push(`/profile/${userid}`);
                 }}
                 className="flex items-center no-underline text-white hover:opacity-70 transition-opacity duration-300 bg-transparent border border-white rounded-md px-5 py-2 cursor-pointer"
                 aria-label="Profile"
               >
-                <Image src="/images/profile.svg" width={24} height={24} alt="profile" className="mr-2" />
-                <span className="text-base font-medium">
-                  Profile
-                </span>
+                <div className="w-6 h-6 mr-2 relative">
+                  <Image
+                    src={
+                      userData?.avatar &&
+                      (userData.avatar.startsWith("http://") ||
+                        userData.avatar.startsWith("https://"))
+                        ? userData.avatar
+                        : "/profile.svg"
+                    }
+                    fill
+                    className="rounded-full object-cover"
+                    alt="profile"
+                  />
+                </div>
+                <span className="text-base font-medium">Profile</span>
               </div>
 
               <button
@@ -409,15 +471,16 @@ const Header = () => {
                   <polyline points="16 17 21 12 16 7"></polyline>
                   <line x1="21" y1="12" x2="9" y2="12"></line>
                 </svg>
-                <span className="text-base font-medium">
-                  Logout
-                </span>
+                <span className="text-base font-medium">Logout</span>
               </button>
             </div>
           )}
 
           {/* Mobile menu button */}
-          <div className="md:hidden relative inline-block ml-auto" ref={dropdownRef}>
+          <div
+            className="md:hidden relative inline-block ml-auto"
+            ref={dropdownRef}
+          >
             <div
               className="flex items-center text-white hover:opacity-70 transition-opacity duration-300"
               onClick={toggleDropdown}
@@ -425,53 +488,68 @@ const Header = () => {
               aria-expanded={isDropdownOpen}
               aria-label="Menu"
             >
-              <Image src="/images/hamburger.svg" width={28} height={28} alt="menu" />
+              <Image
+                src="/images/hamburger.svg"
+                width={28}
+                height={28}
+                alt="menu"
+              />
             </div>
             <div
               className={`absolute top-[80px] right-0 bg-white min-w-[200px] shadow-lg rounded-md z-50 opacity-0 transition-all duration-300 transform -translate-y-2 ${
-                isDropdownOpen
-                  ? "block opacity-100 translate-y-0"
-                  : "hidden"
-                }`}
+                isDropdownOpen ? "block opacity-100 translate-y-0" : "hidden"
+              }`}
             >
               <div className="flex flex-col md:hidden">
                 {/* Menu items for non-logged in users */}
                 {!isLoggedIn && (
                   <>
                     <button
-                      className={`flex items-center p-3 no-underline w-full text-left transition-all duration-300 ${activeSection === 'about' ? 'bg-[#FFD700] text-black' : 'text-black hover:bg-gray-200'}`}
+                      className={`flex items-center p-3 no-underline w-full text-left transition-all duration-300 ${
+                        activeSection === "about"
+                          ? "bg-[#FFD700] text-black"
+                          : "text-black hover:bg-gray-200"
+                      }`}
                       onClick={(e) => {
                         // Close dropdown first
                         setIsDropdownOpen(false);
                         // Use setTimeout to ensure dropdown closes before scrolling
                         setTimeout(() => {
-                          scrollToSection('about', e);
+                          scrollToSection("about", e);
                         }, 50);
                       }}
                     >
                       About
                     </button>
                     <button
-                      className={`flex items-center p-3 no-underline w-full text-left transition-all duration-300 ${activeSection === 'features' ? 'bg-[#FFD700] text-black' : 'text-black hover:bg-gray-200'}`}
+                      className={`flex items-center p-3 no-underline w-full text-left transition-all duration-300 ${
+                        activeSection === "features"
+                          ? "bg-[#FFD700] text-black"
+                          : "text-black hover:bg-gray-200"
+                      }`}
                       onClick={(e) => {
                         // Close dropdown first
                         setIsDropdownOpen(false);
                         // Use setTimeout to ensure dropdown closes before scrolling
                         setTimeout(() => {
-                          scrollToSection('features', e);
+                          scrollToSection("features", e);
                         }, 50);
                       }}
                     >
                       Features
                     </button>
                     <button
-                      className={`flex items-center p-3 no-underline w-full text-left transition-all duration-300 ${activeSection === 'contact' ? 'bg-[#FFD700] text-black' : 'text-black hover:bg-gray-200'}`}
+                      className={`flex items-center p-3 no-underline w-full text-left transition-all duration-300 ${
+                        activeSection === "contact"
+                          ? "bg-[#FFD700] text-black"
+                          : "text-black hover:bg-gray-200"
+                      }`}
                       onClick={(e) => {
                         // Close dropdown first
                         setIsDropdownOpen(false);
                         // Use setTimeout to ensure dropdown closes before scrolling
                         setTimeout(() => {
-                          scrollToSection('contact', e);
+                          scrollToSection("contact", e);
                         }, 50);
                       }}
                     >
@@ -512,44 +590,69 @@ const Header = () => {
                     <div
                       onClick={(e) => handleNavigation("/home", e)}
                       className={`flex items-center text-black p-3 no-underline hover:bg-gray-200 w-full text-left cursor-pointer transition-all duration-200 ${
-                        isActiveRoute("/home") ? "bg-blue-50 border-l-4 border-[#FFD700] font-semibold" : ""
+                        isActiveRoute("/home")
+                          ? "bg-blue-50 border-l-4 border-[#FFD700] font-semibold"
+                          : ""
                       }`}
                     >
                       Trang chủ
-                      {isActiveRoute("/home") && <span className="ml-auto text-[#FFD700]">●</span>}
+                      {isActiveRoute("/home") && (
+                        <span className="ml-auto text-[#FFD700]">●</span>
+                      )}
                     </div>
 
                     <div
                       onClick={(e) => handleNavigation("/trips", e)}
                       className={`flex items-center text-black p-3 no-underline hover:bg-gray-200 w-full text-left cursor-pointer transition-all duration-200 ${
-                        isActiveRoute("/trips") ? "bg-blue-50 border-l-4 border-[#FFD700] font-semibold" : ""
+                        isActiveRoute("/trips")
+                          ? "bg-blue-50 border-l-4 border-[#FFD700] font-semibold"
+                          : ""
                       }`}
                     >
                       Lộ trình AI
-                      {isActiveRoute("/trips") && <span className="ml-auto text-[#FFD700]">●</span>}
+                      {isActiveRoute("/trips") && (
+                        <span className="ml-auto text-[#FFD700]">●</span>
+                      )}
                     </div>
 
                     <div
                       onClick={(e) => handleNavigation("/explore", e)}
                       className={`flex items-center text-black p-3 no-underline hover:bg-gray-200 w-full text-left cursor-pointer transition-all duration-200 ${
-                        isActiveRoute("/explore") ? "bg-blue-50 border-l-4 border-[#FFD700] font-semibold" : ""
+                        isActiveRoute("/explore")
+                          ? "bg-blue-50 border-l-4 border-[#FFD700] font-semibold"
+                          : ""
                       }`}
                     >
                       Khám phá
-                      {isActiveRoute("/explore") && <span className="ml-auto text-[#FFD700]">●</span>}
+                      {isActiveRoute("/explore") && (
+                        <span className="ml-auto text-[#FFD700]">●</span>
+                      )}
                     </div>
                   </>
                 )}
 
                 {isLoggedIn && (
                   <Link
-                    href="/profile"
+                    href={`/profile/${userid}`}
                     key="mobile-profile"
                     className="flex items-center text-black p-3 no-underline hover:bg-gray-200 w-full text-left"
                     onClick={() => setIsDropdownOpen(false)}
                     prefetch={false}
                   >
-                    <Image src="/images/profile.svg" width={24} height={24} alt="profile" className="mr-2" />
+<div className="w-6 h-6 mr-2 relative">
+                  <Image
+                    src={
+                      userData?.avatar &&
+                      (userData.avatar.startsWith("http://") ||
+                        userData.avatar.startsWith("https://"))
+                        ? userData.avatar
+                        : "/profile.svg"
+                    }
+                    fill
+                    className="rounded-full object-cover"
+                    alt="profile"
+                  />
+                </div>
                     Profile
                   </Link>
                 )}

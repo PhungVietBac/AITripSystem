@@ -50,6 +50,16 @@ export default function LoginForm() {
       if (data.access_token) {
         // Use the login function from auth context
         login(data.access_token, username);
+        
+        const profileRes = await fetch(`/api/profile`, {
+          headers: {
+            Authorization: `Bearer ${data.access_token}`,
+          },
+        });
+        if (profileRes.ok) {
+          const profileData = await profileRes.json();
+          localStorage.setItem("current_user_id", profileData.userId);
+        }
 
         // Redirect to home page using router
         router.push("/home");
