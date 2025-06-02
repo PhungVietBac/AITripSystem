@@ -15,7 +15,7 @@ const ChatInterface = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
-      text: "Xin chào! Tôi là TravelGO Assistant. Tôi có thể giúp gì cho bạn về việc lên kế hoạch du lịch?",
+      text: "Xin chào! Tôi là Explavue Assistant. Tôi có thể giúp gì cho bạn về việc lên kế hoạch du lịch?",
       sender: "bot",
       timestamp: new Date(),
     },
@@ -66,16 +66,33 @@ const ChatInterface = () => {
   // Hàm giả lập phản hồi từ bot
   const getBotResponse = (message: string): string => {
     const lowerCaseMessage = message.toLowerCase();
-    
-    if (lowerCaseMessage.includes("xin chào") || lowerCaseMessage.includes("hello")) {
+
+    if (
+      lowerCaseMessage.includes("xin chào") ||
+      lowerCaseMessage.includes("hello")
+    ) {
       return "Xin chào! Tôi có thể giúp gì cho bạn về kế hoạch du lịch?";
-    } else if (lowerCaseMessage.includes("đà nẵng") || lowerCaseMessage.includes("da nang")) {
+    } else if (
+      lowerCaseMessage.includes("đà nẵng") ||
+      lowerCaseMessage.includes("da nang")
+    ) {
       return "Đà Nẵng là một điểm đến tuyệt vời! Bạn có thể khám phá Bà Nà Hills, Cầu Vàng, bãi biển Mỹ Khê và nhiều địa điểm hấp dẫn khác. Bạn muốn đi vào thời gian nào?";
-    } else if (lowerCaseMessage.includes("hà nội") || lowerCaseMessage.includes("ha noi")) {
+    } else if (
+      lowerCaseMessage.includes("hà nội") ||
+      lowerCaseMessage.includes("ha noi")
+    ) {
       return "Hà Nội có nhiều địa điểm du lịch nổi tiếng như Hồ Hoàn Kiếm, Văn Miếu, Hoàng Thành Thăng Long. Bạn muốn tôi gợi ý lịch trình mấy ngày?";
-    } else if (lowerCaseMessage.includes("hồ chí minh") || lowerCaseMessage.includes("ho chi minh") || lowerCaseMessage.includes("sài gòn") || lowerCaseMessage.includes("sai gon")) {
+    } else if (
+      lowerCaseMessage.includes("hồ chí minh") ||
+      lowerCaseMessage.includes("ho chi minh") ||
+      lowerCaseMessage.includes("sài gòn") ||
+      lowerCaseMessage.includes("sai gon")
+    ) {
       return "Thành phố Hồ Chí Minh có nhiều điểm tham quan như Nhà thờ Đức Bà, Bưu điện Trung tâm, Chợ Bến Thành. Bạn quan tâm đến ẩm thực, mua sắm hay tham quan?";
-    } else if (lowerCaseMessage.includes("phú quốc") || lowerCaseMessage.includes("phu quoc")) {
+    } else if (
+      lowerCaseMessage.includes("phú quốc") ||
+      lowerCaseMessage.includes("phu quoc")
+    ) {
       return "Phú Quốc có những bãi biển đẹp, nước trong xanh và nhiều hoạt động thú vị như lặn biển, câu cá, tham quan vườn tiêu. Bạn dự định đi trong bao lâu?";
     } else if (lowerCaseMessage.includes("nha trang")) {
       return "Nha Trang nổi tiếng với những bãi biển đẹp, các khu nghỉ dưỡng cao cấp và ẩm thực hải sản tuyệt vời. Bạn muốn tôi gợi ý khách sạn phù hợp với ngân sách của bạn không?";
@@ -89,7 +106,7 @@ const ChatInterface = () => {
       {/* Header */}
       <div className="flex items-center p-4 border-b border-gray-200 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-t-xl">
         <FaRobot className="text-xl mr-2" />
-        <h2 className="text-lg font-semibold">TravelGO Assistant</h2>
+        <h2 className="text-lg font-semibold">Explavue Assistant</h2>
       </div>
 
       {/* Messages container */}
@@ -115,7 +132,7 @@ const ChatInterface = () => {
                   <FaUser className="mr-2 text-blue-300" />
                 )}
                 <span className="font-semibold">
-                  {message.sender === "user" ? "Bạn" : "TravelGO Assistant"}
+                  {message.sender === "user" ? "Bạn" : "Explavue Assistant"}
                 </span>
               </div>
               <p className="whitespace-pre-wrap">{message.text}</p>

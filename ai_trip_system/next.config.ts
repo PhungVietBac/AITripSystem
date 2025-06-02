@@ -11,15 +11,9 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "bcp.cdnchinhphu.vn",
+        hostname: "aitripsystem-api.onrender.com",
         port: "",
-        pathname: "/**",
-      },
-      {
-        protocol: "https",
-        hostname: "ifqvsthceyghtkdrkuze.supabase.co",
-        port: "",
-        pathname: "/storage/v1/object/public/avatars/**",
+        pathname: "/api/v1/**",
       },
     ],
   },
