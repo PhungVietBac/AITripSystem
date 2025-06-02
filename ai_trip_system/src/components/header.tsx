@@ -277,7 +277,7 @@ const Header = () => {
               className="cursor-pointer transition-all duration-300 hover:scale-105"
             >
               <span className="text-[#FFD700] text-4xl font-['PlaywriteDKLoopet'] tracking-wide">
-                TravelGO!
+                Explavue!
               </span>
             </div>
           </div>
@@ -438,11 +438,11 @@ const Header = () => {
                 <div className="w-6 h-6 mr-2 relative">
                   <Image
                     src={
-                      userData?.avatar &&
-                      (userData.avatar.startsWith("http://") ||
-                        userData.avatar.startsWith("https://"))
-                        ? userData.avatar
-                        : "/profile.svg"
+                      userData?.avatar
+                        ? `https://aitripsystem-api.onrender.com/api/v1/proxy_image/?url=${encodeURIComponent(
+                            userData.avatar
+                          )}`
+                        : "profile.svg"
                     }
                     fill
                     className="rounded-full object-cover"
@@ -639,20 +639,20 @@ const Header = () => {
                     onClick={() => setIsDropdownOpen(false)}
                     prefetch={false}
                   >
-<div className="w-6 h-6 mr-2 relative">
-                  <Image
-                    src={
-                      userData?.avatar &&
-                      (userData.avatar.startsWith("http://") ||
-                        userData.avatar.startsWith("https://"))
-                        ? userData.avatar
-                        : "/profile.svg"
-                    }
-                    fill
-                    className="rounded-full object-cover"
-                    alt="profile"
-                  />
-                </div>
+                    <div className="w-6 h-6 mr-2 relative">
+                      <Image
+                        src={
+                          userData?.avatar
+                            ? `https://aitripsystem-api.onrender.com/api/v1/proxy_image/?url=${encodeURIComponent(
+                                userData.avatar
+                              )}`
+                            : "profile.svg"
+                        }
+                        fill
+                        className="rounded-full object-cover"
+                        alt="profile"
+                      />
+                    </div>
                     Profile
                   </Link>
                 )}

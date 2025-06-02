@@ -142,3 +142,32 @@ interface AIRecResponse extends AIRecBase {
 }
 
 interface AIRecCreate extends AIRecBase {}
+
+interface TripPlan {
+  name: string;
+  parameters: TripParameters;
+}
+
+interface TripParameters {
+  location: string;
+  days: TripDay[];
+}
+
+interface TripDay {
+  day: number;
+  date: string;
+  activities: Activity[];
+}
+
+interface Activity {
+  time: string;
+  name: string;
+  lat: number;
+  lon: number;
+  description: string;
+  namePlace: string;
+  city: string;
+  province?: string;
+  address: string;
+  rating: number;
+}
