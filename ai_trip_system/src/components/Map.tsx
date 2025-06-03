@@ -58,13 +58,19 @@ const MapUpdater = ({
   return null;
 };
 
+interface LocationItem {
+  name: string;
+  lat: number;
+  lon: number;
+}
+
 interface UserLocation {
   lat: number;
   lng: number;
   accuracy?: number;
 }
 
-const MapComponent = () => {
+const MapComponent = ({ location }: { location?: LocationItem }) => {
   const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
   const [locationPermission, setLocationPermission] = useState<
     "prompt" | "granted" | "denied"
@@ -76,6 +82,13 @@ const MapComponent = () => {
   const [mapKey, setMapKey] = useState(() =>
     Math.random().toString(36).substr(2, 9)
   );
+
+  useEffect(() => {
+    if (location) {
+      setMapCenter([location.lat, location.lon]);
+      setMapZoom(16);
+    }
+  }, [location]);
 
   // Check and request location permission
   const checkLocationPermission = async () => {
@@ -187,7 +200,9 @@ const MapComponent = () => {
         />
 
         {/* Map updater to handle center and zoom changes */}
-        <MapUpdater center={mapCenter} zoom={mapZoom} />
+        {mapCenter[0] !== undefined && mapCenter[1] !== undefined && (
+          <MapUpdater center={mapCenter} zoom={mapZoom} />
+        )}
 
         {/* User location marker */}
         {userLocation && (
@@ -205,6 +220,14 @@ const MapComponent = () => {
                   </div>
                 )}
               </div>
+            </Popup>
+          </Marker>
+        )}
+
+        {location && (
+          <Marker position={[location.lat, location.lon]}>
+            <Popup>
+              <div className="text-sm font-medium">{location.name}</div>
             </Popup>
           </Marker>
         )}
@@ -277,7 +300,7 @@ const MapComponent = () => {
 };
 
 // Wrapper component to handle SSR and prevent map container conflicts
-const Map = () => {
+const Map = ({ location }: { location?: LocationItem }) => {
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -292,7 +315,7 @@ const Map = () => {
     );
   }
 
-  return <MapComponent />;
+  return <MapComponent location={location} />;
 };
 
 export default Map;

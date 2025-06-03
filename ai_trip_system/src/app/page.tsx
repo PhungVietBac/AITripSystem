@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import IntroPage from './intro/page';
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import IntroPage from "./(public)/intro/page";
 
 // Main page with auth check
 export default function HomePage() {
@@ -11,11 +11,12 @@ export default function HomePage() {
   // Redirect to home if logged in
   useEffect(() => {
     // Check localStorage directly for immediate decision
-    const isUserLoggedIn = typeof window !== 'undefined' &&
-      localStorage.getItem('isLoggedIn') === 'true';
+    const isUserLoggedIn =
+      typeof window !== "undefined" &&
+      localStorage.getItem("isLoggedIn") === "true";
 
     if (isUserLoggedIn) {
-      router.replace('/home');
+      router.replace("/home");
     }
   }, [router]);
 
