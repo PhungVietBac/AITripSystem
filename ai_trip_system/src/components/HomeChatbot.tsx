@@ -60,14 +60,23 @@ export default function HomeChatbot({
   conversationId,
   onConversationCreate
 }: HomeChatbotProps) {
-  const { isLoggedIn, username } = useAuth();
+  const { isLoggedIn } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const [currentConversationId, setCurrentConversationId] = useState<string | undefined>(conversationId);
+  const [userId, setUserId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
+
+  // Get userId from localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storedUserId = localStorage.getItem('current_user_id');
+      setUserId(storedUserId);
+    }
+  }, [isLoggedIn]);
 
   const scrollToBottom = () => {
     // Scroll within the chat container only, not the entire page
@@ -217,7 +226,7 @@ export default function HomeChatbot({
               message: messageText,
               history: recentHistory,
               conversationId: conversationIdToUse,
-              userId: username || 'anonymous'
+              userId: userId || 'anonymous'
             }),
           });
 
@@ -263,6 +272,7 @@ export default function HomeChatbot({
         try {
           // Save user message
           await messageApi.createMessageDirect({
+            userId: userId || 'anonymous',
             conversationId: conversationIdToUse,
             content: messageText,
             role: 'user',
@@ -271,6 +281,7 @@ export default function HomeChatbot({
 
           // Save assistant response
           await messageApi.createMessageDirect({
+            userId: userId || 'anonymous',
             conversationId: conversationIdToUse,
             content: data.response || '',
             role: 'assistant',

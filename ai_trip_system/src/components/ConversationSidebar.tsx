@@ -10,6 +10,7 @@ import {
   ChevronRightIcon
 } from '@heroicons/react/24/outline';
 import { useAuth } from '@/context/AuthContext';
+import { useConversations } from '@/hooks/useConversations';
 
 interface Conversation {
   id: string;
@@ -35,56 +36,22 @@ export default function ConversationSidebar({
   className = ''
 }: ConversationSidebarProps) {
   const { user } = useAuth();
-  const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const {
+    conversations,
+    isLoading,
+    createConversation,
+    deleteConversation,
+    updateConversationTitle,
+    loadConversations
+  } = useConversations();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState('');
   const [isCollapsed, setIsCollapsed] = useState(false);
 
-  useEffect(() => {
-    if (user?.id) {
-      loadConversations();
-    }
-  }, [user?.id]);
-
-  const loadConversations = async () => {
-    if (!user?.id) return;
-
-    try {
-      setIsLoading(true);
-      const response = await fetch(`/api/conversations?userId=${user.id}&limit=50`);
-
-      if (response.ok) {
-        const data = await response.json();
-        setConversations(data);
-      } else {
-        console.error('Failed to load conversations');
-      }
-    } catch (error) {
-      console.error('Error loading conversations:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const handleNewConversation = async () => {
-    if (!user?.id) return;
-
     try {
-      const response = await fetch('/api/conversations', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId: user.id,
-          title: 'New Conversation'
-        }),
-      });
-
-      if (response.ok) {
-        const newConversation = await response.json();
-        await loadConversations(); // Refresh list
+      const newConversation = await createConversation('New Conversation');
+      if (newConversation) {
         onNewConversation();
       }
     } catch (error) {
@@ -95,20 +62,12 @@ export default function ConversationSidebar({
   const handleDeleteConversation = async (conversationId: string, e: React.MouseEvent) => {
     e.stopPropagation();
 
-    if (!user?.id || !confirm('Bạn có chắc muốn xóa cuộc trò chuyện này?')) return;
+    if (!confirm('Bạn có chắc muốn xóa cuộc trò chuyện này?')) return;
 
     try {
-      const response = await fetch(`/api/conversations?id=${conversationId}&userId=${user.id}`, {
-        method: 'DELETE',
-      });
-
-      if (response.ok) {
-        setConversations(prev => prev.filter(conv => conv.id !== conversationId));
-
-        // If deleting current conversation, create new one
-        if (conversationId === currentConversationId) {
-          onNewConversation();
-        }
+      const success = await deleteConversation(conversationId);
+      if (success && conversationId === currentConversationId) {
+        onNewConversation();
       }
     } catch (error) {
       console.error('Error deleting conversation:', error);
@@ -116,29 +75,11 @@ export default function ConversationSidebar({
   };
 
   const handleEditTitle = async (conversationId: string, newTitle: string) => {
-    if (!user?.id || !newTitle.trim()) return;
+    if (!newTitle.trim()) return;
 
     try {
-      // Note: You'll need to create this API endpoint
-      const response = await fetch(`/api/conversations/${conversationId}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId: user.id,
-          title: newTitle.trim()
-        }),
-      });
-
-      if (response.ok) {
-        setConversations(prev =>
-          prev.map(conv =>
-            conv.id === conversationId
-              ? { ...conv, title: newTitle.trim() }
-              : conv
-          )
-        );
+      const success = await updateConversationTitle(conversationId, newTitle.trim());
+      if (success) {
         setEditingId(null);
       }
     } catch (error) {
