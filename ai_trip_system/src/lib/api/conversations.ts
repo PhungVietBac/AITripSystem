@@ -12,21 +12,21 @@ import {
   MessageListResponse,
 } from '@/types/conversation';
 
-const API_BASE = '/api';
+// Sử dụng API backend đã deploy trên Render
+const API_BASE = 'https://aitripsystem-api.onrender.com/api/v1';
 
 // Conversation API functions
 export const conversationApi = {
   // Get conversations list
   async getConversations(params: ConversationListParams): Promise<ConversationListResponse> {
     const searchParams = new URLSearchParams();
-    searchParams.append('userId', params.userId);
-    
+
     if (params.page) searchParams.append('page', params.page.toString());
     if (params.limit) searchParams.append('limit', params.limit.toString());
-    if (params.includeArchived) searchParams.append('includeArchived', 'true');
+    if (params.includeArchived) searchParams.append('include_archived', 'true');
     if (params.search) searchParams.append('search', params.search);
 
-    const response = await fetch(`${API_BASE}/conversations?${searchParams}`);
+    const response = await fetch(`${API_BASE}/conversations/user/${params.userId}?${searchParams}`);
     if (!response.ok) {
       throw new Error(`Failed to fetch conversations: ${response.statusText}`);
     }
@@ -35,7 +35,7 @@ export const conversationApi = {
 
   // Get single conversation
   async getConversation(id: string, userId: string): Promise<Conversation> {
-    const response = await fetch(`${API_BASE}/conversations?id=${id}&userId=${userId}`);
+    const response = await fetch(`${API_BASE}/conversations/${id}?include_messages=true`);
     if (!response.ok) {
       throw new Error(`Failed to fetch conversation: ${response.statusText}`);
     }
@@ -44,7 +44,7 @@ export const conversationApi = {
 
   // Create new conversation
   async createConversation(data: ConversationCreateRequest): Promise<Conversation> {
-    const response = await fetch(`${API_BASE}/conversations`, {
+    const response = await fetch(`${API_BASE}/conversations/`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -59,7 +59,7 @@ export const conversationApi = {
 
   // Update conversation
   async updateConversation(id: string, data: ConversationUpdateRequest): Promise<Conversation> {
-    const response = await fetch(`${API_BASE}/conversations?id=${id}`, {
+    const response = await fetch(`${API_BASE}/conversations/${id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -74,7 +74,7 @@ export const conversationApi = {
 
   // Archive conversation (soft delete)
   async archiveConversation(id: string, userId: string): Promise<{ message: string }> {
-    const response = await fetch(`${API_BASE}/conversations?id=${id}&userId=${userId}`, {
+    const response = await fetch(`${API_BASE}/conversations/${id}`, {
       method: 'DELETE',
     });
     if (!response.ok) {
@@ -89,13 +89,11 @@ export const messageApi = {
   // Get messages for a conversation
   async getMessages(conversationId: string, params: MessageListParams): Promise<MessageListResponse> {
     const searchParams = new URLSearchParams();
-    searchParams.append('userId', params.userId);
-    searchParams.append('conversationId', conversationId);
 
     if (params.page) searchParams.append('page', params.page.toString());
     if (params.limit) searchParams.append('limit', params.limit.toString());
 
-    const response = await fetch(`${API_BASE}/messages?${searchParams}`);
+    const response = await fetch(`${API_BASE}/messages/conversation/${conversationId}?${searchParams}`);
     if (!response.ok) {
       throw new Error(`Failed to fetch messages: ${response.statusText}`);
     }
@@ -105,11 +103,14 @@ export const messageApi = {
   // Create new message in conversation
   async createMessage(conversationId: string, data: MessageCreateRequest): Promise<Message> {
     const messageData = {
-      ...data,
-      conversationId,
+      conversation_id: conversationId,
+      content: data.content,
+      role: data.role,
+      metadata: data.metadata,
+      token_count: data.token_count || 0,
     };
 
-    const response = await fetch(`${API_BASE}/messages`, {
+    const response = await fetch(`${API_BASE}/messages/`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -124,12 +125,20 @@ export const messageApi = {
 
   // Create message directly
   async createMessageDirect(data: MessageCreateRequest): Promise<Message> {
-    const response = await fetch(`${API_BASE}/messages`, {
+    const messageData = {
+      conversation_id: data.conversationId,
+      content: data.content,
+      role: data.role,
+      metadata: data.metadata,
+      token_count: data.token_count || 0,
+    };
+
+    const response = await fetch(`${API_BASE}/messages/`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(data),
+      body: JSON.stringify(messageData),
     });
     if (!response.ok) {
       throw new Error(`Failed to create message: ${response.statusText}`);
@@ -137,39 +146,39 @@ export const messageApi = {
     return response.json();
   },
 
-  // Get single message
+  // Get single message - không có endpoint này trong backend, bỏ qua
   async getMessage(messageId: string, userId: string): Promise<Message> {
-    const response = await fetch(`${API_BASE}/messages?id=${messageId}&userId=${userId}`);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch message: ${response.statusText}`);
-    }
-    return response.json();
+    throw new Error('Get single message endpoint not available in backend API');
   },
 };
 
 // Utility functions
 export const chatUtils = {
-  // Create a new conversation with first message
+  // Create a new conversation with first message using backend endpoint
   async startConversation(
     userId: string,
     title: string,
     firstMessage: string,
     role: 'user' | 'assistant' = 'user'
   ): Promise<{ conversation: Conversation; message: Message }> {
-    // Create conversation
-    const conversation = await conversationApi.createConversation({
-      user_id: userId,
-      title,
+    const response = await fetch(`${API_BASE}/messages/start-conversation`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        user_id: userId,
+        title,
+        first_message: firstMessage,
+        role,
+      }),
     });
 
-    // Create first message
-    const message = await messageApi.createMessage(conversation.id, {
-      userId,
-      content: firstMessage,
-      role,
-    });
+    if (!response.ok) {
+      throw new Error(`Failed to start conversation: ${response.statusText}`);
+    }
 
-    return { conversation, message };
+    return response.json();
   },
 
   // Generate conversation title from first message

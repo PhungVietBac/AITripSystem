@@ -3,8 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { PaperAirplaneIcon, ChatBubbleLeftRightIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '@/context/AuthContext';
-import ContextTracingService from '@/services/contextTracing';
-import ContextCacheService from '@/services/contextCache';
+import { messageApi } from '@/lib/api/conversations';
 
 interface Message {
   id: string;
@@ -198,64 +197,8 @@ export default function HomeChatbot({
     setMessages(prev => [...prev, userMessage]);
 
     try {
-      // Get conversation context from cache or database
-      let conversationContext = null;
-
-      // Debug logging
-      console.log('Context Debug:', {
-        conversationIdToUse,
-        currentConversationId,
-        messagesLength: messages.length
-      });
-
-      if (conversationIdToUse) {
-        // Try cache first
-        conversationContext = await ContextCacheService.getContext(conversationIdToUse);
-        console.log('Cache result:', conversationContext);
-
-        // If not in cache, get from database
-        if (!conversationContext) {
-          conversationContext = await ContextTracingService.getConversationContext(conversationIdToUse);
-          console.log('DB result:', conversationContext);
-
-          // Cache the context for future use
-          if (conversationContext) {
-            await ContextCacheService.setContext(conversationIdToUse, conversationContext, 300); // 5 minutes TTL
-          }
-        }
-      } else {
-        // Fallback: Use local messages as context if no conversation ID
-        if (messages.length > 0) {
-          const recentMessages = messages.slice(-6).map((msg, index) => ({
-            role: msg.isUser ? 'user' : 'assistant' as 'user' | 'assistant',
-            content: msg.text,
-            timestamp: msg.timestamp,
-            sequence: index
-          }));
-
-          conversationContext = {
-            conversationId: 'local',
-            currentSequence: messages.length,
-            recentMessages,
-            contextSummary: `Ngữ cảnh cuộc trò chuyện gần đây:\n${recentMessages.map((msg, i) =>
-              `${i + 1}. ${msg.role === 'user' ? 'Người dùng' : 'Trợ lý'}: ${msg.content}`
-            ).join('\n')}`
-          };
-
-          console.log('Using local context:', conversationContext);
-        }
-      }
-
-      // Build contextual prompt
-      const contextualMessage = conversationContext
-        ? ContextTracingService.buildContextualPrompt(messageText, conversationContext)
-        : messageText;
-
-      console.log('Contextual message:', {
-        original: messageText,
-        contextual: contextualMessage,
-        hasContext: !!conversationContext
-      });
+      // Use simple message history for context
+      const recentHistory = messages.slice(-6); // Last 3 exchanges (6 messages)
 
       // Retry logic for first request
       let response;
@@ -271,10 +214,8 @@ export default function HomeChatbot({
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              message: contextualMessage,
-              originalMessage: messageText, // Keep original for logging
-              context: conversationContext,
-              history: messages.slice(-6), // Send last 3 exchanges (6 messages)
+              message: messageText,
+              history: recentHistory,
               conversationId: conversationIdToUse,
               userId: username || 'anonymous'
             }),
@@ -317,29 +258,27 @@ export default function HomeChatbot({
 
       setMessages(prev => [...prev, botMessage]);
 
-      // Save messages with context to database (if conversation exists)
+      // Save messages to backend API (if conversation exists)
       if (conversationIdToUse && data.success) {
         try {
           // Save user message
-          await ContextTracingService.saveMessageWithContext(
-            conversationIdToUse,
-            messageText,
-            'user',
-            conversationContext || undefined
-          );
+          await messageApi.createMessageDirect({
+            conversationId: conversationIdToUse,
+            content: messageText,
+            role: 'user',
+            token_count: 0
+          });
 
           // Save assistant response
-          await ContextTracingService.saveMessageWithContext(
-            conversationIdToUse,
-            data.response || '',
-            'assistant',
-            conversationContext || undefined
-          );
-
-          // Invalidate cache to force refresh on next request
-          await ContextCacheService.invalidateConversation(conversationIdToUse);
+          await messageApi.createMessageDirect({
+            conversationId: conversationIdToUse,
+            content: data.response || '',
+            role: 'assistant',
+            metadata: data.metadata,
+            token_count: 0
+          });
         } catch (saveError) {
-          console.error('Error saving messages with context:', saveError);
+          console.error('Error saving messages to backend:', saveError);
         }
       }
     } catch (error) {
