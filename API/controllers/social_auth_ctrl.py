@@ -4,8 +4,10 @@ from datetime import timedelta
 from pydantic import BaseModel
 from database import get_db
 from models.token import Token
+from models.user import User
 import auth
 import requests
+import secrets
 
 router = APIRouter()
 
@@ -37,47 +39,91 @@ async def social_login(request: SocialLoginRequest, db: Session = Depends(get_db
             detail="Invalid social token"
         )
     
-    # Get email from token verification or request
+    # Get email and name from token verification or request
     email = user_data.get("email") or request.email
+    name = user_data.get("name") or request.name
+    
     if not email:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Email is required"
         )
     
-    # Check if user exists
-    user = db.query(Token).filter(Token.username == email).first()
+    # Check if user exists in Token table
+    token_user = db.query(Token).filter(Token.username == email).first()
     
-    # If user doesn't exist, create a new one
-    if not user:
-        # Generate a random password for the user
-        import secrets
-        random_password = secrets.token_hex(16)
-        hashed_password = auth.hash_password(random_password)
+    # Check if user exists in User table
+    user = db.query(User).filter(User.username == email).first()
+    
+    # New user - needs registration
+    if not token_user:
+        # Extract Google profile information
+        profile_data = {
+            "email": email,
+            "name": name,
+            "picture": user_data.get("picture"),
+            "given_name": user_data.get("given_name"),
+            "family_name": user_data.get("family_name"),
+            "locale": user_data.get("locale")
+        }
         
-        user = Token(username=email, hashed_password=hashed_password)
-        db.add(user)
-        db.commit()
+        # Return profile data for registration
+        return {
+            "isNewUser": True,
+            "message": "User not registered. Please complete registration.",
+            "profileData": profile_data
+        }
+    
+    # User exists but may be missing from User table
+    if not user:
+        return {
+            "isNewUser": True,
+            "message": "User account incomplete. Please complete registration.",
+            "username": email,
+            "name": name
+        }
+    
+    # Existing user - generate token and return user info
+    token_data = {
+        "sub": user.username,
+        "user_id": user.idUser,
+        "name": user.name
+    }
     
     # Generate access token
     access_token = auth.create_access_token(
-        {"sub": user.username}, 
+        token_data, 
         timedelta(minutes=30)
     )
     
-    return {"access_token": access_token, "token_type": "bearer"}
+    # Return full user info like regular login
+    return {
+        "isNewUser": False,
+        "access_token": access_token, 
+        "token_type": "bearer",
+        "user_id": user.idUser,
+        "username": user.username,
+        "name": user.name,
+        "email": user.email,
+        "phoneNumber": user.phoneNumber,
+        "gender": user.gender,
+        "theme": user.theme,
+        "language": user.language
+    }
 
 def verify_google_token(token: str):
     """
     Verify Google token with Google API
     """
     try:
+        # Try ID token verification first
         response = requests.get(
             f"https://www.googleapis.com/oauth2/v3/tokeninfo?id_token={token}"
         )
         if response.status_code == 200:
             return response.json()
-            
+        
+        # Fall back to access token verification
         response = requests.get(
             f"https://www.googleapis.com/oauth2/v3/userinfo",
             headers={"Authorization": f"Bearer {token}"}

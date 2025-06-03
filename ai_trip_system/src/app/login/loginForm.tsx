@@ -94,20 +94,43 @@ export default function LoginForm() {
         if (!response.ok) throw new Error("Login failed");
 
         const data = await response.json();
-
-        socialLogin("google", data);
-
-        // Chuyển hướng người dùng
-        router.push("/home");
+        
+        // Kiểm tra xem đây có phải là người dùng mới không
+        if (data.isNewUser) {
+          // Lưu dữ liệu profile vào localStorage để sử dụng ở trang đăng ký
+          if (data.profileData) {
+            localStorage.setItem('socialProfileData', JSON.stringify(data.profileData));
+          } else {
+            localStorage.setItem('socialProfileData', JSON.stringify({
+              email: data.username || '',
+              name: data.name || ''
+            }));
+          }
+          
+          // Chuyển hướng đến trang đăng ký với tham số nguồn
+          router.push('/register?source=google');
+        } else {
+          // Người dùng đã tồn tại, xử lý đăng nhập bình thường
+          socialLogin("google", data);
+          
+          // Lưu user ID nếu có
+          if (data.user_id) {
+            localStorage.setItem("current_user_id", data.user_id.toString());
+          }
+          
+          // Chuyển hướng người dùng đến trang chính
+          router.push("/home");
+        }
       } catch (error) {
         console.error("Login error:", error);
-        // Hiển thị thông báo lỗi
+        setError("Đăng nhập Google không thành công. Vui lòng thử lại.");
       } finally {
         setIsLoading(false);
       }
     },
     onError: (error) => {
       console.error("Google Login Error:", error);
+      setError("Lỗi xác thực Google. Vui lòng thử lại sau.");
     },
     scope: "email profile",
   });
