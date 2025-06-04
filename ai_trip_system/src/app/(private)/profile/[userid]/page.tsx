@@ -124,16 +124,16 @@ export default function ProfilePage({
   const friendsCount = friendsData?.length ?? 0;
 
   const genderOptions = [
-    { label: "Nam", value: 0 },
-    { label: "Nữ", value: 1 },
-    { label: "Khác", value: 2 },
+    { label: "Nam ♂️", value: 0 },
+    { label: "Nữ ♀️", value: 1 },
+    { label: "Khác❓", value: 2 },
   ];
 
   const renderGender = () => {
     const gender = genderOptions.find(
       (option) => option.value === userData?.gender
     );
-    return <span>{gender ? gender.label : "Other"}</span>;
+    return <span>{gender ? gender.label : "Khác❓"}</span>;
   };
 
   const handleBtnBack = () => {
@@ -328,7 +328,7 @@ export default function ProfilePage({
                   ? `https://aitripsystem-api.onrender.com/api/v1/proxy_image/?url=${encodeURIComponent(
                       userData.avatar
                     )}`
-                  : "profile.svg"
+                  : "/images/profile.svg"
               }
               priority={true}
               width={200}
@@ -386,13 +386,27 @@ export default function ProfilePage({
               <li className="py-3 sm:py-4">
                 <div className="text-justify">
                   <div className="font-bold text-lg">Về bản thân:</div>
-                  {userData?.description}
+                  {userData?.description &&
+                  userData.description.trim() !== "" ? (
+                    userData.description
+                  ) : (
+                    <span className="text-gray-600">
+                      Chưa cập nhật thông tin
+                    </span>
+                  )}
                 </div>
               </li>
               <li className="py-3 sm:py-4">
                 <div>
                   <span className="font-bold text-lg">Liên hệ:</span>{" "}
-                  {userData?.phonenumber}
+                  {userData?.phonenumber &&
+                  userData.phonenumber.trim() !== "" ? (
+                    userData.phonenumber
+                  ) : (
+                    <span className="text-gray-600">
+                      Chưa cập nhật thông tin
+                    </span>
+                  )}
                 </div>
               </li>
               <li className="py-3 sm:py-4">
@@ -436,7 +450,7 @@ export default function ProfilePage({
                         ? `https://aitripsystem-api.onrender.com/api/v1/proxy_image/?url=${encodeURIComponent(
                             userData.avatar
                           )}`
-                        : "profile.svg"
+                        : "/images/profile.svg"
                     }
                     width={200}
                     height={200}
