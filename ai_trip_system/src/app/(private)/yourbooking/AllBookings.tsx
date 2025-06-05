@@ -7,9 +7,23 @@ import { useState } from "react";
 import { getCookie } from "cookies-next";
 import Filter, { FilterOptions } from './Filter';
 import Loading from "@/components/Loading";
+import useScrollReveal from "@/hooks/useScrollReveal";
 
 interface Booking {
     idBooking: string;
+}
+
+function BookingCardReveal({ idBooking, index }: { idBooking: string; index: number }) {
+    const [ref, isVisible] = useScrollReveal();
+    return (
+        <div
+            ref={ref}
+            className={`transition-transform duration-500 ease-in-out will-change-transform ${isVisible ? "animate-fadeInUp opacity-100" : "opacity-0 translate-y-8"}`}
+            style={{ animationDelay: `${index * 80}ms`, animationFillMode: 'both' }}
+        >
+            <BookingCard idBooking={idBooking} />
+        </div>
+    );
 }
 
 export default function AllBookings() {
@@ -63,17 +77,21 @@ export default function AllBookings() {
                     <Loading message="Đang tải dữ liệu đặt chỗ..." />
                 </div>
             ) : bookings.length === 0 ? (
-                <div className="bg-gray-50 p-4 rounded-md text-gray-500 text-center">
+                <div className="bg-white p-6 rounded-lg text-gray-500 text-center border border-gray-200 shadow-sm">
                     <p>Không tìm thấy đặt chỗ nào</p>
                 </div>
             ) : (
-                <div className="space-y-6">
-                    {bookings.slice(0, 10).map((booking) => (
-                        <BookingCard key={booking.idBooking} idBooking={booking.idBooking} />
+                <div className="space-y-6 overflow-y-auto max-h-[70vh] pr-2 custom-scrollbar">
+                    {bookings.slice(0, 10).map((booking, index) => (
+                        <BookingCardReveal
+                            key={booking.idBooking}
+                            idBooking={booking.idBooking}
+                            index={index}
+                        />
                     ))}
 
                     {bookings.length > 10 && (
-                        <div className="text-center py-3 text-gray-600">
+                        <div className="text-center py-3 text-sky-700 font-semibold bg-sky-50 rounded-lg border border-sky-100 shadow-sm">
                             Hiển thị 10/{bookings.length} đặt chỗ.
                         </div>
                     )}

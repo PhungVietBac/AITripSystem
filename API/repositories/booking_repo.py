@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
 from models.booking import Booking
+from models.user import User
 from schemas.booking_schema import BookingCreate, BookingUpdate
 from datetime import datetime, timedelta
 from fastapi import HTTPException
@@ -95,3 +96,10 @@ def delete_booking(db: Session, id_booking: str):
     db.delete(db_booking)
     db.commit()
     return db_booking
+
+
+def get_bookings_by_user(db: Session, user_id: str):
+    """
+    Lấy danh sách booking của một user cụ thể
+    """
+    return db.query(Booking).join(Booking.owner_booking).filter(User.idUser == user_id).all()

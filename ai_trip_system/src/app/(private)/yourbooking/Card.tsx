@@ -9,6 +9,8 @@ import { getCookie } from 'cookies-next';
 import Loading from '@/components/Loading';
 import Modal from '@/components/Modal';
 import Toast from '@/components/Toast';
+import { useRouter } from 'next/navigation';
+
 
 interface BookingCardProps {
   idBooking: string;
@@ -33,6 +35,7 @@ export default function BookingCard({
 }: {
   idBooking: string;
 }) {
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
   const [showUserModal, setShowUserModal] = useState(false);
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
@@ -152,11 +155,11 @@ export default function BookingCard({
       const updatedData = await response.json();
       setData(updatedData);
       setIsEditingBooking(false);
-      showToast('Thay đổi đã được lưu thành công!', 'success');
     } catch (error) {
       showToast(`Lỗi khi lưu thay đổi: ${error}`, 'error');
     } finally {
       setIsLoading(false);
+      showToast('Thay đổi đã được lưu thành công!', 'success');
     }
   };
 
@@ -177,6 +180,10 @@ export default function BookingCard({
     }
   };
 
+  const handlePlaceClick = () => {
+    router.push(`/place?idBooking=${idBooking}`);
+  };
+
   if (isLoading) {
     return (
       <div className="bg-white rounded-lg shadow-md p-4 w-full max-w-md mx-auto">
@@ -194,53 +201,55 @@ export default function BookingCard({
   }
 
   return (
-    <div className="border-gray-700 bg-blue-100 rounded-lg shadow-lg filter backdrop-blur-sm p-4 overflow-hidden w-full md:w-4/5 mx-auto">
+    <div className="bg-gray-300 border border-gray-200 rounded-lg shadow-md filter backdrop-blur-sm p-4 overflow-hidden w-full md:w-4/5 mx-auto">
       {/* Content section */}
       <div className="p-4">
-        <div className="flex justify-between items-start mb-2">
-          <h3 className="font-semibold text-lg">
-            {data.placeName || `Địa điểm #${data.idPlace} (nhét link tới trang chi tiết địa điểm chỗ này)`} {/* Add link to place details here*/}
+        <div className="flex justify-between items-start mb-3">
+          <h3 
+            className="font-semibold text-lg text-blue-700 cursor-pointer hover:text-blue-900 hover:underline"
+            onClick={handlePlaceClick}
+          >
+            {data.placeName || `Địa điểm #${data.idPlace}`}
           </h3>
-          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-            data.status === 1 ? 'bg-green-100 text-green-800' : 
-            data.status === 0 ? 'bg-yellow-100 text-yellow-800' :
-            'bg-red-100 text-red-800'
-          }`}>
-            {data.status === 1 ? 'CONFIRMED' : 
-             data.status === 0 ? 'PENDING' : 'CANCELED'}
+          <span className={`px-2 py-1 rounded-full text-xs font-medium ${data.status === 1 ? 'bg-green-100 text-green-800' :
+              data.status === 0 ? 'bg-yellow-100 text-yellow-800' :
+                'bg-red-100 text-red-800'
+            }`}>
+            {data.status === 1 ? 'CONFIRMED' :
+              data.status === 0 ? 'PENDING' : 'CANCELED'}
           </span>
         </div>
 
-        <div className="flex items-center text-gray-600 mb-1">
-          <FaMapMarkerAlt className="mr-2 text-gray-500" />
+        <div className="flex items-center text-gray-700 mb-1">
+          <FaMapMarkerAlt className="mr-2 text-sky-600" />
           <span className="text-sm">Địa điểm ID: {data.idPlace}</span>
         </div>
 
-        <div className="flex items-center text-gray-600 mb-1">
-          <FaCalendarAlt className="mr-2 text-gray-500" />
+        <div className="flex items-center text-gray-700 mb-1">
+          <FaCalendarAlt className="mr-2 text-sky-600" />
           <span className="text-sm">
             {data.date ? formatDate(data.date) : 'Chưa có thông tin ngày'}
           </span>
         </div>
 
-        <div className="flex items-center text-gray-600 mb-4">
+        <div className="flex items-center text-gray-700 mb-4">
           <span className="text-sm font-medium mr-2">Mã đặt chỗ:</span>
           <span className="text-sm font-bold">{data.idBooking}</span>
         </div>
 
         {/* Amenities */}
         <div className="flex flex-wrap gap-2 mb-4">
-          <div className="flex items-center px-2 py-1 bg-gray-100 rounded-md">
-            <FaWifi className="mr-1 text-gray-600" />
-            <span className="text-xs">Wifi miễn phí</span>
+          <div className="flex items-center px-3 py-1 bg-sky-50 text-sky-700 rounded-md border border-sky-200">
+            <FaWifi className="mr-2" />
+            <span className="text-xs font-medium">Wifi miễn phí</span>
           </div>
-          <div className="flex items-center px-2 py-1 bg-gray-100 rounded-md">
-            <FaCoffee className="mr-1 text-gray-600" />
-            <span className="text-xs">Bữa sáng</span>
+          <div className="flex items-center px-3 py-1 bg-sky-50 text-sky-700 rounded-md border border-sky-200">
+            <FaCoffee className="mr-2" />
+            <span className="text-xs font-medium">Bữa sáng</span>
           </div>
-          <div className="flex items-center px-2 py-1 bg-gray-100 rounded-md">
-            <FaConciergeBell className="mr-1 text-gray-600" />
-            <span className="text-xs">Dịch vụ phòng</span>
+          <div className="flex items-center px-3 py-1 bg-sky-50 text-sky-700 rounded-md border border-sky-200">
+            <FaConciergeBell className="mr-2" />
+            <span className="text-xs font-medium">Dịch vụ phòng</span>
           </div>
         </div>
 
@@ -266,13 +275,13 @@ export default function BookingCard({
 
         <div className="mt-4 pt-4 flex flex-wrap gap-2">
           <button
-            className="w-50 py-2 bg-cyan-600 text-white rounded-md hover:bg-cyan-700 transition duration-200"
+            className="w-full sm:w-auto flex-grow sm:flex-grow-0 px-5 py-2.5 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition duration-200 text-sm font-medium"
             onClick={handleViewUserInfo}
           >
             Xem thông tin người đặt
           </button>
           <button
-            className="w-50 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition duration-200"
+            className="w-full sm:w-auto flex-grow sm:flex-grow-0 px-5 py-2.5 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition duration-200 text-sm font-medium"
             onClick={() => setIsEditingBooking(true)}
           >
             Chỉnh sửa
