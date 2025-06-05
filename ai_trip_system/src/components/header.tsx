@@ -242,7 +242,9 @@ const Header = () => {
       )}
 
       <header
-        className={`bg-gradient-to-r from-[#000080] to-[#00BFFF] flex items-center h-[80px] fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        className={`bg-gradient-to-r from-[#000080] to-[#00BFFF] flex items-center ${
+          isLoggedIn ? 'h-[53px]' : 'h-[80px]'
+        } fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
           scrolled
             ? "shadow-[0_4px_10px_rgba(0,0,0,0.5)] border-b border-black/30"
             : ""
@@ -255,7 +257,7 @@ const Header = () => {
           </div>
         )}
         {/* Left side - Logo */}
-        <div className="flex justify-start items-center p-4 gap-3 w-1/4">
+        <div className={`flex justify-start items-center gap-3 ${isLoggedIn ? 'px-6 w-auto' : 'p-4 w-1/4'}`}>
           <div className="flex items-center justify-center">
             <div
               onClick={(e) => handleNavigation(isLoggedIn ? "/home" : "/", e)}
@@ -263,10 +265,10 @@ const Header = () => {
             >
               <Image
                 src="/images/logo.png"
-                width={70}
-                height={70}
+                width={isLoggedIn ? 40 : 70}
+                height={isLoggedIn ? 40 : 70}
                 alt="logo"
-                className="w-[70px] h-[70px] -my-1"
+                className={`${isLoggedIn ? 'w-[40px] h-[40px]' : 'w-[70px] h-[70px] -my-1'}`}
                 priority
               />
             </div>
@@ -276,7 +278,9 @@ const Header = () => {
               onClick={(e) => handleNavigation(isLoggedIn ? "/home" : "/", e)}
               className="cursor-pointer transition-all duration-300 hover:scale-105"
             >
-              <span className="text-[#FFD700] text-4xl font-['PlaywriteDKLoopet'] tracking-wide">
+              <span className={`text-[#FFD700] font-['PlaywriteDKLoopet'] tracking-wide ${
+                isLoggedIn ? 'text-2xl' : 'text-4xl'
+              }`}>
                 Explavue!
               </span>
             </div>
@@ -338,62 +342,11 @@ const Header = () => {
             </div>
           )}
 
-          {/* Menu for logged in users */}
-          {isLoggedIn && (
-            <div className="hidden md:flex items-center justify-center mx-auto gap-20">
-              <div
-                onClick={(e) => handleNavigation("/home", e)}
-                className={`flex items-center no-underline transition-all duration-300 cursor-pointer relative ${
-                  isActiveRoute("/home")
-                    ? "text-[#FFD700] scale-105"
-                    : "text-white hover:opacity-70 hover:scale-105"
-                }`}
-              >
-                <span className="text-lg font-medium relative">
-                  Trang chủ
-                  {isActiveRoute("/home") && (
-                    <div className="absolute -bottom-1 left-0 right-0 h-0.5 bg-[#FFD700] rounded-full"></div>
-                  )}
-                </span>
-              </div>
-
-              <div
-                onClick={(e) => handleNavigation("/trips", e)}
-                className={`flex items-center no-underline transition-all duration-300 cursor-pointer relative ${
-                  isActiveRoute("/trips")
-                    ? "text-[#FFD700] scale-105"
-                    : "text-white hover:opacity-70 hover:scale-105"
-                }`}
-              >
-                <span className="text-lg font-medium relative">
-                  Lộ trình AI
-                  {isActiveRoute("/trips") && (
-                    <div className="absolute -bottom-1 left-0 right-0 h-0.5 bg-[#FFD700] rounded-full"></div>
-                  )}
-                </span>
-              </div>
-
-              <div
-                onClick={(e) => handleNavigation("/explore", e)}
-                className={`flex items-center no-underline transition-all duration-300 cursor-pointer relative ${
-                  isActiveRoute("/explore")
-                    ? "text-[#FFD700] scale-105"
-                    : "text-white hover:opacity-70 hover:scale-105"
-                }`}
-              >
-                <span className="text-lg font-medium relative">
-                  Khám phá
-                  {isActiveRoute("/explore") && (
-                    <div className="absolute -bottom-1 left-0 right-0 h-0.5 bg-[#FFD700] rounded-full"></div>
-                  )}
-                </span>
-              </div>
-            </div>
-          )}
+          {/* No navigation menu for logged in users - handled by sidebar */}
         </div>
 
         {/* Right side - Buttons */}
-        <div className="flex justify-end items-center p-4 w-1/4">
+        <div className={`flex justify-end items-center ${isLoggedIn ? 'px-6' : 'p-4 w-1/4'}`}>
           {/* Login/Signup buttons - only show when not logged in */}
           {!isLoggedIn && (
             <div className="hidden md:flex items-center gap-3">
@@ -496,7 +449,7 @@ const Header = () => {
               />
             </div>
             <div
-              className={`absolute top-[80px] right-0 bg-white min-w-[200px] shadow-lg rounded-md z-50 opacity-0 transition-all duration-300 transform -translate-y-2 ${
+              className={`absolute ${isLoggedIn ? 'top-[53px]' : 'top-[80px]'} right-0 bg-white min-w-[200px] shadow-lg rounded-md z-50 opacity-0 transition-all duration-300 transform -translate-y-2 ${
                 isDropdownOpen ? "block opacity-100 translate-y-0" : "hidden"
               }`}
             >
@@ -584,52 +537,7 @@ const Header = () => {
                   </>
                 )}
 
-                {/* Menu items for logged in users */}
-                {isLoggedIn && (
-                  <>
-                    <div
-                      onClick={(e) => handleNavigation("/home", e)}
-                      className={`flex items-center text-black p-3 no-underline hover:bg-gray-200 w-full text-left cursor-pointer transition-all duration-200 ${
-                        isActiveRoute("/home")
-                          ? "bg-blue-50 border-l-4 border-[#FFD700] font-semibold"
-                          : ""
-                      }`}
-                    >
-                      Trang chủ
-                      {isActiveRoute("/home") && (
-                        <span className="ml-auto text-[#FFD700]">●</span>
-                      )}
-                    </div>
-
-                    <div
-                      onClick={(e) => handleNavigation("/trips", e)}
-                      className={`flex items-center text-black p-3 no-underline hover:bg-gray-200 w-full text-left cursor-pointer transition-all duration-200 ${
-                        isActiveRoute("/trips")
-                          ? "bg-blue-50 border-l-4 border-[#FFD700] font-semibold"
-                          : ""
-                      }`}
-                    >
-                      Lộ trình AI
-                      {isActiveRoute("/trips") && (
-                        <span className="ml-auto text-[#FFD700]">●</span>
-                      )}
-                    </div>
-
-                    <div
-                      onClick={(e) => handleNavigation("/explore", e)}
-                      className={`flex items-center text-black p-3 no-underline hover:bg-gray-200 w-full text-left cursor-pointer transition-all duration-200 ${
-                        isActiveRoute("/explore")
-                          ? "bg-blue-50 border-l-4 border-[#FFD700] font-semibold"
-                          : ""
-                      }`}
-                    >
-                      Khám phá
-                      {isActiveRoute("/explore") && (
-                        <span className="ml-auto text-[#FFD700]">●</span>
-                      )}
-                    </div>
-                  </>
-                )}
+                {/* No navigation menu for logged in users - handled by sidebar */}
 
                 {isLoggedIn && (
                   <Link
