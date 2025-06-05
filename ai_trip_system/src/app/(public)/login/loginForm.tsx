@@ -65,8 +65,11 @@ export default function LoginForm({ callbackUrl }: LoginFormProps) {
           localStorage.setItem("current_user_id", profileData.userId);
         }
 
-        // Redirect to home page using router
-        router.push(callbackUrl);
+        // Small delay to ensure auth state is updated
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        // Redirect to home page using router with replace to avoid back button issues
+        router.replace(callbackUrl === "/" ? "/home" : callbackUrl);
       } else {
         throw new Error("Thông tin đăng nhập không hợp lệ.");
       }

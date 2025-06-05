@@ -5,7 +5,13 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import MapEx from "./Map_Ex";
 import PlaceCard from "./PlaceCard";
-import { FaList, FaMap, FaStar, FaMapMarkerAlt, FaCompass } from "react-icons/fa";
+import {
+  FaList,
+  FaMap,
+  FaStar,
+  FaMapMarkerAlt,
+  FaCompass,
+} from "react-icons/fa";
 import { getCookie } from "cookies-next";
 import vietnamProvinces from "@/data/vietnam-provinces.json";
 
@@ -13,15 +19,15 @@ interface Place {
   name: string;
   country: string;
   city: string;
-  province: string | null;  // Có thể null theo schema
+  province: string | null; // Có thể null theo schema
   address: string;
   description: string;
   rating: number;
-  type?: number | null;     // Optional theo schema
+  type?: number | null; // Optional theo schema
   lat: number;
   lon: number;
-  idplace: string;          // Sửa thành chữ thường theo schema
-  image?: string;           // Đánh dấu là optional vì không có trong schema
+  idplace: string; // Sửa thành chữ thường theo schema
+  image?: string; // Đánh dấu là optional vì không có trong schema
 }
 
 export default function ExplorePage() {
@@ -33,18 +39,18 @@ export default function ExplorePage() {
   const [showPlaces, setShowPlaces] = useState(false);
   const [toast, setToast] = useState({
     visible: false,
-    message: '',
-    type: 'success' as 'success' | 'error' | 'info',
+    message: "",
+    type: "success" as "success" | "error" | "info",
   });
-  const showToast = (message: string, type: 'success' | 'error' | 'info') => {
+  const showToast = (message: string, type: "success" | "error" | "info") => {
     setToast({
       visible: true,
       message,
-      type
+      type,
     });
 
     setTimeout(() => {
-      setToast(prev => ({ ...prev, visible: false }));
+      setToast((prev) => ({ ...prev, visible: false }));
     }, 5000);
   };
 
@@ -63,21 +69,24 @@ export default function ExplorePage() {
   const normalizePovinceName = (province: string): string => {
     // Remove common prefixes
     let normalized = province
-      .replace(/^Tỉnh\s+/i, '') // Remove "Tỉnh" prefix
-      .replace(/^tỉnh\s+/i, '')    // Remove "tỉnh" prefix
-      .replace(/^thành phố\s+/i, '') // Remove "thành phố" prefix
-      .replace(/^Thành phố\s+/i, '') // Remove "Thành phố" prefix
-      .replace(/^tp\.\s*/i, '')    // Remove "tp." prefix
+      .replace(/^Tỉnh\s+/i, "") // Remove "Tỉnh" prefix
+      .replace(/^tỉnh\s+/i, "") // Remove "tỉnh" prefix
+      .replace(/^thành phố\s+/i, "") // Remove "thành phố" prefix
+      .replace(/^Thành phố\s+/i, "") // Remove "Thành phố" prefix
+      .replace(/^tp\.\s*/i, "") // Remove "tp." prefix
       .trim();
 
     // Optional: Map to standard names if needed
     const provinceMap: Record<string, string> = {
-      'quảng nam': 'Quảng Nam',
-      'quảng ninh': 'Quảng Ninh',
+      "quảng nam": "Quảng Nam",
+      "quảng ninh": "Quảng Ninh",
       // Add more mappings as needed
     };
 
-    return provinceMap[normalized] || normalized.charAt(0).toUpperCase() + normalized.slice(1);
+    return (
+      provinceMap[normalized] ||
+      normalized.charAt(0).toUpperCase() + normalized.slice(1)
+    );
   };
 
   const fetchPlacesByProvince = async (province: string) => {
@@ -89,20 +98,24 @@ export default function ExplorePage() {
     try {
       // Kiểm tra xem normalizedProvince có trong danh sách tỉnh thành không
       const isProvince = vietnamProvinces.provinces.some(
-        p => p.toLowerCase() === normalizedProvince.toLowerCase()
+        (p) => p.toLowerCase() === normalizedProvince.toLowerCase()
       );
 
-      console.log(`Checking ${normalizedProvince} - Is province: ${isProvince}`);
+      console.log(
+        `Checking ${normalizedProvince} - Is province: ${isProvince}`
+      );
 
       // Gọi API tương ứng dựa trên kết quả kiểm tra
       const endpoint = isProvince ? "province" : "city";
       const response = await fetch(
-        `https://aitripsystem-api.onrender.com/api/v1/places/${endpoint}?lookup=${encodeURIComponent(normalizedProvince)}`,
+        `https://aitripsystem-api.onrender.com/api/v1/places/${endpoint}?lookup=${encodeURIComponent(
+          normalizedProvince
+        )}`,
         {
           method: "GET",
           headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
           },
         }
       );
@@ -112,13 +125,16 @@ export default function ExplorePage() {
         console.log("Raw API data:", rawData);
 
         // Kiểm tra và xử lý cấu trúc dữ liệu
-        const data = Array.isArray(rawData) ? rawData :
-          (rawData.data ? rawData.data : []);
+        const data = Array.isArray(rawData)
+          ? rawData
+          : rawData.data
+          ? rawData.data
+          : [];
 
         console.log("Processed data:", data);
         setPlaces(data);
         setShowPlaces(true);
-        showToast(`Đã tìm thấy ${data.length} địa điểm`, 'success');
+        showToast(`Đã tìm thấy ${data.length} địa điểm`, "success");
       } else {
         console.error("API request failed with status:", response.status);
         // Thử phương pháp dự phòng nếu lỗi
@@ -126,22 +142,28 @@ export default function ExplorePage() {
           const fallbackEndpoint = isProvince ? "city" : "province";
           console.log(`Trying fallback API with ${fallbackEndpoint} endpoint`);
           const fallbackResponse = await fetch(
-            `https://aitripsystem-api.onrender.com/api/v1/places/${fallbackEndpoint}?lookup=${encodeURIComponent(normalizedProvince)}`,
+            `https://aitripsystem-api.onrender.com/api/v1/places/${fallbackEndpoint}?lookup=${encodeURIComponent(
+              normalizedProvince
+            )}`,
             {
               method: "GET",
               headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${token}`
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
               },
             }
           );
 
           if (fallbackResponse.ok) {
             const rawData = await fallbackResponse.json();
-            const data = Array.isArray(rawData) ? rawData : (rawData.data ? rawData.data : []);
+            const data = Array.isArray(rawData)
+              ? rawData
+              : rawData.data
+              ? rawData.data
+              : [];
             setPlaces(data);
             setShowPlaces(true);
-            showToast(`Đã tìm thấy ${data.length} địa điểm`, 'success');
+            showToast(`Đã tìm thấy ${data.length} địa điểm`, "success");
           } else {
             setPlaces([]);
             setShowPlaces(true);
@@ -158,7 +180,7 @@ export default function ExplorePage() {
       setShowPlaces(true);
     } finally {
       setLoading(false);
-      showToast("Đã tải xong địa điểm", 'info');
+      showToast("Đã tải xong địa điểm", "info");
     }
   };
 
@@ -185,14 +207,22 @@ export default function ExplorePage() {
                 onClick={handleBackToMap}
                 className="flex items-center text-blue-600 hover:text-blue-800"
               >
-                <svg className="w-5 h-5 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M9.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L6.414 9H15a1 1 0 110 2H6.414l3.293 3.293a1 1 0 010 1.414z" clipRule="evenodd" />
+                <svg
+                  className="w-5 h-5 mr-1"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M9.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L6.414 9H15a1 1 0 110 2H6.414l3.293 3.293a1 1 0 010 1.414z"
+                    clipRule="evenodd"
+                  />
                 </svg>
                 Quay lại
               </button>
             )}
             <h2 className="text-xl font-bold text-red-500">
-              {showPlaces ? `Gợi ý lộ trình du lịch` : 'Khám phá địa điểm'}
+              {showPlaces ? `Gợi ý lộ trình du lịch` : "Khám phá địa điểm"}
             </h2>
           </div>
         </div>
@@ -201,7 +231,11 @@ export default function ExplorePage() {
         <div className="bg-white rounded-xl shadow-md overflow-hidden">
           <div className="flex">
             {/* Map Section */}
-            <div className={`transition-all duration-300 ${showPlaces ? "w-2/3" : "w-full"} relative overflow-hidden`}>
+            <div
+              className={`transition-all duration-300 ${
+                showPlaces ? "w-2/3" : "w-full"
+              } relative overflow-hidden`}
+            >
               <MapEx
                 onProvinceSelect={handleProvinceSelect}
                 className="h-[calc(100vh-180px)] w-full z-0"
@@ -246,7 +280,7 @@ export default function ExplorePage() {
                           className="transform transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
                           style={{
                             animationDelay: `${index * 100}ms`,
-                            animation: 'fadeInUp 0.5s ease forwards'
+                            animation: "fadeInUp 0.5s ease forwards",
                           }}
                         >
                           <PlaceCard place={place} />
@@ -261,5 +295,5 @@ export default function ExplorePage() {
         </div>
       </div>
     </div>
-  )
+  );
 }
