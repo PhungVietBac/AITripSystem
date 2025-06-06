@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { AiOutlineExpandAlt } from "react-icons/ai";
 import dynamic from "next/dynamic";
 import { FaClock, FaMapMarkerAlt, FaTag, FaLightbulb, FaStar, FaShare, FaHeart, FaRegHeart, FaMapMarkedAlt, FaUtensils, FaHotel, FaShoppingBag } from "react-icons/fa";
@@ -39,8 +39,10 @@ interface NearbyPlace {
 }
 
 export default function DetailPage() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const idBooking = searchParams.get('idBooking');
+  const idPlace = searchParams.get('idPlace');
   const [isMapExpanded, setIsMapExpanded] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
   const [activeTab, setActiveTab] = useState('info');
@@ -48,7 +50,7 @@ export default function DetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const token = getCookie("token") as string;
-  
+
   // Optional additional data for UI enhancements
   const [reviews, setReviews] = useState<Review[]>([]);
   const [nearbyPlaces, setNearbyPlaces] = useState<NearbyPlace[]>([]);
@@ -62,7 +64,7 @@ export default function DetailPage() {
 
   // Activities based on place type
   const getActivitiesByType = (type: number): string[] => {
-    switch(type) {
+    switch (type) {
       case 1: // Assuming 1 is historical site
         return ["Tham quan di tích", "Chụp ảnh", "Tìm hiểu lịch sử"];
       case 2: // Assuming 2 is beach
@@ -76,22 +78,38 @@ export default function DetailPage() {
     const fetchPlaceData = async () => {
       setIsLoading(true);
       try {
-        const placeResponse = await fetch(`https://aitripsystem-api.onrender.com/api/v1/bookings/${idBooking}/places/`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
+        if (!idPlace) {
+          const placeResponse = await fetch(`hhttps://aitripsystem-api.onrender.com/api/v1/bookings/${idBooking}/places/`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`
+            }
+          });
+          if (!placeResponse.ok) throw new Error("Không thể lấy thông tin địa điểm");
+
+          const data: PlaceData = await placeResponse.json();
+          setPlaceData(data);
+
+        } else {
+          const placeResponse = await fetch(`hhttps://aitripsystem-api.onrender.com/api/v1/places?idPlace=${idPlace}`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`
+            }
+          });
+          if (!placeResponse.ok) throw new Error("Không thể lấy thông tin địa điểm");
+
+          const data: PlaceData = await placeResponse.json();
+          setPlaceData(data);
         }
-      });
-        if (!placeResponse.ok) throw new Error("Không thể lấy thông tin địa điểm");
-        
-        const data: PlaceData = await placeResponse.json();
-        setPlaceData(data);
-        
+
+
         // Optional: fetch reviews and nearby places in separate calls
         // fetchReviews(placeId);
         // fetchNearbyPlaces(placeId);
-        
+
         setError(null);
       } catch (err) {
         console.error("Error fetching place data:", err);
@@ -100,7 +118,7 @@ export default function DetailPage() {
         setIsLoading(false);
       }
     };
-    
+
     fetchPlaceData();
   }, [idBooking]);
 
@@ -118,7 +136,7 @@ export default function DetailPage() {
         <div className="bg-white p-8 rounded-xl shadow-xl max-w-md w-full text-center">
           <h2 className="text-2xl font-bold text-red-500 mb-4">Không thể tải thông tin</h2>
           <p className="text-gray-600 mb-6">{error || "Vui lòng thử lại sau"}</p>
-          <button 
+          <button
             onClick={() => window.history.back()}
             className="px-6 py-2 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 transition"
           >
@@ -132,6 +150,10 @@ export default function DetailPage() {
   // Calculate activities based on place type
   const activities = getActivitiesByType(placeData.type);
 
+  const handleBookingNow = () => {
+    router.push(`/booking?idPlace=${placeData.idPlace}&namePlace=${placeData.name}`);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-white via-sky-50 to-blue-100">
       <main className="container mx-auto px-4 py-8">
@@ -144,31 +166,31 @@ export default function DetailPage() {
             className="object-cover"
             priority
           /> */}
-          
+
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex flex-col justify-end p-6">
             <div className="flex justify-between items-center">
               <h1 className="text-3xl md:text-4xl font-bold text-white">{placeData.name}</h1>
-              <button 
+              <button
                 onClick={() => setIsFavorite(!isFavorite)}
                 className="p-2 rounded-full bg-white/20 backdrop-blur-sm"
               >
-                {isFavorite ? 
-                  <FaHeart className="text-red-500 text-xl" /> : 
+                {isFavorite ?
+                  <FaHeart className="text-red-500 text-xl" /> :
                   <FaRegHeart className="text-white text-xl" />
                 }
               </button>
             </div>
-            
+
             <div className="flex items-center mt-2">
               {[...Array(5)].map((_, i) => (
-                <FaStar 
-                  key={i} 
-                  className={`${i < Math.round(placeData.rating/2) ? "text-yellow-400" : "text-gray-400"}`}
+                <FaStar
+                  key={i}
+                  className={`${i < Math.round(placeData.rating / 2) ? "text-yellow-400" : "text-gray-400"}`}
                 />
               ))}
               <span className="text-white ml-2 font-medium">{placeData.rating}/10</span>
             </div>
-            
+
             <p className="text-white/90 mt-2 text-sm md:text-base">{placeData.address}</p>
           </div>
         </div>
@@ -177,26 +199,26 @@ export default function DetailPage() {
         <div className="bg-white/80 backdrop-blur-md rounded-xl shadow-xl overflow-hidden">
           {/* Tab Navigation */}
           <div className="flex border-b">
-            <button 
-              onClick={() => setActiveTab('info')} 
+            <button
+              onClick={() => setActiveTab('info')}
               className={`flex-1 py-4 font-medium ${activeTab === 'info' ? 'text-cyan-500 border-b-2 border-cyan-500' : 'text-gray-600'}`}
             >
               Thông tin
             </button>
-            <button 
-              onClick={() => setActiveTab('reviews')} 
+            <button
+              onClick={() => setActiveTab('reviews')}
               className={`flex-1 py-4 font-medium ${activeTab === 'reviews' ? 'text-cyan-500 border-b-2 border-cyan-500' : 'text-gray-600'}`}
             >
               Đánh giá
             </button>
-            <button 
-              onClick={() => setActiveTab('nearby')} 
+            <button
+              onClick={() => setActiveTab('nearby')}
               className={`flex-1 py-4 font-medium ${activeTab === 'nearby' ? 'text-cyan-500 border-b-2 border-cyan-500' : 'text-gray-600'}`}
             >
               Lân cận
             </button>
           </div>
-          
+
           {/* Tab Content */}
           <div className="p-6">
             {activeTab === 'info' && (
@@ -205,7 +227,7 @@ export default function DetailPage() {
                   <h2 className="text-xl font-bold text-gray-800 mb-3">Mô tả</h2>
                   <p className="text-gray-600">{placeData.description || "Chưa có thông tin mô tả."}</p>
                 </div>
-                
+
                 <div className="mb-6">
                   <h2 className="text-xl font-bold text-gray-800 mb-3">Thông tin chi tiết</h2>
                   <ul className="space-y-3">
@@ -239,7 +261,7 @@ export default function DetailPage() {
                     </li>
                   </ul>
                 </div>
-                
+
                 <div className="mb-6">
                   <h2 className="text-xl font-bold text-gray-800 mb-3">Hoạt động nổi bật</h2>
                   <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
@@ -251,10 +273,10 @@ export default function DetailPage() {
                     ))}
                   </ul>
                 </div>
-                
+
                 <div className="relative h-[300px] rounded-lg overflow-hidden mb-6 border-2 border-white shadow-lg">
                   <MapView />
-                  <button 
+                  <button
                     onClick={() => setIsMapExpanded(!isMapExpanded)}
                     className="absolute bottom-4 right-4 z-10 p-2 bg-white rounded-full shadow-lg"
                   >
@@ -263,7 +285,7 @@ export default function DetailPage() {
                 </div>
               </div>
             )}
-            
+
             {activeTab === 'reviews' && (
               <div>
                 <h2 className="text-xl font-bold text-gray-800 mb-4">Đánh giá từ khách du lịch</h2>
@@ -274,8 +296,8 @@ export default function DetailPage() {
                         <p className="font-semibold">{review.user}</p>
                         <div className="flex items-center">
                           {[...Array(5)].map((_, i) => (
-                            <FaStar 
-                              key={i} 
+                            <FaStar
+                              key={i}
                               className={`text-sm ${i < review.rating ? "text-yellow-400" : "text-gray-300"}`}
                             />
                           ))}
@@ -287,13 +309,13 @@ export default function DetailPage() {
                 ) : (
                   <p className="text-gray-500 italic mb-4">Chưa có đánh giá nào. Hãy là người đầu tiên đánh giá!</p>
                 )}
-                
+
                 <button className="w-full mt-4 py-2 text-center border border-cyan-500 text-cyan-500 rounded-lg hover:bg-cyan-50 transition">
                   Viết đánh giá
                 </button>
               </div>
             )}
-            
+
             {activeTab === 'nearby' && (
               <div>
                 <h2 className="text-xl font-bold text-gray-800 mb-4">Địa điểm lân cận</h2>
@@ -324,13 +346,14 @@ export default function DetailPage() {
             )}
           </div>
         </div>
-        
+
         {/* Call-to-action Buttons */}
         <div className="mt-6 grid grid-cols-2 md:grid-cols-3 gap-4">
           <button className="flex items-center justify-center gap-2 bg-cyan-500 text-white py-3 rounded-lg hover:bg-cyan-600 transition shadow-md">
             <FaMapMarkedAlt /> <span>Xem trên bản đồ</span>
           </button>
-          <button className="flex items-center justify-center gap-2 bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 transition shadow-md">
+          <button className="flex items-center justify-center gap-2 bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 transition shadow-md"
+            onClick={handleBookingNow}>
             <FaHotel /> <span>Đặt khách sạn gần đây</span>
           </button>
           <button className="flex items-center justify-center gap-2 bg-gray-200 text-gray-800 py-3 rounded-lg hover:bg-gray-300 transition shadow-md col-span-2 md:col-span-1">
@@ -343,12 +366,12 @@ export default function DetailPage() {
           🗓️ Lịch trình gợi ý
         </h1>
       </main>
-      
+
       {/* Modal for expanded map */}
       {isMapExpanded && (
         <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4">
           <div className="bg-white rounded-xl w-full max-w-4xl h-3/4 overflow-hidden relative">
-            <button 
+            <button
               onClick={() => setIsMapExpanded(false)}
               className="absolute top-4 right-4 z-10 p-2 bg-white rounded-full shadow-md text-gray-700"
             >
