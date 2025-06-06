@@ -52,7 +52,7 @@ export function useConversations() {
       const response = await conversationApi.getConversations({
         userId: userId,
         page: 1,
-        limit: 50
+        limit: 10 // Only fetch 10 most recent conversations
       });
       return response.conversations || [];
     } catch (err) {
@@ -83,12 +83,52 @@ export function useConversations() {
     if (!userId) return null;
 
     try {
+      // First, get the latest conversations to check count
+      const response = await conversationApi.getConversations({
+        userId: userId,
+        page: 1,
+        limit: 50 // Get more to check total count
+      });
+      const currentConversations = response.conversations || [];
+
+      // Check if we need to delete old conversations (keep only 9, so we can add 1 new = 10 total)
+      console.log(`📊 Current conversations count: ${currentConversations.length}`);
+      if (currentConversations.length >= 10) {
+        // Sort by date and get the oldest ones to delete
+        const sortedByDate = [...currentConversations].sort((a, b) => {
+          const dateA = new Date(a.updatedAt || a.updated_at || a.createdAt || a.created_at).getTime();
+          const dateB = new Date(b.updatedAt || b.updated_at || b.createdAt || b.created_at).getTime();
+          return dateA - dateB; // Oldest first
+        });
+
+        // Delete the oldest conversations to make room (keep 9, so we can add 1 new)
+        const conversationsToDelete = sortedByDate.slice(0, currentConversations.length - 9);
+        console.log(`🗑️ Auto-deleting ${conversationsToDelete.length} old conversations to maintain limit of 10`);
+        console.log('Conversations to delete:', conversationsToDelete.map(c => ({ id: c.id, title: c.title })));
+
+        for (const conv of conversationsToDelete) {
+          try {
+            console.log(`🗑️ Attempting to delete conversation: ${conv.id} - ${conv.title}`);
+            await conversationApi.archiveConversation(conv.id, userId);
+            console.log(`✅ Successfully auto-deleted old conversation: ${conv.title}`);
+          } catch (deleteErr) {
+            console.error('❌ Failed to delete old conversation:', deleteErr);
+            console.error('Conversation details:', conv);
+          }
+        }
+      } else {
+        console.log(`✅ No need to delete conversations. Current count: ${currentConversations.length}/10`);
+      }
+
+      console.log(`🆕 Creating new conversation with title: ${title || 'New Conversation'}`);
       const newConversation = await conversationApi.createConversation({
         user_id: userId,
         title: title || 'New Conversation'
       });
+      console.log(`✅ Successfully created new conversation:`, newConversation);
 
       await mutate(); // Revalidate SWR cache
+      console.log(`🔄 SWR cache revalidated`);
       return newConversation;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');

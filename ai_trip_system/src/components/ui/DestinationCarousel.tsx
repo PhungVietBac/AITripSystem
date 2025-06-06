@@ -87,7 +87,7 @@ export default function DestinationCarousel() {
   };
 
   return (
-    <div className="relative h-[24rem] lg:h-[32rem] w-full lg:w-[120%] overflow-hidden rounded-lg shadow-lg">
+    <div className="relative h-[24rem] lg:h-[32rem] w-full lg:w-[120%] overflow-hidden rounded-[25px] shadow-lg">
       {/* Main Image */}
       <div className="relative h-full">
         <img

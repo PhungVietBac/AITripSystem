@@ -6,7 +6,6 @@ import Image from 'next/image';
 import {
   ChatBubbleLeftRightIcon,
   MapIcon,
-  BookmarkIcon,
   ClockIcon,
   ChevronDownIcon,
   ChevronRightIcon,
@@ -14,7 +13,8 @@ import {
   HomeIcon,
   MapPinIcon,
   CalendarDaysIcon,
-  UserIcon
+  UserIcon,
+  CogIcon
 } from '@heroicons/react/24/outline';
 import { useConversation } from '@/context/ConversationContext';
 import { useAuth } from '@/context/AuthContext';
@@ -67,7 +67,7 @@ export default function MainSidebar({
 
   const handleNewConversation = async () => {
     try {
-      const newConversation = await createConversation('New Conversation');
+      const newConversation = await createConversation('Cuộc trò chuyện mới');
       if (newConversation) {
         onNewConversation();
       }
@@ -79,22 +79,22 @@ export default function MainSidebar({
   const menuItems = [
     {
       icon: HomeIcon,
-      label: 'Home',
+      label: 'Trang chủ',
       route: '/home'
     },
     {
       icon: MapIcon,
-      label: 'Explore',
+      label: 'Khám phá',
       route: '/explore'
     },
     {
       icon: MapPinIcon,
-      label: 'Plan Trip',
+      label: 'Lên kế hoạch',
       route: '/trips'
     },
     {
       icon: CalendarDaysIcon,
-      label: 'Your Bookings',
+      label: 'Đặt chỗ của bạn',
       route: '/yourbooking'
     },
 
@@ -192,7 +192,7 @@ export default function MainSidebar({
             className="flex items-center gap-2 w-full text-left text-gray-700 hover:text-gray-900 transition-colors"
           >
             <ClockIcon className="h-5 w-5" />
-            <span className="font-medium">Recent chat</span>
+            <span className="font-medium">Trò chuyện gần đây</span>
             {isRecentChatExpanded ? (
               <ChevronDownIcon className="h-4 w-4 ml-auto" />
             ) : (
@@ -213,7 +213,7 @@ export default function MainSidebar({
             ) : conversations.length === 0 ? (
               <div className="text-center text-gray-500 py-8">
                 <div className="text-2xl mb-2">💬</div>
-                <p className="text-sm">No conversations yet</p>
+                <p className="text-sm">Chưa có cuộc trò chuyện nào</p>
               </div>
             ) : (
               <div className="space-y-4">
@@ -223,7 +223,7 @@ export default function MainSidebar({
                   className="w-full flex items-center gap-3 p-3 bg-white border border-gray-200 hover:bg-gray-50 rounded-lg transition-colors text-gray-700"
                 >
                   <ChatBubbleLeftRightIcon className="h-5 w-5" />
-                  <span className="font-medium">New chat</span>
+                  <span className="font-medium">Trò chuyện mới</span>
                   <PlusIcon className="h-4 w-4 ml-auto" />
                 </button>
 
@@ -291,7 +291,17 @@ export default function MainSidebar({
               className="flex items-center gap-3 p-3 hover:bg-gray-50 cursor-pointer transition-colors border-b border-gray-100"
             >
               <UserIcon className="h-5 w-5 text-gray-600" />
-              <span className="font-medium text-gray-700">Profile</span>
+              <span className="font-medium text-gray-700">Hồ sơ</span>
+            </div>
+            <div
+              onClick={() => {
+                setIsProfileDropdownOpen(false);
+                router.push('/settings');
+              }}
+              className="flex items-center gap-3 p-3 hover:bg-gray-50 cursor-pointer transition-colors border-b border-gray-100"
+            >
+              <CogIcon className="h-5 w-5 text-gray-600" />
+              <span className="font-medium text-gray-700">Cài đặt</span>
             </div>
             <div
               onClick={handleLogout}
@@ -300,7 +310,7 @@ export default function MainSidebar({
               <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
               </svg>
-              <span className="font-medium">Logout</span>
+              <span className="font-medium">Đăng xuất</span>
             </div>
           </div>
         )}
