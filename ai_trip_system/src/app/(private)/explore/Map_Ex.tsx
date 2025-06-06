@@ -36,6 +36,7 @@ const MapClickHandler = ({ onLocationClick }: { onLocationClick: (lat: number, l
   useMapEvents({
     click(e) {
       const { lat, lng } = e.latlng;
+      console.log("Clicked location:", lat, lng);
       onLocationClick(lat, lng);
     },
   });

@@ -1,73 +1,70 @@
-import React from 'react'
-import { FaList, FaMap, FaStar, FaMapMarkerAlt } from "react-icons/fa";
+import React from 'react';
+import { FaStar, FaMapMarkerAlt } from 'react-icons/fa';
+import { useRouter } from 'next/navigation';
+import PlaceImage from '@/components/PlaceImage';
 
-
+// Cập nhật interface Place nếu cần
 interface Place {
   name: string;
   country: string;
   city: string;
-  province: string;
+  province: string | null;
   address: string;
   description: string;
-  image: string;
   rating: number;
-  idPlace: string;
+  type?: number | null;
+  lat: number;
+  lon: number;
+  idplace: string;
+  image?: string;
 }
 
 export default function PlaceCard({ place }: { place: Place }) {
+  const router = useRouter();
+
+  const handleClick = () => {
+    router.push(`/place?idPlace=${place.idplace}`);
+  };
+
+  // Giới hạn mô tả
+  const truncateDescription = (text: string, maxLength: number = 100) => {
+    if (text.length <= maxLength) return text;
+    return text.substr(0, maxLength) + '...';
+  };
+
   return (
-    <div className="bg-indigo-200 border rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer">
-      <div className="p-4">
-        <div className="flex space-x-4">
-          {/* Image - sử dụng thẻ img thông thường */}
-          <div className="flex-shrink-0 w-20 h-20 relative">
-            <img
-              src={place.image || "elementor-placeholder-image.webp"}
-              alt={place.name}
-              className="w-20 h-20 object-cover rounded-lg"
-            />
-          </div>
-          
-          {/* Content */}
-          <div className="flex-1 min-w-0">
-            <h3 className="text-lg font-semibold text-gray-900 truncate">
-              {place.name}
-            </h3>
-            
-            <div className="flex items-center mt-1 text-sm text-gray-600">
-              <FaMapMarkerAlt className="w-3 h-3 mr-1" />
-              <span className="truncate">
-                {place.city}, {place.province}
-              </span>
-            </div>
-            
-            {place.rating > 0 && (
-              <div className="flex items-center mt-2">
-                <div className="flex items-center">
-                  {[...Array(5)].map((_, i) => (
-                    <FaStar
-                      key={i}
-                      className={`w-3 h-3 ${
-                        i < Math.floor(place.rating)
-                          ? "text-yellow-400"
-                          : "text-gray-300"
-                      }`}
-                    />
-                  ))}
-                </div>
-                <span className="ml-1 text-sm text-gray-600">
-                  {place.rating.toFixed(1)}
-                </span>
-              </div>
-            )}
-            
-            <p className="text-sm text-gray-600 mt-2 line-clamp-2">
-              {place.description}
-            </p>
-          </div>
+    <div 
+      onClick={handleClick}
+      className="bg-white rounded-lg shadow overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
+    >
+      {/* Image section - sử dụng PlaceImage */}
+      <div className="h-40 relative">
+        <PlaceImage 
+          idPlace={place.idplace} 
+          altText={place.name}
+          className="w-full h-full"
+        />
+        
+        <div className="absolute top-2 right-2 bg-blue-500 text-white px-2 py-1 rounded-full text-xs font-bold flex items-center z-10">
+          <FaStar className="mr-1 text-yellow-300" />
+          {place.rating.toFixed(1)}
         </div>
+      </div>
+      
+      {/* Content section */}
+      <div className="p-4">
+        <h3 className="font-semibold text-lg text-gray-800 mb-1">{place.name}</h3>
+        
+        <div className="flex items-center text-gray-600 text-sm mb-2">
+          <FaMapMarkerAlt className="mr-1 text-blue-500" />
+          <span>{place.address}</span>
+        </div>
+        
+        <p className="text-gray-600 text-sm">
+          {truncateDescription(place.description)}
+        </p>
       </div>
     </div>
   );
-};
+}
 

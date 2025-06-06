@@ -32,21 +32,27 @@ function BookingPage() {
                 throw new Error('Thiếu thông tin địa điểm');
             }
 
+            const requestBody = {
+                idplace: idPlace,
+                date: new Date(selectedDate).toISOString(),
+                status: 1
+            };
+            console.log("Request payload:", requestBody);
+
             const response = await fetch(`https://aitripsystem-api.onrender.com/api/v1/bookings/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify({
-                    idPlace: idPlace,
-                    date: new Date(selectedDate).toISOString(),
-                    status: '1'
-                })
+                body: JSON.stringify(requestBody)
             });
 
+            // Thêm sau response để xem chi tiết lỗi
             if (!response.ok) {
-                throw new Error('Có lỗi xảy ra khi đặt chỗ');
+                const errorText = await response.text();
+                console.error("API Error:", response.status, errorText);
+                throw new Error(`Lỗi ${response.status}: ${errorText}`);
             }
 
             const data = await response.json();

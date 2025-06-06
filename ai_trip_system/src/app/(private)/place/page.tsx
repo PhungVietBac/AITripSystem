@@ -6,6 +6,8 @@ import dynamic from "next/dynamic";
 import { FaClock, FaMapMarkerAlt, FaTag, FaLightbulb, FaStar, FaShare, FaHeart, FaRegHeart, FaMapMarkedAlt, FaUtensils, FaHotel, FaShoppingBag } from "react-icons/fa";
 import { getCookie } from "cookies-next";
 import Loading from "@/components/Loading";
+import PlaceImage from "@/components/PlaceImage";
+import Reviews from './Review';
 
 const MapView = dynamic(() => import("@/components/Map"), {
   ssr: false,
@@ -19,9 +21,10 @@ interface PlaceData {
   province: string;
   address: string;
   description: string;
-  image: string;
   rating: number;
   type: number;
+  lat: number;
+  lon: number;
   idPlace: string;
 }
 
@@ -50,6 +53,7 @@ export default function DetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const token = getCookie("token") as string;
+  const [imageUrl, setImageUrl] = useState("");
 
   // Optional additional data for UI enhancements
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -74,12 +78,13 @@ export default function DetailPage() {
     }
   };
 
+
   useEffect(() => {
     const fetchPlaceData = async () => {
       setIsLoading(true);
       try {
         if (!idPlace) {
-          const placeResponse = await fetch(`hhttps://aitripsystem-api.onrender.com/api/v1/bookings/${idBooking}/places/`, {
+          const placeResponse = await fetch(`https://aitripsystem-api.onrender.com/api/v1/bookings/${idBooking}/places/`, {
             method: 'GET',
             headers: {
               'Content-Type': 'application/json',
@@ -92,7 +97,7 @@ export default function DetailPage() {
           setPlaceData(data);
 
         } else {
-          const placeResponse = await fetch(`hhttps://aitripsystem-api.onrender.com/api/v1/places?idPlace=${idPlace}`, {
+          const placeResponse = await fetch(`https://aitripsystem-api.onrender.com/api/v1/places?idPlace=${idPlace}`, {
             method: 'GET',
             headers: {
               'Content-Type': 'application/json',
@@ -106,10 +111,6 @@ export default function DetailPage() {
         }
 
 
-        // Optional: fetch reviews and nearby places in separate calls
-        // fetchReviews(placeId);
-        // fetchNearbyPlaces(placeId);
-
         setError(null);
       } catch (err) {
         console.error("Error fetching place data:", err);
@@ -120,7 +121,8 @@ export default function DetailPage() {
     };
 
     fetchPlaceData();
-  }, [idBooking]);
+  }, [idBooking, idPlace, token]);
+
 
   if (isLoading) {
     return (
@@ -151,7 +153,7 @@ export default function DetailPage() {
   const activities = getActivitiesByType(placeData.type);
 
   const handleBookingNow = () => {
-    router.push(`/booking?idPlace=${placeData.idPlace}&namePlace=${placeData.name}`);
+    router.push(`/booking?idPlace=${idPlace}&namePlace=${placeData.name}`);
   };
 
   return (
@@ -159,13 +161,12 @@ export default function DetailPage() {
       <main className="container mx-auto px-4 py-8">
         {/* Featured Image and Title Section */}
         <div className="relative w-full h-[400px] rounded-xl overflow-hidden mb-6 shadow-xl">
-          {/* <Image 
-            src={placeData.image} 
-            alt={placeData.name}
-            fill
-            className="object-cover"
-            priority
-          /> */}
+
+          <PlaceImage
+            idPlace={placeData.idPlace}
+            altText={placeData.name}
+            className="w-full h-full object-cover"
+          />
 
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex flex-col justify-end p-6">
             <div className="flex justify-between items-center">
@@ -185,10 +186,10 @@ export default function DetailPage() {
               {[...Array(5)].map((_, i) => (
                 <FaStar
                   key={i}
-                  className={`${i < Math.round(placeData.rating / 2) ? "text-yellow-400" : "text-gray-400"}`}
+                  className={`${i < Math.round(placeData.rating) ? "text-yellow-400" : "text-gray-400"}`}
                 />
               ))}
-              <span className="text-white ml-2 font-medium">{placeData.rating}/10</span>
+              <span className="text-white ml-2 font-medium">{placeData.rating}/5</span>
             </div>
 
             <p className="text-white/90 mt-2 text-sm md:text-base">{placeData.address}</p>
@@ -198,7 +199,7 @@ export default function DetailPage() {
         {/* Content Section */}
         <div className="bg-white/80 backdrop-blur-md rounded-xl shadow-xl overflow-hidden">
           {/* Tab Navigation */}
-          <div className="flex border-b">
+          <div className="flex border-b text-2xl text-gray-900 font-stretch-extra-condensed">
             <button
               onClick={() => setActiveTab('info')}
               className={`flex-1 py-4 font-medium ${activeTab === 'info' ? 'text-cyan-500 border-b-2 border-cyan-500' : 'text-gray-600'}`}
@@ -288,31 +289,12 @@ export default function DetailPage() {
 
             {activeTab === 'reviews' && (
               <div>
-                <h2 className="text-xl font-bold text-gray-800 mb-4">Đánh giá từ khách du lịch</h2>
-                {reviews.length > 0 ? (
-                  reviews.map((review, index) => (
-                    <div key={index} className="border-b pb-4 mb-4 last:border-0">
-                      <div className="flex justify-between items-center mb-2">
-                        <p className="font-semibold">{review.user}</p>
-                        <div className="flex items-center">
-                          {[...Array(5)].map((_, i) => (
-                            <FaStar
-                              key={i}
-                              className={`text-sm ${i < review.rating ? "text-yellow-400" : "text-gray-300"}`}
-                            />
-                          ))}
-                        </div>
-                      </div>
-                      <p className="text-gray-600 text-sm">{review.comment}</p>
-                    </div>
-                  ))
+                {/* Reviews Section */}
+                {idPlace ? (
+                  <Reviews idPlace={idPlace} />
                 ) : (
-                  <p className="text-gray-500 italic mb-4">Chưa có đánh giá nào. Hãy là người đầu tiên đánh giá!</p>
+                  <p className="text-gray-500 italic">Không thể hiển thị đánh giá do thiếu thông tin địa điểm.</p>
                 )}
-
-                <button className="w-full mt-4 py-2 text-center border border-cyan-500 text-cyan-500 rounded-lg hover:bg-cyan-50 transition">
-                  Viết đánh giá
-                </button>
               </div>
             )}
 
@@ -347,6 +329,7 @@ export default function DetailPage() {
           </div>
         </div>
 
+
         {/* Call-to-action Buttons */}
         <div className="mt-6 grid grid-cols-2 md:grid-cols-3 gap-4">
           <button className="flex items-center justify-center gap-2 bg-cyan-500 text-white py-3 rounded-lg hover:bg-cyan-600 transition shadow-md">
@@ -360,11 +343,6 @@ export default function DetailPage() {
             <FaShare /> <span>Chia sẻ</span>
           </button>
         </div>
-
-        {/* Trip Schedule Section */}
-        <h1 className="text-3xl font-extrabold text-cyan-500 my-10 text-center">
-          🗓️ Lịch trình gợi ý
-        </h1>
       </main>
 
       {/* Modal for expanded map */}
