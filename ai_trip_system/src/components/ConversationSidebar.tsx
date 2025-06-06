@@ -10,6 +10,7 @@ import {
   ChevronRightIcon
 } from '@heroicons/react/24/outline';
 import { useConversations } from '@/hooks/useConversations';
+import { useAuth } from '@/context/AuthContext';
 
 interface Conversation {
   id: string;
@@ -36,16 +37,25 @@ export default function ConversationSidebar({
   onNewConversation,
   className = ''
 }: ConversationSidebarProps) {
+  const { isLoggedIn } = useAuth();
   const {
     conversations,
     isLoading,
     createConversation,
     deleteConversation,
-    updateConversationTitle
+    updateConversationTitle,
+    loadConversations
   } = useConversations();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState('');
   const [isCollapsed, setIsCollapsed] = useState(false);
+
+  // Auto-fetch conversations when user logs in
+  useEffect(() => {
+    if (isLoggedIn) {
+      loadConversations();
+    }
+  }, [isLoggedIn, loadConversations]);
 
   const handleNewConversation = async () => {
     try {

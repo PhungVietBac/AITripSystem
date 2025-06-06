@@ -174,11 +174,12 @@ const Header = () => {
       // Update active section based on scroll position
       const aboutSection = document.getElementById("about");
       const featuresSection = document.getElementById("features");
+      const membersSection = document.getElementById("members");
       const contactSection = document.getElementById("contact");
 
       const scrollPosition = scrollY + 100; // Add offset for header height
 
-      if (aboutSection && featuresSection && contactSection) {
+      if (aboutSection && featuresSection && membersSection && contactSection) {
         // Hide scroll indicator when we've scrolled deeper into the contact section
         if (scrollPosition >= contactSection.offsetTop + 300) {
           // Add 300px offset to hide it later
@@ -195,10 +196,15 @@ const Header = () => {
           setActiveSection("about");
         } else if (
           scrollPosition >= featuresSection.offsetTop &&
-          scrollPosition < contactSection.offsetTop
+          scrollPosition < membersSection.offsetTop
         ) {
           setActiveSection("features");
-        } else if (scrollPosition >= contactSection.offsetTop) {
+        } else if (
+          scrollPosition >= membersSection.offsetTop &&
+          scrollPosition < contactSection.offsetTop
+        ) {
+          setActiveSection("members");
+        } else if (scrollPosition > contactSection.offsetTop) {
           setActiveSection("contact");
         } else {
           setActiveSection(null);
@@ -291,11 +297,11 @@ const Header = () => {
         <div className="flex justify-center items-center p-4 w-2/4">
           {/* Center menu items - only show when not logged in */}
           {!isLoggedIn && (
-            <div className="hidden md:flex items-center justify-center mx-auto gap-20">
+            <div className="hidden md:flex items-center justify-center mx-auto gap-16">
               <button
                 onClick={(e) => scrollToSection("about", e)}
                 className="flex items-center no-underline transition-all duration-300"
-                aria-label="About"
+                aria-label="Giới thiệu"
               >
                 <span
                   className={`text-lg font-medium ${
@@ -304,14 +310,14 @@ const Header = () => {
                       : "text-white hover:opacity-70"
                   }`}
                 >
-                  About
+                  Giới thiệu
                 </span>
               </button>
 
               <button
                 onClick={(e) => scrollToSection("features", e)}
                 className="flex items-center no-underline transition-all duration-300"
-                aria-label="Features"
+                aria-label="Tính năng"
               >
                 <span
                   className={`text-lg font-medium ${
@@ -320,14 +326,30 @@ const Header = () => {
                       : "text-white hover:opacity-70"
                   }`}
                 >
-                  Features
+                  Tính năng
+                </span>
+              </button>
+
+              <button
+                onClick={(e) => scrollToSection("members", e)}
+                className="flex items-center no-underline transition-all duration-300"
+                aria-label="Thành viên"
+              >
+                <span
+                  className={`text-lg font-medium ${
+                    activeSection === "members"
+                      ? "text-[#FFD700]"
+                      : "text-white hover:opacity-70"
+                  }`}
+                >
+                  Thành viên
                 </span>
               </button>
 
               <button
                 onClick={(e) => scrollToSection("contact", e)}
                 className="flex items-center no-underline transition-all duration-300"
-                aria-label="Contact"
+                aria-label="Hướng dẫn"
               >
                 <span
                   className={`text-lg font-medium ${
@@ -336,7 +358,7 @@ const Header = () => {
                       : "text-white hover:opacity-70"
                   }`}
                 >
-                  Contact
+                  Hướng dẫn
                 </span>
               </button>
             </div>
@@ -356,10 +378,10 @@ const Header = () => {
                   e.stopPropagation();
                   router.push("/login");
                 }}
-                className="flex items-center no-underline text-black bg-[#FFD700] border-2 border-transparent rounded-md px-5 py-2 cursor-pointer transition-all duration-300 hover:bg-white hover:border-[#FFD700]"
-                aria-label="Login"
+                className="flex items-center no-underline text-black bg-[#FFD700] border-2 border-transparent rounded-full px-5 py-2 cursor-pointer transition-all duration-300 hover:bg-white hover:border-[#FFD700]"
+                aria-label="Đăng nhập"
               >
-                <span className="text-base font-medium">Login</span>
+                <span className="text-base font-medium">Đăng nhập</span>
               </div>
 
               <div
@@ -368,64 +390,11 @@ const Header = () => {
                   e.stopPropagation();
                   router.push("/register");
                 }}
-                className="flex items-center no-underline text-black bg-[#FFD700] border-2 border-transparent rounded-md px-5 py-2 cursor-pointer transition-all duration-300 hover:bg-white hover:border-[#FFD700]"
-                aria-label="Sign Up"
+                className="flex items-center no-underline text-black bg-[#FFD700] border-2 border-transparent rounded-full px-5 py-2 cursor-pointer transition-all duration-300 hover:bg-white hover:border-[#FFD700]"
+                aria-label="Đăng ký"
               >
-                <span className="text-base font-medium">Sign Up</span>
+                <span className="text-base font-medium">Đăng ký</span>
               </div>
-            </div>
-          )}
-
-          {/* Profile and Logout buttons - only show when logged in */}
-          {isLoggedIn && (
-            <div className="hidden md:flex items-center gap-3">
-              <div
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  router.push(`/profile/${userid}`);
-                }}
-                className="flex items-center no-underline text-white hover:opacity-70 transition-opacity duration-300 bg-transparent border border-white rounded-md px-5 py-2 cursor-pointer"
-                aria-label="Profile"
-              >
-                <div className="w-6 h-6 mr-2 relative">
-                  <Image
-                    src={
-                      userData?.avatar
-                        ? `https://aitripsystem-api.onrender.com/api/v1/proxy_image/?url=${encodeURIComponent(
-                            userData.avatar
-                          )}`
-                        : "profile.svg"
-                    }
-                    fill
-                    className="rounded-full object-cover"
-                    alt="profile"
-                  />
-                </div>
-                <span className="text-base font-medium">Profile</span>
-              </div>
-
-              <button
-                onClick={handleLogout}
-                className="flex items-center no-underline text-white hover:opacity-90 transition-opacity duration-300 bg-[#4B3DB5] rounded-md px-5 py-2"
-                aria-label="Logout"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  className="mr-2"
-                >
-                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                  <polyline points="16 17 21 12 16 7"></polyline>
-                  <line x1="21" y1="12" x2="9" y2="12"></line>
-                </svg>
-                <span className="text-base font-medium">Logout</span>
-              </button>
             </div>
           )}
 
@@ -472,7 +441,7 @@ const Header = () => {
                         }, 50);
                       }}
                     >
-                      About
+                      Giới thiệu
                     </button>
                     <button
                       className={`flex items-center p-3 no-underline w-full text-left transition-all duration-300 ${
@@ -489,7 +458,24 @@ const Header = () => {
                         }, 50);
                       }}
                     >
-                      Features
+                      Tính năng
+                    </button>
+                    <button
+                      className={`flex items-center p-3 no-underline w-full text-left transition-all duration-300 ${
+                        activeSection === "members"
+                          ? "bg-[#FFD700] text-black"
+                          : "text-black hover:bg-gray-200"
+                      }`}
+                      onClick={(e) => {
+                        // Close dropdown first
+                        setIsDropdownOpen(false);
+                        // Use setTimeout to ensure dropdown closes before scrolling
+                        setTimeout(() => {
+                          scrollToSection("members", e);
+                        }, 50);
+                      }}
+                    >
+                      Thành viên
                     </button>
                     <button
                       className={`flex items-center p-3 no-underline w-full text-left transition-all duration-300 ${
@@ -506,7 +492,7 @@ const Header = () => {
                         }, 50);
                       }}
                     >
-                      Contact
+                      Hướng dẫn
                     </button>
 
                     <Link
@@ -519,7 +505,7 @@ const Header = () => {
                       }}
                       prefetch={false}
                     >
-                      Login
+                      Đăng nhập
                     </Link>
 
                     <Link
@@ -532,7 +518,7 @@ const Header = () => {
                       }}
                       prefetch={false}
                     >
-                      Sign Up
+                      Đăng ký
                     </Link>
                   </>
                 )}

@@ -23,7 +23,7 @@ export default function ProfilePage({
 }) {
   const [showEditModal, setShowEditModal] = useState(false);
   const [userEdit, setUserEdit] = useState<UserBase>();
-  const [step, setStep] = useState(1);
+
   const [previewAvatar, setPreviewAvatar] = useState<string | null>(null);
   const [isFriendRequestSent, setIsFriendRequestSent] = useState(false);
   const [isFriend, setIsFriend] = useState(false);
@@ -147,7 +147,6 @@ export default function ProfilePage({
 
     setPreviewAvatar(null);
     avatarFileRef.current = null;
-    setStep(1);
     setShowEditModal(true);
   };
 
@@ -251,7 +250,6 @@ export default function ProfilePage({
     } finally {
       setIsSaving(false);
       setShowEditModal(false);
-      setStep(1);
     }
   };
 
@@ -309,149 +307,154 @@ export default function ProfilePage({
   };
 
   return (
-    <div className="flex flex-col">
-      <main className="flex-grow w-full mx-auto px-4 md:px-16 pt-8 pb-16 dark:bg-gradient-to-b from-black via-gray-800 to-blue-950 dark:border-b-2 border-gray-700">
-        <div className="flex items-center gap-2 mb-6">
-          <button
-            onClick={handleBtnBack}
-            className="p-2 rounded-full hover:bg-gray-300 dark:hover:bg-gray-700 dark:text-white transition-colors duration-200 cursor-pointer"
-          >
-            <FaChevronLeft />
-          </button>
-          <h1 className="text-2xl font-bold text-black dark:text-white"></h1>
-        </div>
-        <div className="flex-grow flex-col bg-white rounded-lg p-6 mx-auto shadow-sm dark:bg-transparent text-black dark:text-white dark:border-2 border-gray-700">
-          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 text-center sm:text-left">
-            <Image
-              src={
-                userData?.avatar
-                  ? `https://aitripsystem-api.onrender.com/api/v1/proxy_image/?url=${encodeURIComponent(
-                      userData.avatar
-                    )}`
-                  : "profile.svg"
-              }
-              priority={true}
-              width={200}
-              height={200}
-              alt="avatar"
-              className="border-2 dark:text-white border-black rounded-full object-cover"
-              style={{ width: "200px", height: "200px" }}
-            />
-            <div className="flex flex-col">
-              <h2 className="text-2xl font-bold">{userData?.name}</h2>
-              <p>{userData?.email}</p>
-              <p>
-                <span>{friendsCount}</span> người bạn
-              </p>
+    <div className="min-h-screen bg-white">
+      {/* Header */}
+      <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
+        <div className="max-w-4xl mx-auto px-4 py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={handleBtnBack}
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <FaChevronLeft className="w-5 h-5" />
+              </button>
+              <h1 className="text-xl font-semibold">{userData?.username || userData?.name}</h1>
             </div>
-            <div className="flex gap-2 sm:ml-auto justify-center">
-              {currentUserID == userID && (
-                <button
-                  onClick={openEditModal}
-                  className="flex items-center justify-center py-3 px-4 font-bold rounded-lg text-white bg-gray-800 hover:bg-gray-900 dark:bg-gray-800 dark:hover:bg-gray-700 dark:border-gray-700 cursor-pointer transition-colors duration-200"
-                >
-                  <FaPen className="mr-2" /> Sửa hồ sơ
-                </button>
-              )}
-              {currentUserID !== userID && (
-                <button
-                  onClick={handleFriendRequestSent}
-                  disabled={isSending}
-                  className="flex items-center justify-center w-32 h-12 font-bold rounded-lg text-md text-white bg-gray-800 hover:bg-gray-900 dark:bg-gray-800 dark:hover:bg-gray-700 dark:border-gray-700 cursor-pointer transition-colors duration-200"
-                >
-                  {isFriend ? (
-                    <>
-                      <FaUserCheck className="mr-2" />
-                      Bạn bè
-                    </>
-                  ) : isFriendRequestSent ? (
-                    <>
-                      <FaUserXmark className="mr-2" /> Hủy lời mời
-                    </>
-                  ) : (
-                    <>
-                      <FaUserPlus className="mr-2" />
-                      Thêm bạn
-                    </>
-                  )}
-                </button>
-              )}
+            <div className="flex items-center gap-2">
+              <button className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                </svg>
+              </button>
             </div>
           </div>
-          <div className="flex-grow mt-8">
-            <ul
-              role="list"
-              className="divide-y divide-gray-200 dark:divide-gray-700"
-            >
-              <li className="py-3 sm:py-4">
-                <div className="text-justify">
-                  <div className="font-bold text-lg">Về bản thân:</div>
-                  {userData?.description}
+        </div>
+      </div>
+
+      {/* Profile Content */}
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        {/* Profile Header */}
+        <div className="flex flex-col md:flex-row items-center md:items-start gap-8 mb-8">
+          {/* Avatar */}
+          <div className="flex-shrink-0">
+            <div className="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 border-gray-200">
+              <Image
+                src={
+                  userData?.avatar
+                    ? `https://aitripsystem-api.onrender.com/api/v1/proxy_image/?url=${encodeURIComponent(
+                        userData.avatar
+                      )}`
+                    : "/profile.svg"
+                }
+                priority={true}
+                width={160}
+                height={160}
+                alt="avatar"
+                className="w-full h-full object-cover"
+              />
+            </div>
+          </div>
+
+          {/* Profile Info */}
+          <div className="flex-1 text-center md:text-left">
+            <div className="flex flex-col md:flex-row md:items-center gap-4 mb-4">
+              <h2 className="text-2xl font-light">{userData?.name}</h2>
+              <div className="flex gap-2 justify-center md:justify-start">
+                {currentUserID == userID ? (
+                  <button
+                    onClick={openEditModal}
+                    className="px-4 py-1.5 text-sm font-medium border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                  >
+                    Chỉnh sửa trang cá nhân
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleFriendRequestSent}
+                    disabled={isSending}
+                    className="px-4 py-1.5 text-sm font-medium text-white bg-blue-500 rounded-md hover:bg-blue-600 transition-colors"
+                  >
+                    {isFriend ? "Bạn bè" : isFriendRequestSent ? "Hủy lời mời" : "Theo dõi"}
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Stats */}
+            <div className="flex justify-center md:justify-start gap-8 mb-4">
+              <div className="text-center">
+                <span className="font-semibold">{friendsCount}</span>
+                <span className="text-gray-500 ml-1">bạn bè</span>
+              </div>
+            </div>
+
+            {/* Bio */}
+            <div className="text-sm">
+              <div className="font-semibold mb-1">{userData?.name}</div>
+              {userData?.description && (
+                <div className="text-gray-700 whitespace-pre-line">
+                  {userData.description}
                 </div>
-              </li>
-              <li className="py-3 sm:py-4">
-                <div>
-                  <span className="font-bold text-lg">Liên hệ:</span>{" "}
-                  {userData?.phonenumber}
+              )}
+              {userData?.phonenumber && (
+                <div className="text-gray-500 mt-1">
+                  📞 {userData.phonenumber}
                 </div>
-              </li>
-              <li className="py-3 sm:py-4">
-                <div>
-                  <span className="font-bold text-lg">Giới tính:</span>{" "}
-                  {renderGender()}
-                </div>
-              </li>
-            </ul>
+              )}
+              <div className="text-gray-500 mt-1">
+                👤 {renderGender()}
+              </div>
+            </div>
           </div>
         </div>
-      </main>
+
+
+      </div>
 
       {showEditModal && (
-        <div
-          className="flex fixed inset-0 z-50 items-center justify-center bg-black/50"
-          draggable="false"
-        >
-          <div className="flex flex-col bg-white dark:bg-black rounded-lg shadow-lg w-full h-108 md:h-100 max-w-2xl mx-4">
-            {/* {Avatar update modal} */}
-            {step === 1 && (
-              <>
-                <div className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-600">
-                  <h3 className="text-2xl font-semibold text-gray-900 dark:text-white">
-                    Chọn ảnh đại diện
-                  </h3>
-                  <button
-                    onClick={() => setShowEditModal(false)}
-                    className="text-xl p-2 rounded-full hover:bg-gray-300 dark:hover:bg-gray-700 dark:text-white transition-colors duration-200 cursor-pointer"
-                  >
-                    <FaXmark />
-                  </button>
-                </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto">
+            {/* Header */}
+            <div className="flex justify-between items-center p-4 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Chỉnh sửa trang cá nhân
+              </h3>
+              <button
+                onClick={() => setShowEditModal(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <FaXmark className="w-5 h-5" />
+              </button>
+            </div>
 
-                <div className="relative p-4 text-gray-700 dark:text-white mx-auto">
-                  <Image
-                    src={
-                      previewAvatar
-                        ? previewAvatar
-                        : userData?.avatar
-                        ? `https://aitripsystem-api.onrender.com/api/v1/proxy_image/?url=${encodeURIComponent(
-                            userData.avatar
-                          )}`
-                        : "profile.svg"
-                    }
-                    width={200}
-                    height={200}
-                    alt="avatar"
-                    className="border-2 border-black dark:border-gray-400 rounded-full object-cover"
-                    style={{ width: "200px", height: "200px" }}
-                  />
-
+            {/* Form */}
+            <div className="p-4 space-y-4">
+              {/* Avatar */}
+              <div className="flex flex-col items-center">
+                <div className="relative">
+                  <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-gray-200">
+                    <Image
+                      src={
+                        previewAvatar
+                          ? previewAvatar
+                          : userData?.avatar
+                          ? `https://aitripsystem-api.onrender.com/api/v1/proxy_image/?url=${encodeURIComponent(
+                              userData.avatar
+                            )}`
+                          : "/profile.svg"
+                      }
+                      width={96}
+                      height={96}
+                      alt="avatar"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
                   <label
                     htmlFor="avatarUpload"
-                    className="absolute bottom-0 right-0 text-xl m-4 p-3 rounded-full bg-gray-200 hover:bg-gray-300 dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-white transition-colors duration-200 cursor-pointer"
+                    className="absolute bottom-0 right-0 w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center cursor-pointer hover:bg-blue-600 transition-colors"
                   >
-                    <FaCamera />
+                    <FaCamera className="w-4 h-4 text-white" />
                   </label>
-
                   <input
                     id="avatarUpload"
                     type="file"
@@ -460,229 +463,88 @@ export default function ProfilePage({
                     className="hidden"
                   />
                 </div>
-                <div className="flex p-4 mt-auto">
-                  <button
-                    onClick={() => setStep((prev) => prev + 1)}
-                    className="w-full h-12 text-md font-bold rounded-4xl cursor-pointer text-white bg-gray-800 hover:bg-gray-900 dark:bg-gray-800 dark:hover:bg-gray-700 border-2 border-black dark:border-gray-600 transition-colors duration-200"
-                  >
-                    Tiếp theo
-                  </button>
-                </div>
-              </>
-            )}
+                <p className="text-sm text-gray-500 mt-2">Thay đổi ảnh đại diện</p>
+              </div>
 
-            {/* {Name update modal} */}
-            {step === 2 && (
-              <>
-                <div className="flex items-center p-4 border-b border-gray-200 dark:border-gray-600">
-                  <button
-                    onClick={() => setStep((prev) => prev - 1)}
-                    className="p-2 mr-2 rounded-full hover:bg-gray-300 dark:hover:bg-gray-700 dark:text-white transition-colors duration-200 cursor-pointer"
-                  >
-                    <FaChevronLeft />
-                  </button>
-                  <h3 className="text-2xl font-semibold text-gray-900 dark:text-white">
-                    Cập nhật tên hiển thị
-                  </h3>
-                  <button
-                    onClick={() => setShowEditModal(false)}
-                    className="text-xl p-2 ml-auto rounded-full hover:bg-gray-300 dark:hover:bg-gray-700 dark:text-white transition-colors duration-200 cursor-pointer"
-                  >
-                    <FaXmark />
-                  </button>
-                </div>
+              {/* Name */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Tên hiển thị
+                </label>
+                <input
+                  type="text"
+                  value={userEdit?.name ?? ""}
+                  onChange={handleNameChange}
+                  placeholder="Nhập tên của bạn"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
 
-                <div className="p-4 text-gray-700 dark:text-white">
-                  <input
-                    type="text"
-                    value={userEdit?.name ?? ""}
-                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                    onChange={handleNameChange}
-                    placeholder="Tên của bạn"
-                  />
-                </div>
+              {/* Gender */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Giới tính
+                </label>
+                <select
+                  value={userEdit?.gender ?? 2}
+                  onChange={handleGenderChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  {genderOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-                <div className="flex p-4 mt-auto">
-                  <button
-                    onClick={() => setStep((prev) => prev + 1)}
-                    className="w-full h-12 text-md font-bold rounded-4xl cursor-pointer text-white bg-gray-800 hover:bg-gray-900 dark:bg-gray-800 dark:hover:bg-gray-700 border-2 border-black dark:border-gray-600 transition-colors duration-200"
-                  >
-                    Tiếp theo
-                  </button>
-                </div>
-              </>
-            )}
+              {/* Phone */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Số điện thoại
+                </label>
+                <input
+                  type="tel"
+                  value={userEdit?.phonenumber ?? ""}
+                  onChange={handlePhonenumberChange}
+                  placeholder="Nhập số điện thoại"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
 
-            {/* {Gender update modal} */}
-            {step === 3 && (
-              <>
-                <div className="flex items-center p-4 border-b border-gray-200 dark:border-gray-600">
-                  <button
-                    onClick={() => setStep((prev) => prev - 1)}
-                    className="p-2 mr-2 rounded-full hover:bg-gray-300 dark:hover:bg-gray-700 dark:text-white transition-colors duration-200 cursor-pointer"
-                  >
-                    <FaChevronLeft />
-                  </button>
-                  <h3 className="text-2xl font-semibold text-gray-900 dark:text-white">
-                    Chọn giới tính
-                  </h3>
-                  <button
-                    onClick={() => setShowEditModal(false)}
-                    className="text-xl p-2 ml-auto rounded-full hover:bg-gray-300 dark:hover:bg-gray-700 dark:text-white transition-colors duration-200 cursor-pointer"
-                  >
-                    <FaXmark />
-                  </button>
-                </div>
+              {/* Description */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Giới thiệu bản thân
+                </label>
+                <textarea
+                  rows={4}
+                  value={userEdit?.description ?? ""}
+                  onChange={handleDescriptionChange}
+                  placeholder="Viết mô tả về bản thân..."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                />
+              </div>
+            </div>
 
-                <div className="p-4 text-gray-700 dark:text-white">
-                  <select
-                    value={userEdit?.gender ?? 2}
-                    onChange={handleGenderChange}
-                    className="w-full px-3 py-3 rounded-lg border-2 text-md text-black bg-white focus:ring-blue-500 focus:border-blue-500 dark:bg-black dark:border-gray-600 dark:text-white"
-                  >
-                    {genderOptions.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="flex p-4 mt-auto">
-                  <button
-                    onClick={() => setStep((prev) => prev + 1)}
-                    className="w-full h-12 text-md font-bold rounded-4xl cursor-pointer text-white bg-gray-800 hover:bg-gray-900 dark:bg-gray-800 dark:hover:bg-gray-700 border-2 border-black dark:border-gray-600 transition-colors duration-200"
-                  >
-                    Tiếp theo
-                  </button>
-                </div>
-              </>
-            )}
-
-            {/* {Phone number update modal} */}
-            {step === 4 && (
-              <>
-                <div className="flex items-center p-4 border-b border-gray-200 dark:border-gray-600">
-                  <button
-                    onClick={() => setStep((prev) => prev - 1)}
-                    className="p-2 mr-2 rounded-full hover:bg-gray-300 dark:hover:bg-gray-700 dark:text-white transition-colors duration-200 cursor-pointer"
-                  >
-                    <FaChevronLeft />
-                  </button>
-                  <h3 className="text-2xl font-semibold text-gray-900 dark:text-white">
-                    Thông tin liên hệ
-                  </h3>
-                  <button
-                    onClick={() => setShowEditModal(false)}
-                    className="text-xl p-2 ml-auto rounded-full hover:bg-gray-300 dark:hover:bg-gray-700 dark:text-white transition-colors duration-200 cursor-pointer"
-                  >
-                    <FaXmark />
-                  </button>
-                </div>
-
-                <div className="p-4 text-gray-700 dark:text-white">
-                  <input
-                    type="tel"
-                    value={userEdit?.phonenumber ?? ""}
-                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                    onChange={handlePhonenumberChange}
-                    placeholder="Số điện thoại"
-                  />
-                </div>
-
-                <div className="flex p-4 mt-auto">
-                  <button
-                    onClick={() => setStep((prev) => prev + 1)}
-                    className="w-full h-12 text-md font-bold rounded-4xl cursor-pointer text-white bg-gray-800 hover:bg-gray-900 dark:bg-gray-800 dark:hover:bg-gray-700 border-2 border-black dark:border-gray-600 transition-colors duration-200"
-                  >
-                    Tiếp theo
-                  </button>
-                </div>
-              </>
-            )}
-
-            {/* {Description update modal} */}
-            {step === 5 && (
-              <>
-                <div className="flex items-center p-4 border-b border-gray-200 dark:border-gray-600">
-                  <button
-                    onClick={() => setStep((prev) => prev - 1)}
-                    className="p-2 mr-2 rounded-full hover:bg-gray-300 dark:hover:bg-gray-700 dark:text-white transition-colors duration-200 cursor-pointer"
-                  >
-                    <FaChevronLeft />
-                  </button>
-                  <h3 className="text-2xl font-semibold text-gray-900 dark:text-white">
-                    Giới thiệu bản thân
-                  </h3>
-                  <button
-                    onClick={() => {
-                      setShowEditModal(false);
-                      setStep(1);
-                    }}
-                    className="text-xl p-2 ml-auto rounded-full hover:bg-gray-300 dark:hover:bg-gray-700 dark:text-white transition-colors duration-200 cursor-pointer"
-                  >
-                    <FaXmark />
-                  </button>
-                </div>
-
-                <div className="p-4 text-gray-700 dark:text-white">
-                  <textarea
-                    rows={6}
-                    placeholder="Viết mô tả tại đây..."
-                    value={userEdit?.description ?? ""}
-                    onChange={handleDescriptionChange}
-                    className="resize-none w-full p-2.5 text-sm rounded-lg border text-gray-900 bg-gray-50 border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                  />
-                </div>
-
-                <div className="flex p-4 mt-auto">
-                  <button
-                    onClick={() => setStep((prev) => prev + 1)}
-                    className="w-full h-12 text-md font-bold rounded-4xl cursor-pointer text-white bg-gray-800 hover:bg-gray-900 dark:bg-gray-800 dark:hover:bg-gray-700 border-2 border-black dark:border-gray-600 transition-colors duration-200"
-                  >
-                    Tiếp theo
-                  </button>
-                </div>
-              </>
-            )}
-
-            {/* {Save update modal} */}
-            {step === 6 && (
-              <>
-                <div className="flex items-center p-4 border-b border-gray-200 dark:border-gray-600">
-                  <button
-                    onClick={() => setStep((prev) => prev - 1)}
-                    className="p-2 mr-2 rounded-full hover:bg-gray-300 dark:hover:bg-gray-700 dark:text-white transition-colors duration-200 cursor-pointer"
-                  >
-                    <FaChevronLeft />
-                  </button>
-                  <h3 className="text-2xl font-semibold text-gray-900 dark:text-white">
-                    Lưu thay đổi
-                  </h3>
-                  <button
-                    onClick={() => {
-                      setShowEditModal(false);
-                      setStep(1);
-                    }}
-                    className="text-xl p-2 ml-auto rounded-full hover:bg-gray-300 dark:hover:bg-gray-700 dark:text-white transition-colors duration-200 cursor-pointer"
-                  >
-                    <FaXmark />
-                  </button>
-                </div>
-
-                <div className="flex p-4 m-auto">
-                  <button
-                    onClick={handleSaveBtn}
-                    disabled={isSaving}
-                    className={`w-72 md:w-84 h-12 text-md font-bold rounded-4xl cursor-pointer text-white bg-gray-800 hover:bg-gray-900 dark:bg-gray-800 dark:hover:bg-gray-700 border-2 border-black dark:border-gray-600 transition-colors duration-200 ${
-                      isSaving ? "opacity-50 cursor-not-allowed" : ""
-                    }`}
-                  >
-                    {isSaving ? "Lưu thay đổi..." : "Xác nhận"}
-                  </button>
-                </div>
-              </>
-            )}
+            {/* Footer */}
+            <div className="flex gap-3 p-4 border-t border-gray-200">
+              <button
+                onClick={() => setShowEditModal(false)}
+                className="flex-1 px-4 py-2 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+              >
+                Hủy
+              </button>
+              <button
+                onClick={handleSaveBtn}
+                disabled={isSaving}
+                className={`flex-1 px-4 py-2 text-white bg-blue-500 rounded-md hover:bg-blue-600 transition-colors ${
+                  isSaving ? "opacity-50 cursor-not-allowed" : ""
+                }`}
+              >
+                {isSaving ? "Đang lưu..." : "Lưu thay đổi"}
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -126,7 +126,7 @@ export default function Abouts() {
             </div>
           </div>
           {/* Carousel with fade-in animation */}
-          <div className={`lg:col-span-3 relative mt-16 lg:mt-0 lg:ml-8 transition-all duration-1000 delay-800 ${
+          <div className={`lg:col-span-3 relative mt-16 lg:mt-0 lg:mr-10 transition-all duration-1000 delay-800 ${
             isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
           }`}>
             <DestinationCarousel />

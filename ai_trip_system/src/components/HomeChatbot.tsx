@@ -317,10 +317,18 @@ export default function HomeChatbot({
                   <div className="max-w-2xl bg-blue-600 text-white px-4 py-3 rounded-2xl shadow-sm">
                     <div className="whitespace-pre-wrap">{renderMessageText(message.text, message.isUser)}</div>
                     <div className="text-xs mt-1 opacity-70">
-                      {new Date(message.timestamp).toLocaleTimeString('vi-VN', {
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
+                      {message.timestamp instanceof Date
+                        ? message.timestamp.toLocaleTimeString('vi-VN', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            timeZone: 'Asia/Ho_Chi_Minh'
+                          })
+                        : new Date(message.timestamp).toLocaleTimeString('vi-VN', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            timeZone: 'Asia/Ho_Chi_Minh'
+                          })
+                      }
                     </div>
                   </div>
                 </div>
@@ -330,10 +338,18 @@ export default function HomeChatbot({
                   <div className="text-gray-800 leading-relaxed">
                     <div className="whitespace-pre-wrap">{renderMessageText(message.text, message.isUser)}</div>
                     <div className="text-xs mt-2 text-gray-500">
-                      {new Date(message.timestamp).toLocaleTimeString('vi-VN', {
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
+                      {message.timestamp instanceof Date
+                        ? message.timestamp.toLocaleTimeString('vi-VN', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            timeZone: 'Asia/Ho_Chi_Minh'
+                          })
+                        : new Date(message.timestamp).toLocaleTimeString('vi-VN', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            timeZone: 'Asia/Ho_Chi_Minh'
+                          })
+                      }
                     </div>
                   </div>
                 </div>

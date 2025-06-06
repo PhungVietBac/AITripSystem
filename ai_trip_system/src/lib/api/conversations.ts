@@ -85,8 +85,8 @@ export const conversationApi = {
 
   // Archive conversation (soft delete)
   async archiveConversation(id: string, userId: string): Promise<{ message: string }> {
-    const response = await fetch(`${API_BASE}/conversations/${id}`, {
-      method: 'DELETE',
+    const response = await fetch(`${API_BASE}/conversations/${id}/archive`, {
+      method: 'PATCH',
       headers: getAuthHeaders()
     });
     if (!response.ok) {
