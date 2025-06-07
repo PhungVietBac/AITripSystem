@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Image from 'next/image';
+import useSWR from 'swr';
+import { getCookie } from 'cookies-next';
 import {
   ChatBubbleLeftRightIcon,
   MapIcon,
@@ -33,7 +35,6 @@ export default function MainSidebar({
   const router = useRouter();
   const pathname = usePathname();
   const [isRecentChatExpanded, setIsRecentChatExpanded] = useState(true);
-  const [userData, setUserData] = useState<any>(null);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const [userid, setUserid] = useState<string>('');
 
@@ -45,25 +46,39 @@ export default function MainSidebar({
 
   const { logout } = useAuth();
 
-  // Get user data from localStorage
+  // Get user ID from localStorage
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const storedUserData = localStorage.getItem('user_data');
       const storedUserId = localStorage.getItem('current_user_id');
-
-      if (storedUserData) {
-        try {
-          setUserData(JSON.parse(storedUserData));
-        } catch (error) {
-          console.error('Error parsing user data:', error);
-        }
-      }
-
       if (storedUserId) {
         setUserid(storedUserId);
       }
     }
   }, []);
+
+  // Fetch user data from API using SWR
+  const access_token = getCookie("token") || "";
+  const fetcher = (url: string) =>
+    fetch(url, {
+      headers: {
+        Authorization: `Bearer ${access_token}`,
+        "Content-Type": "application/json",
+      },
+    }).then((res) => res.json());
+
+  const {
+    data: userData,
+    error: userError,
+    isLoading: userLoading,
+  } = useSWR(
+    userid ? `https://aitripsystem-api.onrender.com/api/v1/users/idUser?lookup=${userid}` : null,
+    fetcher,
+    {
+      revalidateIfStale: false,
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false,
+    }
+  );
 
   const handleNewConversation = async () => {
     try {
