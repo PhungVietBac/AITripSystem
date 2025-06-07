@@ -1,5 +1,4 @@
 "use client";
-import Header from "@/components/header";
 import { useAuthCheck } from "@/hooks/useAuthCheck";
 
 export default function PrivateLayout({
@@ -10,10 +9,5 @@ export default function PrivateLayout({
   const { user, loading } = useAuthCheck();
   if (loading) return <p>Đang kiểm tra đăng nhập...</p>;
 
-  return (
-    <>
-      <Header />
-      {children}
-    </>
-  );
+  return children;
 }

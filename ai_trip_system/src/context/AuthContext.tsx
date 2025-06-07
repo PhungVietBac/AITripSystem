@@ -48,6 +48,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Update state
     setIsLoggedIn(true);
+
+    // Dispatch custom event to notify other components
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new Event("authStateChanged"));
+    }
   };
 
   // Function to handle social login
@@ -70,6 +75,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Update state
     setIsLoggedIn(false);
 
+    // Dispatch custom event to notify other components
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new Event("authStateChanged"));
+    }
+
     // Sign out from NextAuth
     // signOut({ callbackUrl: '/' });
     console.log("NextAuth signOut temporarily disabled");
@@ -78,7 +88,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Initialize state from localStorage or session
   useEffect(() => {
     // First check NextAuth session
-    if (session && session.user) {
+    if (session && (session as any).user) {
       setIsLoggedIn(true);
       setIsInitialized(true);
       return;
@@ -86,10 +96,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // If no NextAuth session, check localStorage (for traditional login)
     if (typeof window !== "undefined") {
-      const storedLoggedIn = localStorage.getItem("isLoggedIn") === "true";
+      const checkAuthStatus = () => {
+        const storedLoggedIn = localStorage.getItem("isLoggedIn") === "true";
+        setIsLoggedIn(storedLoggedIn);
+        setIsInitialized(true);
+      };
 
-      setIsLoggedIn(storedLoggedIn);
-      setIsInitialized(true);
+      // Initial check
+      checkAuthStatus();
+
+      // Listen for storage changes (when login happens in another tab or component)
+      const handleStorageChange = (e: StorageEvent) => {
+        if (e.key === "isLoggedIn" || e.key === "access_token") {
+          checkAuthStatus();
+        }
+      };
+
+      window.addEventListener("storage", handleStorageChange);
+
+      // Also listen for custom events (for same-tab updates)
+      const handleAuthChange = () => {
+        checkAuthStatus();
+      };
+
+      window.addEventListener("authStateChanged", handleAuthChange);
+
+      return () => {
+        window.removeEventListener("storage", handleStorageChange);
+        window.removeEventListener("authStateChanged", handleAuthChange);
+      };
     }
   }, [session]);
 

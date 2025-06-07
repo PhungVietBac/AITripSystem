@@ -58,7 +58,7 @@ export default function HeroSections() {
               <a
                 ref={buttonRef}
                 href="/login"
-                className="group relative rounded-md bg-[#FFD700] px-5 py-3 text-sm font-semibold text-black shadow-md transition-all duration-300 border-2 border-transparent hover:bg-white hover:border-[#FFD700] hover:pr-9"
+                className="group relative rounded-full bg-[#FFD700] px-5 py-3 text-sm font-semibold text-black shadow-md transition-all duration-300 border-2 border-transparent hover:bg-white hover:border-[#FFD700] hover:pr-9"
               >
                 <span className="relative z-10">
                   BẮT ĐẦU HÀNH TRÌNH CỦA BẠN

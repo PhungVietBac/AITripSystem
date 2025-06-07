@@ -9,14 +9,17 @@ import {
   ChevronDownIcon,
   ChevronRightIcon
 } from '@heroicons/react/24/outline';
+import { useConversations } from '@/hooks/useConversations';
 import { useAuth } from '@/context/AuthContext';
 
 interface Conversation {
   id: string;
   title: string;
-  createdAt: string;
-  updatedAt: string;
-  messageCount: number;
+  created_at?: string;
+  updated_at?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  messageCount?: number;
   lastMessage?: string;
   lastMessageAt?: string;
 }
@@ -34,57 +37,30 @@ export default function ConversationSidebar({
   onNewConversation,
   className = ''
 }: ConversationSidebarProps) {
-  const { user } = useAuth();
-  const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { isLoggedIn } = useAuth();
+  const {
+    conversations,
+    isLoading,
+    createConversation,
+    deleteConversation,
+    updateConversationTitle,
+    loadConversations
+  } = useConversations();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState('');
   const [isCollapsed, setIsCollapsed] = useState(false);
 
+  // Auto-fetch conversations when user logs in
   useEffect(() => {
-    if (user?.id) {
+    if (isLoggedIn) {
       loadConversations();
     }
-  }, [user?.id]);
-
-  const loadConversations = async () => {
-    if (!user?.id) return;
-
-    try {
-      setIsLoading(true);
-      const response = await fetch(`/api/conversations?userId=${user.id}&limit=50`);
-
-      if (response.ok) {
-        const data = await response.json();
-        setConversations(data);
-      } else {
-        console.error('Failed to load conversations');
-      }
-    } catch (error) {
-      console.error('Error loading conversations:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  }, [isLoggedIn, loadConversations]);
 
   const handleNewConversation = async () => {
-    if (!user?.id) return;
-
     try {
-      const response = await fetch('/api/conversations', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId: user.id,
-          title: 'New Conversation'
-        }),
-      });
-
-      if (response.ok) {
-        const newConversation = await response.json();
-        await loadConversations(); // Refresh list
+      const newConversation = await createConversation('New Conversation');
+      if (newConversation) {
         onNewConversation();
       }
     } catch (error) {
@@ -95,20 +71,12 @@ export default function ConversationSidebar({
   const handleDeleteConversation = async (conversationId: string, e: React.MouseEvent) => {
     e.stopPropagation();
 
-    if (!user?.id || !confirm('Bạn có chắc muốn xóa cuộc trò chuyện này?')) return;
+    if (!confirm('Bạn có chắc muốn xóa cuộc trò chuyện này?')) return;
 
     try {
-      const response = await fetch(`/api/conversations?id=${conversationId}&userId=${user.id}`, {
-        method: 'DELETE',
-      });
-
-      if (response.ok) {
-        setConversations(prev => prev.filter(conv => conv.id !== conversationId));
-
-        // If deleting current conversation, create new one
-        if (conversationId === currentConversationId) {
-          onNewConversation();
-        }
+      const success = await deleteConversation(conversationId);
+      if (success && conversationId === currentConversationId) {
+        onNewConversation();
       }
     } catch (error) {
       console.error('Error deleting conversation:', error);
@@ -116,29 +84,11 @@ export default function ConversationSidebar({
   };
 
   const handleEditTitle = async (conversationId: string, newTitle: string) => {
-    if (!user?.id || !newTitle.trim()) return;
+    if (!newTitle.trim()) return;
 
     try {
-      // Note: You'll need to create this API endpoint
-      const response = await fetch(`/api/conversations/${conversationId}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId: user.id,
-          title: newTitle.trim()
-        }),
-      });
-
-      if (response.ok) {
-        setConversations(prev =>
-          prev.map(conv =>
-            conv.id === conversationId
-              ? { ...conv, title: newTitle.trim() }
-              : conv
-          )
-        );
+      const success = await updateConversationTitle(conversationId, newTitle.trim());
+      if (success) {
         setEditingId(null);
       }
     } catch (error) {
@@ -152,79 +102,55 @@ export default function ConversationSidebar({
     setEditTitle(conversation.title);
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffTime = now.getTime() - date.getTime();
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-
-    if (diffDays === 0) return 'Hôm nay';
-    if (diffDays === 1) return 'Hôm qua';
-    if (diffDays < 7) return `${diffDays} ngày trước`;
-    if (diffDays < 30) return `${Math.floor(diffDays / 7)} tuần trước`;
-    return date.toLocaleDateString('vi-VN');
-  };
-
-  const groupConversationsByDate = (conversations: Conversation[]) => {
-    const groups: { [key: string]: Conversation[] } = {};
-
-    conversations.forEach(conv => {
-      const dateKey = formatDate(conv.updatedAt);
-      if (!groups[dateKey]) {
-        groups[dateKey] = [];
-      }
-      groups[dateKey].push(conv);
+  // Sort conversations by most recent first
+  const sortConversationsByRecent = (conversations: Conversation[]) => {
+    return [...conversations].sort((a, b) => {
+      const dateA = new Date(a.updatedAt || a.updated_at || a.createdAt || a.created_at || new Date()).getTime();
+      const dateB = new Date(b.updatedAt || b.updated_at || b.createdAt || b.created_at || new Date()).getTime();
+      return dateB - dateA; // Most recent first
     });
-
-    return groups;
   };
 
-  const conversationGroups = groupConversationsByDate(conversations);
+  const sortedConversations = sortConversationsByRecent(conversations);
 
   if (isCollapsed) {
     return (
-      <div className={`w-16 bg-gradient-to-b from-blue-50 to-indigo-100 text-gray-700 flex flex-col border-r border-gray-200 ${className}`}>
+      <div className={`w-16 bg-gradient-to-b from-amber-50 to-orange-100 text-gray-700 flex flex-col border-r border-amber-200 ${className}`}>
         <button
           onClick={() => setIsCollapsed(false)}
-          className="p-4 hover:bg-blue-100 transition-colors rounded-lg m-2"
+          className="p-4 hover:bg-amber-100 transition-colors rounded-lg m-2"
           title="Mở rộng sidebar"
         >
-          <ChevronRightIcon className="h-5 w-5" />
+          <ChevronRightIcon className="h-5 w-5 text-amber-600" />
         </button>
 
         <button
           onClick={handleNewConversation}
-          className="p-4 hover:bg-blue-100 transition-colors rounded-lg m-2"
-          title="Cuộc trò chuyện mới"
+          className="p-4 hover:bg-amber-100 transition-colors rounded-lg m-2"
+          title="✈️ Chuyến đi mới"
         >
-          <PlusIcon className="h-5 w-5" />
+          <PlusIcon className="h-5 w-5 text-amber-600" />
         </button>
       </div>
     );
   }
 
   return (
-    <div className={`w-80 bg-gradient-to-b from-blue-50 to-indigo-100 text-gray-700 flex flex-col border-r border-gray-200 ${className}`}>
+    <div className={`w-64 bg-gradient-to-b from-amber-50 to-orange-100 text-gray-700 flex flex-col border-r border-amber-200 ${className}`}>
       {/* Header */}
-      <div className="p-4 border-b border-blue-200">
+      <div className="p-4 border-b border-amber-200">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-semibold text-gray-800">Conversations</h2>
+          <h2 className="text-lg font-semibold text-amber-800">🗺️ Chuyến đi của tôi</h2>
           <button
             onClick={() => setIsCollapsed(true)}
-            className="p-1 hover:bg-blue-100 rounded transition-colors"
+            className="p-1 hover:bg-amber-100 rounded transition-colors"
             title="Thu gọn sidebar"
           >
-            <ChevronDownIcon className="h-4 w-4" />
+            <ChevronDownIcon className="h-4 w-4 text-amber-600" />
           </button>
         </div>
 
-        <button
-          onClick={handleNewConversation}
-          className="w-full flex items-center gap-3 p-3 bg-blue-100 hover:bg-blue-200 rounded-lg transition-colors text-gray-700"
-        >
-          <PlusIcon className="h-5 w-5" />
-          <span>New Conversation</span>
-        </button>
+
       </div>
 
       {/* Conversations List */}
@@ -238,27 +164,31 @@ export default function ConversationSidebar({
             </div>
           </div>
         ) : conversations.length === 0 ? (
-          <div className="p-4 text-center text-gray-500">
-            <ChatBubbleLeftIcon className="h-12 w-12 mx-auto mb-3 opacity-50" />
-            <p>Chưa có cuộc trò chuyện nào</p>
-            <p className="text-sm mt-1">Bắt đầu chat để tạo cuộc trò chuyện đầu tiên</p>
+          <div className="p-4 text-center text-amber-600">
+            <div className="text-4xl mb-3">🧳</div>
+            <p className="font-medium">Chưa có chuyến đi nào</p>
+            <p className="text-sm mt-1 text-amber-500">Bắt đầu lên kế hoạch chuyến đi đầu tiên của bạn!</p>
           </div>
         ) : (
           <div className="p-2">
-            {Object.entries(conversationGroups).map(([dateGroup, groupConversations]) => (
-              <div key={dateGroup} className="mb-4">
-                <h3 className="text-xs font-medium text-gray-600 px-3 py-2 uppercase tracking-wider">
-                  {dateGroup}
-                </h3>
-                <div className="space-y-1">
-                  {groupConversations.map((conversation) => (
+            {/* New Chat Button */}
+            <button
+              onClick={handleNewConversation}
+              className="w-full flex items-center gap-3 p-3 mb-3 bg-gradient-to-r from-amber-200 to-yellow-200 hover:from-amber-300 hover:to-yellow-300 rounded-lg transition-colors text-amber-800 shadow-sm"
+            >
+              <PlusIcon className="h-5 w-5" />
+              <span>✈️ Lên kế hoạch mới</span>
+            </button>
+
+            <div className="space-y-1">
+              {sortedConversations.map((conversation) => (
                     <div
                       key={conversation.id}
                       onClick={() => onConversationSelect(conversation.id)}
                       className={`group relative p-3 rounded-lg cursor-pointer transition-colors ${
                         conversation.id === currentConversationId
-                          ? 'bg-blue-200 border border-blue-300'
-                          : 'hover:bg-blue-100'
+                          ? 'bg-gradient-to-r from-amber-200 to-yellow-200 border border-amber-300 shadow-sm'
+                          : 'hover:bg-amber-100'
                       }`}
                     >
                       {editingId === conversation.id ? (
@@ -281,21 +211,21 @@ export default function ConversationSidebar({
                       ) : (
                         <>
                           <div className="flex items-start justify-between">
-                            <h4 className="text-sm font-medium truncate pr-2 flex-1 text-gray-800">
-                              {conversation.title}
+                            <h4 className="text-sm font-medium truncate pr-2 flex-1 text-amber-800">
+                              🌍 {conversation.title}
                             </h4>
                             <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                               <button
                                 onClick={(e) => startEditing(conversation, e)}
-                                className="p-1 hover:bg-blue-200 rounded text-gray-600"
-                                title="Đổi tên"
+                                className="p-1 hover:bg-amber-200 rounded text-amber-600"
+                                title="Đổi tên chuyến đi"
                               >
                                 <PencilIcon className="h-3 w-3" />
                               </button>
                               <button
                                 onClick={(e) => handleDeleteConversation(conversation.id, e)}
                                 className="p-1 hover:bg-red-100 rounded text-red-500"
-                                title="Xóa"
+                                title="Xóa chuyến đi"
                               >
                                 <TrashIcon className="h-3 w-3" />
                               </button>
@@ -303,24 +233,19 @@ export default function ConversationSidebar({
                           </div>
 
                           {conversation.lastMessage && (
-                            <p className="text-xs text-gray-500 mt-1 truncate">
-                              {conversation.lastMessage}
+                            <p className="text-xs text-amber-600 mt-1 truncate">
+                              💬 {conversation.lastMessage}
                             </p>
                           )}
 
-                          <div className="flex items-center justify-between mt-2 text-xs text-gray-500">
-                            <span>{conversation.messageCount} tin nhắn</span>
-                            {conversation.lastMessageAt && (
-                              <span>{formatDate(conversation.lastMessageAt)}</span>
-                            )}
+                          <div className="flex items-center justify-between mt-2 text-xs text-amber-500">
+                            <span>📝 {conversation.messageCount} tin nhắn</span>
                           </div>
                         </>
                       )}
                     </div>
                   ))}
-                </div>
-              </div>
-            ))}
+            </div>
           </div>
         )}
       </div>
