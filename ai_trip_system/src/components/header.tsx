@@ -174,11 +174,12 @@ const Header = () => {
       // Update active section based on scroll position
       const aboutSection = document.getElementById("about");
       const featuresSection = document.getElementById("features");
+      const membersSection = document.getElementById("members");
       const contactSection = document.getElementById("contact");
 
       const scrollPosition = scrollY + 100; // Add offset for header height
 
-      if (aboutSection && featuresSection && contactSection) {
+      if (aboutSection && featuresSection && membersSection && contactSection) {
         // Hide scroll indicator when we've scrolled deeper into the contact section
         if (scrollPosition >= contactSection.offsetTop + 300) {
           // Add 300px offset to hide it later
@@ -195,10 +196,15 @@ const Header = () => {
           setActiveSection("about");
         } else if (
           scrollPosition >= featuresSection.offsetTop &&
-          scrollPosition < contactSection.offsetTop
+          scrollPosition < membersSection.offsetTop
         ) {
           setActiveSection("features");
-        } else if (scrollPosition >= contactSection.offsetTop) {
+        } else if (
+          scrollPosition >= membersSection.offsetTop &&
+          scrollPosition < contactSection.offsetTop
+        ) {
+          setActiveSection("members");
+        } else if (scrollPosition > contactSection.offsetTop) {
           setActiveSection("contact");
         } else {
           setActiveSection(null);
@@ -242,7 +248,9 @@ const Header = () => {
       )}
 
       <header
-        className={`bg-gradient-to-r from-[#000080] to-[#00BFFF] flex items-center h-[80px] fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        className={`bg-gradient-to-r from-[#000080] to-[#00BFFF] flex items-center ${
+          isLoggedIn ? 'h-[53px]' : 'h-[80px]'
+        } fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
           scrolled
             ? "shadow-[0_4px_10px_rgba(0,0,0,0.5)] border-b border-black/30"
             : ""
@@ -255,7 +263,7 @@ const Header = () => {
           </div>
         )}
         {/* Left side - Logo */}
-        <div className="flex justify-start items-center p-4 gap-3 w-1/4">
+        <div className={`flex justify-start items-center gap-3 ${isLoggedIn ? 'px-6 w-auto' : 'p-4 w-1/4'}`}>
           <div className="flex items-center justify-center">
             <div
               onClick={(e) => handleNavigation(isLoggedIn ? "/home" : "/", e)}
@@ -263,10 +271,10 @@ const Header = () => {
             >
               <Image
                 src="/images/logo.png"
-                width={70}
-                height={70}
+                width={isLoggedIn ? 40 : 70}
+                height={isLoggedIn ? 40 : 70}
                 alt="logo"
-                className="w-[70px] h-[70px] -my-1"
+                className={`${isLoggedIn ? 'w-[40px] h-[40px]' : 'w-[70px] h-[70px] -my-1'}`}
                 priority
               />
             </div>
@@ -276,7 +284,9 @@ const Header = () => {
               onClick={(e) => handleNavigation(isLoggedIn ? "/home" : "/", e)}
               className="cursor-pointer transition-all duration-300 hover:scale-105"
             >
-              <span className="text-[#FFD700] text-4xl font-['PlaywriteDKLoopet'] tracking-wide">
+              <span className={`text-[#FFD700] font-['PlaywriteDKLoopet'] tracking-wide ${
+                isLoggedIn ? 'text-2xl' : 'text-4xl'
+              }`}>
                 Explavue!
               </span>
             </div>
@@ -287,11 +297,11 @@ const Header = () => {
         <div className="flex justify-center items-center p-4 w-2/4">
           {/* Center menu items - only show when not logged in */}
           {!isLoggedIn && (
-            <div className="hidden md:flex items-center justify-center mx-auto gap-20">
+            <div className="hidden md:flex items-center justify-center mx-auto gap-16">
               <button
                 onClick={(e) => scrollToSection("about", e)}
                 className="flex items-center no-underline transition-all duration-300"
-                aria-label="About"
+                aria-label="Giới thiệu"
               >
                 <span
                   className={`text-lg font-medium ${
@@ -300,14 +310,14 @@ const Header = () => {
                       : "text-white hover:opacity-70"
                   }`}
                 >
-                  About
+                  Giới thiệu
                 </span>
               </button>
 
               <button
                 onClick={(e) => scrollToSection("features", e)}
                 className="flex items-center no-underline transition-all duration-300"
-                aria-label="Features"
+                aria-label="Tính năng"
               >
                 <span
                   className={`text-lg font-medium ${
@@ -316,14 +326,30 @@ const Header = () => {
                       : "text-white hover:opacity-70"
                   }`}
                 >
-                  Features
+                  Tính năng
+                </span>
+              </button>
+
+              <button
+                onClick={(e) => scrollToSection("members", e)}
+                className="flex items-center no-underline transition-all duration-300"
+                aria-label="Thành viên"
+              >
+                <span
+                  className={`text-lg font-medium ${
+                    activeSection === "members"
+                      ? "text-[#FFD700]"
+                      : "text-white hover:opacity-70"
+                  }`}
+                >
+                  Thành viên
                 </span>
               </button>
 
               <button
                 onClick={(e) => scrollToSection("contact", e)}
                 className="flex items-center no-underline transition-all duration-300"
-                aria-label="Contact"
+                aria-label="Hướng dẫn"
               >
                 <span
                   className={`text-lg font-medium ${
@@ -332,68 +358,17 @@ const Header = () => {
                       : "text-white hover:opacity-70"
                   }`}
                 >
-                  Contact
+                  Hướng dẫn
                 </span>
               </button>
             </div>
           )}
 
-          {/* Menu for logged in users */}
-          {isLoggedIn && (
-            <div className="hidden md:flex items-center justify-center mx-auto gap-20">
-              <div
-                onClick={(e) => handleNavigation("/home", e)}
-                className={`flex items-center no-underline transition-all duration-300 cursor-pointer relative ${
-                  isActiveRoute("/home")
-                    ? "text-[#FFD700] scale-105"
-                    : "text-white hover:opacity-70 hover:scale-105"
-                }`}
-              >
-                <span className="text-lg font-medium relative">
-                  Trang chủ
-                  {isActiveRoute("/home") && (
-                    <div className="absolute -bottom-1 left-0 right-0 h-0.5 bg-[#FFD700] rounded-full"></div>
-                  )}
-                </span>
-              </div>
-
-              <div
-                onClick={(e) => handleNavigation("/trips", e)}
-                className={`flex items-center no-underline transition-all duration-300 cursor-pointer relative ${
-                  isActiveRoute("/trips")
-                    ? "text-[#FFD700] scale-105"
-                    : "text-white hover:opacity-70 hover:scale-105"
-                }`}
-              >
-                <span className="text-lg font-medium relative">
-                  Lộ trình AI
-                  {isActiveRoute("/trips") && (
-                    <div className="absolute -bottom-1 left-0 right-0 h-0.5 bg-[#FFD700] rounded-full"></div>
-                  )}
-                </span>
-              </div>
-
-              <div
-                onClick={(e) => handleNavigation("/explore", e)}
-                className={`flex items-center no-underline transition-all duration-300 cursor-pointer relative ${
-                  isActiveRoute("/explore")
-                    ? "text-[#FFD700] scale-105"
-                    : "text-white hover:opacity-70 hover:scale-105"
-                }`}
-              >
-                <span className="text-lg font-medium relative">
-                  Khám phá
-                  {isActiveRoute("/explore") && (
-                    <div className="absolute -bottom-1 left-0 right-0 h-0.5 bg-[#FFD700] rounded-full"></div>
-                  )}
-                </span>
-              </div>
-            </div>
-          )}
+          {/* No navigation menu for logged in users - handled by sidebar */}
         </div>
 
         {/* Right side - Buttons */}
-        <div className="flex justify-end items-center p-4 w-1/4">
+        <div className={`flex justify-end items-center ${isLoggedIn ? 'px-6' : 'p-4 w-1/4'}`}>
           {/* Login/Signup buttons - only show when not logged in */}
           {!isLoggedIn && (
             <div className="hidden md:flex items-center gap-3">
@@ -403,10 +378,10 @@ const Header = () => {
                   e.stopPropagation();
                   router.push("/login");
                 }}
-                className="flex items-center no-underline text-black bg-[#FFD700] border-2 border-transparent rounded-md px-5 py-2 cursor-pointer transition-all duration-300 hover:bg-white hover:border-[#FFD700]"
-                aria-label="Login"
+                className="flex items-center no-underline text-black bg-[#FFD700] border-2 border-transparent rounded-full px-5 py-2 cursor-pointer transition-all duration-300 hover:bg-white hover:border-[#FFD700]"
+                aria-label="Đăng nhập"
               >
-                <span className="text-base font-medium">Login</span>
+                <span className="text-base font-medium">Đăng nhập</span>
               </div>
 
               <div
@@ -415,64 +390,11 @@ const Header = () => {
                   e.stopPropagation();
                   router.push("/register");
                 }}
-                className="flex items-center no-underline text-black bg-[#FFD700] border-2 border-transparent rounded-md px-5 py-2 cursor-pointer transition-all duration-300 hover:bg-white hover:border-[#FFD700]"
-                aria-label="Sign Up"
+                className="flex items-center no-underline text-black bg-[#FFD700] border-2 border-transparent rounded-full px-5 py-2 cursor-pointer transition-all duration-300 hover:bg-white hover:border-[#FFD700]"
+                aria-label="Đăng ký"
               >
-                <span className="text-base font-medium">Sign Up</span>
+                <span className="text-base font-medium">Đăng ký</span>
               </div>
-            </div>
-          )}
-
-          {/* Profile and Logout buttons - only show when logged in */}
-          {isLoggedIn && (
-            <div className="hidden md:flex items-center gap-3">
-              <div
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  router.push(`/profile/${userid}`);
-                }}
-                className="flex items-center no-underline text-white hover:opacity-70 transition-opacity duration-300 bg-transparent border border-white rounded-md px-5 py-2 cursor-pointer"
-                aria-label="Profile"
-              >
-                <div className="w-6 h-6 mr-2 relative">
-                  <Image
-                    src={
-                      userData?.avatar
-                        ? `https://aitripsystem-api.onrender.com/api/v1/proxy_image/?url=${encodeURIComponent(
-                            userData.avatar
-                          )}`
-                        : "profile.svg"
-                    }
-                    fill
-                    className="rounded-full object-cover"
-                    alt="profile"
-                  />
-                </div>
-                <span className="text-base font-medium">Profile</span>
-              </div>
-
-              <button
-                onClick={handleLogout}
-                className="flex items-center no-underline text-white hover:opacity-90 transition-opacity duration-300 bg-[#4B3DB5] rounded-md px-5 py-2"
-                aria-label="Logout"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  className="mr-2"
-                >
-                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                  <polyline points="16 17 21 12 16 7"></polyline>
-                  <line x1="21" y1="12" x2="9" y2="12"></line>
-                </svg>
-                <span className="text-base font-medium">Logout</span>
-              </button>
             </div>
           )}
 
@@ -496,7 +418,7 @@ const Header = () => {
               />
             </div>
             <div
-              className={`absolute top-[80px] right-0 bg-white min-w-[200px] shadow-lg rounded-md z-50 opacity-0 transition-all duration-300 transform -translate-y-2 ${
+              className={`absolute ${isLoggedIn ? 'top-[53px]' : 'top-[80px]'} right-0 bg-white min-w-[200px] shadow-lg rounded-md z-50 opacity-0 transition-all duration-300 transform -translate-y-2 ${
                 isDropdownOpen ? "block opacity-100 translate-y-0" : "hidden"
               }`}
             >
@@ -519,7 +441,7 @@ const Header = () => {
                         }, 50);
                       }}
                     >
-                      About
+                      Giới thiệu
                     </button>
                     <button
                       className={`flex items-center p-3 no-underline w-full text-left transition-all duration-300 ${
@@ -536,7 +458,24 @@ const Header = () => {
                         }, 50);
                       }}
                     >
-                      Features
+                      Tính năng
+                    </button>
+                    <button
+                      className={`flex items-center p-3 no-underline w-full text-left transition-all duration-300 ${
+                        activeSection === "members"
+                          ? "bg-[#FFD700] text-black"
+                          : "text-black hover:bg-gray-200"
+                      }`}
+                      onClick={(e) => {
+                        // Close dropdown first
+                        setIsDropdownOpen(false);
+                        // Use setTimeout to ensure dropdown closes before scrolling
+                        setTimeout(() => {
+                          scrollToSection("members", e);
+                        }, 50);
+                      }}
+                    >
+                      Thành viên
                     </button>
                     <button
                       className={`flex items-center p-3 no-underline w-full text-left transition-all duration-300 ${
@@ -553,7 +492,7 @@ const Header = () => {
                         }, 50);
                       }}
                     >
-                      Contact
+                      Hướng dẫn
                     </button>
 
                     <Link
@@ -566,7 +505,7 @@ const Header = () => {
                       }}
                       prefetch={false}
                     >
-                      Login
+                      Đăng nhập
                     </Link>
 
                     <Link
@@ -579,57 +518,12 @@ const Header = () => {
                       }}
                       prefetch={false}
                     >
-                      Sign Up
+                      Đăng ký
                     </Link>
                   </>
                 )}
 
-                {/* Menu items for logged in users */}
-                {isLoggedIn && (
-                  <>
-                    <div
-                      onClick={(e) => handleNavigation("/home", e)}
-                      className={`flex items-center text-black p-3 no-underline hover:bg-gray-200 w-full text-left cursor-pointer transition-all duration-200 ${
-                        isActiveRoute("/home")
-                          ? "bg-blue-50 border-l-4 border-[#FFD700] font-semibold"
-                          : ""
-                      }`}
-                    >
-                      Trang chủ
-                      {isActiveRoute("/home") && (
-                        <span className="ml-auto text-[#FFD700]">●</span>
-                      )}
-                    </div>
-
-                    <div
-                      onClick={(e) => handleNavigation("/trips", e)}
-                      className={`flex items-center text-black p-3 no-underline hover:bg-gray-200 w-full text-left cursor-pointer transition-all duration-200 ${
-                        isActiveRoute("/trips")
-                          ? "bg-blue-50 border-l-4 border-[#FFD700] font-semibold"
-                          : ""
-                      }`}
-                    >
-                      Lộ trình AI
-                      {isActiveRoute("/trips") && (
-                        <span className="ml-auto text-[#FFD700]">●</span>
-                      )}
-                    </div>
-
-                    <div
-                      onClick={(e) => handleNavigation("/explore", e)}
-                      className={`flex items-center text-black p-3 no-underline hover:bg-gray-200 w-full text-left cursor-pointer transition-all duration-200 ${
-                        isActiveRoute("/explore")
-                          ? "bg-blue-50 border-l-4 border-[#FFD700] font-semibold"
-                          : ""
-                      }`}
-                    >
-                      Khám phá
-                      {isActiveRoute("/explore") && (
-                        <span className="ml-auto text-[#FFD700]">●</span>
-                      )}
-                    </div>
-                  </>
-                )}
+                {/* No navigation menu for logged in users - handled by sidebar */}
 
                 {isLoggedIn && (
                   <Link

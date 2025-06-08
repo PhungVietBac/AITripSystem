@@ -5,6 +5,12 @@ import {
   QUERY_ANALYSIS_PROMPT,
   RESPONSE_GENERATION_PROMPT
 } from '../prompts/travel-assistant.js';
+import {
+  findUniversities,
+  getUniversityContext,
+  findLocationsByName,
+  getLocationContext
+} from '../data/vietnam-universities.js';
 
 /**
  * Travel Assistant Agent using Google Gemini
@@ -31,6 +37,9 @@ export class GeminiTravelAgent {
    */
   async analyzeQuery(query, conversationHistory = []) {
     try {
+      // Check for specific location mentions and enhance context
+      const locationContext = this.extractLocationContext(query);
+
       // Format conversation history for context
       const historyContext = conversationHistory.length > 0
         ? conversationHistory.slice(-4).map(msg =>
@@ -38,8 +47,14 @@ export class GeminiTravelAgent {
           ).join('\n')
         : 'No previous conversation';
 
+      // Enhance query with location context if found
+      let enhancedQuery = query;
+      if (locationContext) {
+        enhancedQuery += ` [Context: ${locationContext.searchContext}]`;
+      }
+
       const prompt = QUERY_ANALYSIS_PROMPT
-        .replace('{query}', query)
+        .replace('{query}', enhancedQuery)
         .replace('{conversationHistory}', historyContext);
 
       const result = await this.model.generateContent(prompt);
@@ -48,6 +63,16 @@ export class GeminiTravelAgent {
 
       // Parse JSON response
       const analysis = this.parseAnalysisResult(text);
+
+      // Add location context to analysis if found
+      if (locationContext) {
+        analysis.locationContext = locationContext;
+        if (locationContext.location) {
+          analysis.location = analysis.location || locationContext.location.city;
+          analysis.searchQuery = analysis.searchQuery + ' ' + locationContext.nearbyKeywords;
+        }
+      }
+
       return analysis;
 
     } catch (error) {
@@ -56,6 +81,39 @@ export class GeminiTravelAgent {
       // Return error instead of fallback
       throw new Error(`Failed to analyze query: ${error.message}`);
     }
+  }
+
+  /**
+   * Extract location context from query (universities, companies, malls, etc.)
+   * @param {string} query - User query
+   * @returns {Object|null} Location context or null
+   */
+  extractLocationContext(query) {
+    // First try universities
+    const universities = findUniversities(query);
+    if (universities.length === 1) {
+      return getUniversityContext(universities[0].code);
+    } else if (universities.length > 1) {
+      return {
+        type: 'university',
+        multipleMatches: universities,
+        needsClarification: true
+      };
+    }
+
+    // Then try other locations (companies, malls, hospitals, etc.)
+    const locations = findLocationsByName(query);
+    if (locations.length === 1) {
+      return getLocationContext(locations[0].code);
+    } else if (locations.length > 1) {
+      return {
+        type: 'general',
+        multipleMatches: locations,
+        needsClarification: true
+      };
+    }
+
+    return null;
   }
 
   /**
@@ -184,7 +242,7 @@ Assistant:`;
     }
 
     // Valid travel categories
-    const validCategories = ['food', 'accommodation', 'attractions', 'weather', 'transportation', 'itinerary', 'general'];
+    const validCategories = ['food', 'accommodation', 'attractions', 'weather', 'transportation', 'itinerary', 'general', 'budget', 'safety'];
 
     // Check if category is travel-related
     if (!validCategories.includes(analysis.category)) {
