@@ -3,13 +3,15 @@
 import React, { useState, useEffect } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { getCookie } from 'cookies-next';
-import { FaCalendarAlt, FaQrcode, FaInfoCircle, FaMapMarkerAlt } from 'react-icons/fa';
+import { FaCalendarAlt, FaQrcode, FaInfoCircle, FaMapMarkerAlt, FaTimes } from 'react-icons/fa';
 import Image from 'next/image';
-import Toast from '@/components/Toast'; // Assuming you have a Toast component
+import Toast from '@/components/Toast';
+import { useAuthCheck } from '@/hooks/useAuthCheck'; // Thêm import
 
 function BookingPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
+    const { user } = useAuthCheck(); // Thêm để lấy user info
     const idPlace = searchParams.get('idPlace');
     const namePlace = searchParams.get('namePlace');
     const token = getCookie('token') as string;
@@ -18,13 +20,15 @@ function BookingPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [bookingStatus, setBookingStatus] = useState<'1' | '0' | '2'>('1');
     const [showQR, setShowQR] = useState(false);
+    const [showConfirmModal, setShowConfirmModal] = useState(false); // Thêm state cho modal
+    const [bookingData, setBookingData] = useState<any>(null); // Lưu data từ API đầu tiên
     const [toast, setToast] = useState({
         visible: false,
         message: '',
         type: 'success' as 'success' | 'error' | 'info',
     });
 
-    // Create a new hotel booking
+    // API đầu tiên - Tạo booking
     const createBooking = async () => {
         setIsLoading(true);
         try {
@@ -48,7 +52,6 @@ function BookingPage() {
                 body: JSON.stringify(requestBody)
             });
 
-            // Thêm sau response để xem chi tiết lỗi
             if (!response.ok) {
                 const errorText = await response.text();
                 console.error("API Error:", response.status, errorText);
@@ -57,6 +60,57 @@ function BookingPage() {
 
             const data = await response.json();
             console.log('Booking created:', data);
+            
+            // Lưu data và hiển thị modal xác nhận
+            setBookingData(data);
+            setShowConfirmModal(true);
+            
+        } catch (error) {
+            console.error('Error creating booking:', error);
+            showToast('Có lỗi xảy ra khi đặt chỗ. Vui lòng thử lại sau.', 'error');
+        } finally {
+            setIsLoading(false);
+        }
+    }
+
+    // API thứ hai - Liên kết user với booking
+    const confirmBooking = async () => {
+        setIsLoading(true);
+        try {
+            if (!user?.userId) {
+                throw new Error('Không tìm thấy thông tin người dùng');
+            }
+
+            if (!bookingData?.idbooking) {
+                throw new Error('Không tìm thấy ID booking');
+            }
+
+            const detailBookingBody = {
+                iduser: user.userId,
+                idbooking: bookingData.idbooking
+            };
+            console.log("Detail booking payload:", detailBookingBody);
+
+            const detailResponse = await fetch(`https://aitripsystem-api.onrender.com/api/v1/detail_bookings/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(detailBookingBody)
+            });
+
+            if (!detailResponse.ok) {
+                const errorText = await detailResponse.text();
+                console.error("Detail Booking API Error:", detailResponse.status, errorText);
+                throw new Error(`Lỗi liên kết user với booking ${detailResponse.status}: ${errorText}`);
+            }
+
+            const detailData = await detailResponse.json();
+            console.log('Detail booking created:', detailData);
+
+            // Thành công
+            setShowConfirmModal(false);
             setShowQR(true);
             showToast(
                 'Cảm ơn đã sử dụng dịch vụ của chúng tôi!\nVui lòng đợi trong giây lát để bên du lịch xác nhận!',
@@ -68,10 +122,9 @@ function BookingPage() {
                 setBookingStatus('0');
             }, 5000);
             
-            return data;
         } catch (error) {
-            console.error('Error creating booking:', error);
-            showToast('Có lỗi xảy ra khi đặt chỗ. Vui lòng thử lại sau.', 'error');
+            console.error('Error confirming booking:', error);
+            showToast('Có lỗi xảy ra khi xác nhận đặt chỗ. Vui lòng thử lại sau.', 'error');
         } finally {
             setIsLoading(false);
         }
@@ -91,6 +144,99 @@ function BookingPage() {
 
     const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setSelectedDate(e.target.value);
+    };
+
+    const closeModal = async () => {
+
+        // =============================    CORS    ==================================== 
+
+
+        // console.log('=== DEBUG: Starting closeModal function ===');
+        // console.log('bookingData:', bookingData);
+        // console.log('bookingData?.idbooking:', bookingData?.idbooking);
+        // console.log('token:', token ? 'Token exists' : 'No token');
+        
+        // // Nếu có bookingData, gọi API để xóa booking
+        // if (bookingData?.idbooking) {
+        //     try {
+        //         const deleteUrl = `https://aitripsystem-api.onrender.com/api/v1/bookings/${bookingData.idbooking}`;
+        //         console.log('=== DEBUG: DELETE API Call ===');
+        //         console.log('DELETE URL:', deleteUrl);
+        //         console.log('Request headers:', {
+        //             'Content-Type': 'application/json',
+        //             'Authorization': `Bearer ${token ? token.substring(0, 20) + '...' : 'No token'}`
+        //         });
+                
+        //         const deleteResponse = await fetch(deleteUrl, {
+        //             method: 'DELETE',
+        //             headers: {
+        //                 'Content-Type': 'application/json',
+        //                 'Authorization': `Bearer ${token}`
+        //             }
+        //         });
+
+        //         console.log('=== DEBUG: DELETE Response ===');
+        //         console.log('Response status:', deleteResponse.status);
+        //         console.log('Response statusText:', deleteResponse.statusText);
+        //         console.log('Response headers:', Object.fromEntries(deleteResponse.headers.entries()));
+        //         console.log('Response ok:', deleteResponse.ok);
+
+        //         if (!deleteResponse.ok) {
+        //             const errorText = await deleteResponse.text();
+        //             console.error('=== DEBUG: DELETE Error Response ===');
+        //             console.error("Delete Booking API Error:", deleteResponse.status, errorText);
+        //             console.error('Full error response:', {
+        //                 status: deleteResponse.status,
+        //                 statusText: deleteResponse.statusText,
+        //                 errorText: errorText,
+        //                 url: deleteUrl
+        //             });
+        //             throw new Error(`Lỗi xóa booking ${deleteResponse.status}: ${errorText}`);
+        //         }
+
+        //         // Try to parse response if there's content
+        //         let responseData = null;
+        //         const contentType = deleteResponse.headers.get('content-type');
+        //         console.log('Response content-type:', contentType);
+                
+        //         if (contentType && contentType.includes('application/json')) {
+        //             responseData = await deleteResponse.json();
+        //             console.log('DELETE Response data:', responseData);
+        //         } else {
+        //             const textResponse = await deleteResponse.text();
+        //             console.log('DELETE Response text:', textResponse);
+        //         }
+
+        //         console.log('=== DEBUG: Booking deleted successfully ===');
+                
+        //         // Hiển thị toast thông báo hủy thành công
+        //         showToast(
+        //             'Bạn đã hủy đặt lịch, hi vọng chúng ta sẽ được gặp lại lần sau!',
+        //             'info'
+        //         );
+
+        //     } catch (error) {
+        //         console.error('=== DEBUG: DELETE Error Caught ===');
+        //         console.error('Error type:', error.constructor.name);
+        //         console.error('Error message:', error.message);
+        //         console.error('Full error object:', error);
+        //         console.error('Error stack:', error.stack);
+                
+        //         // Vẫn hiển thị toast nhưng với thông báo lỗi
+                showToast('Có lỗi xảy ra khi hủy đặt chỗ. Vui lòng thử lại sau.', 'info');
+        //     }
+        // } else {
+        //     console.log('=== DEBUG: No booking data to delete ===');
+        // }
+
+        // console.log('=== DEBUG: Closing modal and resetting state ===');
+
+
+        // =============================    CORS    ==================================== 
+        // Đóng modal và reset state
+        setShowConfirmModal(false);
+        setBookingData(null);
+        console.log('=== DEBUG: closeModal function completed ===');
     };
 
     return (
@@ -231,6 +377,63 @@ function BookingPage() {
                     </div>
                 </div>
             </div>
+
+            {/* Confirmation Modal */}
+            {showConfirmModal && (
+                <div className="fixed inset-0 bg-black/50 filter backdrop-blur-2xl bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-lg max-w-md w-full mx-4 p-6 shadow-xl">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-semibold text-gray-800">Xác nhận đặt chỗ</h3>
+                            <button
+                                onClick={closeModal}
+                                className="text-gray-400 hover:text-gray-600 transition-colors"
+                            >
+                                <FaTimes size={20} />
+                            </button>
+                        </div>
+                        
+                        <div className="mb-6">
+                            <p className="text-gray-600 mb-3">
+                                Đặt chỗ đã được tạo thành công! Bạn có muốn tiếp tục xác nhận để hoàn tất quá trình đặt chỗ không?
+                            </p>
+                            
+                            {bookingData && (
+                                <div className="bg-gray-50 p-3 rounded-lg text-sm">
+                                    <p><strong>ID Booking:</strong> {bookingData.idbooking}</p>
+                                    <p><strong>Địa điểm:</strong> {namePlace}</p>
+                                    <p><strong>Ngày:</strong> {new Date(selectedDate).toLocaleDateString('vi-VN')}</p>
+                                </div>
+                            )}
+                        </div>
+                        
+                        <div className="flex space-x-3">
+                            <button
+                                onClick={closeModal}
+                                className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
+                            >
+                                Hủy
+                            </button>
+                            <button
+                                onClick={confirmBooking}
+                                disabled={isLoading}
+                                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 transition-colors flex items-center justify-center"
+                            >
+                                {isLoading ? (
+                                    <>
+                                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        Đang xử lý...
+                                    </>
+                                ) : (
+                                    'Xác nhận'
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Toast Notification */}
             {toast.visible && (
