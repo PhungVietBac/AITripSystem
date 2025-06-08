@@ -13,7 +13,6 @@ import {
   FaHeart,
   FaRegHeart,
   FaMapMarkedAlt,
-  FaUtensils,
   FaHotel,
   FaShoppingBag,
 } from "react-icons/fa";
@@ -27,11 +26,11 @@ const MapView = dynamic(() => import("@/components/Map"), {
 });
 
 // Additional UI data types that might not come directly from API
-interface Review {
-  user: string;
-  rating: number;
-  comment: string;
-}
+// interface Review {
+//   user: string;
+//   rating: number;
+//   comment: string;
+// }
 
 interface NearbyPlace {
   name: string;
@@ -51,11 +50,11 @@ export default function DetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const token = getCookie("token") as string;
-  const [imageUrl, setImageUrl] = useState("");
+  // const [imageUrl, setImageUrl] = useState("");
 
   // Optional additional data for UI enhancements
-  const [reviews, setReviews] = useState<Review[]>([]);
-  const [nearbyPlaces, setNearbyPlaces] = useState<NearbyPlace[]>([]);
+  // const [reviews, setReviews] = useState<Review[]>([]);
+  const [nearbyPlaces] = useState<NearbyPlace[]>([]);
 
   // Default additional information (could be fetched from another API endpoint)
   const uiHelperData = {

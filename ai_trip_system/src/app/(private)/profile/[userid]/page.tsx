@@ -1,13 +1,5 @@
 "use client";
-import {
-  FaChevronLeft,
-  FaPen,
-  FaXmark,
-  FaCamera,
-  FaUserCheck,
-  FaUserXmark,
-  FaUserPlus,
-} from "react-icons/fa6";
+import { FaChevronLeft, FaXmark, FaCamera } from "react-icons/fa6";
 import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect, ChangeEvent } from "react";
 import Image from "next/image";
@@ -42,7 +34,7 @@ export default function ProfilePage({
       router.push("/login");
       return;
     }
-  }, []);
+  }, [accessToken, router]);
 
   const fetcher = (url: string) =>
     fetch(url, {
@@ -319,12 +311,24 @@ export default function ProfilePage({
               >
                 <FaChevronLeft className="w-5 h-5" />
               </button>
-              <h1 className="text-xl font-semibold">{userData?.username || userData?.name}</h1>
+              <h1 className="text-xl font-semibold">
+                {userData?.username || userData?.name}
+              </h1>
             </div>
             <div className="flex items-center gap-2">
               <button className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
+                  />
                 </svg>
               </button>
             </div>
@@ -374,7 +378,11 @@ export default function ProfilePage({
                     disabled={isSending}
                     className="px-4 py-1.5 text-sm font-medium text-white bg-blue-500 rounded-md hover:bg-blue-600 transition-colors"
                   >
-                    {isFriend ? "Bạn bè" : isFriendRequestSent ? "Hủy lời mời" : "Theo dõi"}
+                    {isFriend
+                      ? "Bạn bè"
+                      : isFriendRequestSent
+                      ? "Hủy lời mời"
+                      : "Theo dõi"}
                   </button>
                 )}
               </div>
@@ -401,14 +409,10 @@ export default function ProfilePage({
                   📞 {userData.phonenumber}
                 </div>
               )}
-              <div className="text-gray-500 mt-1">
-                👤 {renderGender()}
-              </div>
+              <div className="text-gray-500 mt-1">👤 {renderGender()}</div>
             </div>
           </div>
         </div>
-
-
       </div>
 
       {showEditModal && (
@@ -463,7 +467,9 @@ export default function ProfilePage({
                     className="hidden"
                   />
                 </div>
-                <p className="text-sm text-gray-500 mt-2">Thay đổi ảnh đại diện</p>
+                <p className="text-sm text-gray-500 mt-2">
+                  Thay đổi ảnh đại diện
+                </p>
               </div>
 
               {/* Name */}

@@ -7,7 +7,7 @@ import {
   useEffect,
   ReactNode,
 } from "react";
-import { getCookie, setCookie, deleteCookie } from "cookies-next";
+import { setCookie, deleteCookie } from "cookies-next";
 // import { useSession, signIn, signOut } from 'next-auth/react';
 // import { Session } from 'next-auth';
 
@@ -17,7 +17,7 @@ interface AuthContextType {
   login: (token: string) => void;
   logout: () => void;
   socialLogin: (provider: string) => void;
-  session: any | null; // Changed from Session to any
+  session: unknown | null; // Changed from any to unknown
 }
 
 // Create the context with a default value
@@ -33,8 +33,17 @@ const AuthContext = createContext<AuthContextType>({
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
+  // Define a type for session if you expect a user property
+  interface SessionType {
+    user?: {
+      name?: string;
+      email?: string;
+      [key: string]: unknown;
+    };
+    [key: string]: unknown;
+  }
   // const { data: session, status } = useSession();
-  const session = null; // Temporarily disabled
+  const session: SessionType | null = null; // Temporarily disabled
 
   // Simple login function for traditional login
   const login = (token: string) => {
@@ -79,16 +88,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (typeof window !== "undefined") {
       window.dispatchEvent(new Event("authStateChanged"));
     }
-
-    // Sign out from NextAuth
-    // signOut({ callbackUrl: '/' });
-    console.log("NextAuth signOut temporarily disabled");
   };
 
   // Initialize state from localStorage or session
   useEffect(() => {
     // First check NextAuth session
-    if (session && (session as any).user) {
+    if (session && (session as SessionType).user) {
       setIsLoggedIn(true);
       setIsInitialized(true);
       return;
