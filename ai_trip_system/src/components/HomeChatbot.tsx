@@ -1,18 +1,9 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { PaperAirplaneIcon, ChatBubbleLeftRightIcon } from '@heroicons/react/24/outline';
+import { PaperAirplaneIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '@/context/AuthContext';
-import ContextTracingService from '@/services/contextTracing';
-import ContextCacheService from '@/services/contextCache';
-
-interface Message {
-  id: string;
-  text: string;
-  isUser: boolean;
-  timestamp: Date;
-  metadata?: any;
-}
+import { useMessages, Message } from '@/hooks/useMessages';
 
 interface ChatResponse {
   success: boolean;
@@ -34,7 +25,7 @@ const renderMessageText = (text: string, isUser: boolean = false) => {
         return (
           <strong
             key={partIndex}
-            className={`font-bold ${isUser ? 'text-yellow-200' : 'text-blue-600'}`}
+            className={`font-bold ${isUser ? 'text-yellow-100' : 'text-amber-700'}`}
           >
             {boldText}
           </strong>
@@ -61,14 +52,44 @@ export default function HomeChatbot({
   conversationId,
   onConversationCreate
 }: HomeChatbotProps) {
-  const { isLoggedIn, username } = useAuth();
-  const [messages, setMessages] = useState<Message[]>([]);
+  const { isLoggedIn } = useAuth();
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const [currentConversationId, setCurrentConversationId] = useState<string | undefined>(conversationId);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [localMessages, setLocalMessages] = useState<Message[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
+
+  // Use messages hook for API data
+  const {
+    messages: apiMessages,
+    isLoading: messagesLoading,
+    startConversation,
+    addMessage,
+    getWelcomeMessage,
+    mutate: mutateMessages
+  } = useMessages({
+    conversationId: currentConversationId,
+    userId: userId || undefined
+  });
+
+  // Use API messages when available, fallback to local for new conversations
+  const messages = currentConversationId && apiMessages.length > 0
+    ? apiMessages
+    : localMessages;
+
+  // Check if we should show welcome message (no real messages yet)
+  const shouldShowWelcome = messages.length === 0;
+
+  // Get userId from localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storedUserId = localStorage.getItem('current_user_id');
+      setUserId(storedUserId);
+    }
+  }, [isLoggedIn]);
 
   const scrollToBottom = () => {
     // Scroll within the chat container only, not the entire page
@@ -87,70 +108,51 @@ export default function HomeChatbot({
   }, [messages]);
 
   useEffect(() => {
-    checkChatbotHealth();
+    // Ping server first to wake it up, then check health
+    pingAndCheckHealth();
+
+    // Temporarily disable conversation integration for testing
+    console.log('🧪 Testing mode: Conversation integration disabled');
   }, []);
+
+  const pingAndCheckHealth = async () => {
+    try {
+      console.log('🚀 Testing chatbot connection...');
+      setIsConnected(false);
+
+      const response = await fetch('https://travellingchatbot.onrender.com/api/health');
+      console.log('📡 Response status:', response.status);
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('📊 Health data:', data);
+
+        // Simple check - if we get valid response, server is ready
+        if (data && data.status === 'ok') {
+          console.log('✅ Chatbot ready!');
+          setIsConnected(true);
+        } else {
+          console.log('⚠️ Invalid response format');
+          setIsConnected(false);
+        }
+      } else {
+        console.log('❌ Health check failed:', response.status);
+        setIsConnected(false);
+      }
+    } catch (error: any) {
+      console.error('❌ Connection error:', error);
+      setIsConnected(false);
+    }
+  };
 
   useEffect(() => {
     setCurrentConversationId(conversationId);
-    // TEMPORARILY DISABLED conversation loading for testing
-    // if (conversationId && isLoggedIn) {
-    //   loadConversationMessages(conversationId);
-    // } else {
-      // New conversation - show welcome message
-      setMessages([{
-        id: 'welcome',
-        text: 'Xin chào! Tôi là trợ lý du lịch AI. Tôi có thể giúp bạn lên kế hoạch du lịch, tìm kiếm địa điểm, và trả lời các câu hỏi về du lịch. Bạn muốn đi đâu?',
-        isUser: false,
-        timestamp: new Date(),
-      }]);
-    // }
-  }, [conversationId, isLoggedIn]);
-
-  const loadConversationMessages = async (convId: string) => {
-    // TEMPORARILY DISABLED for testing
-    // if (!isLoggedIn) return;
-
-    // try {
-    //   const response = await fetch(`/api/conversations/${convId}/messages?userId=${username}`);
-    //   if (response.ok) {
-    //     const messagesData = await response.json();
-    //     setMessages(messagesData);
-    //   } else {
-    //     console.error('Failed to load conversation messages');
-    //   }
-    // } catch (error) {
-    //   console.error('Error loading conversation messages:', error);
-    // }
-  };
+  }, [conversationId]);
 
   const checkChatbotHealth = async () => {
-    try {
-      const response = await fetch('/api/chatbot');
-      const data = await response.json();
-      setIsConnected(data.status === 'ok' && data.initialized);
-
-      // Warm-up request to initialize chatbot if it's connected but not warmed up
-      if (data.status === 'ok' && data.initialized) {
-        try {
-          await fetch('/api/chatbot', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              message: 'ping',
-              history: [],
-              userId: 'warmup'
-            }),
-          });
-        } catch (warmupError) {
-          console.log('Warmup request failed, but continuing...');
-        }
-      }
-    } catch (error) {
-      console.error('Chatbot service not available:', error);
-      setIsConnected(false);
-    }
+    // This function is now simplified since pingAndCheckHealth handles the main logic
+    console.log('🔄 Retry health check...');
+    pingAndCheckHealth();
   };
 
   const sendMessage = async () => {
@@ -160,106 +162,36 @@ export default function HomeChatbot({
     setInputMessage('');
     setIsLoading(true);
 
-    // TEMPORARILY DISABLED conversation creation for testing
-    // Create conversation if this is the first message
-    let conversationIdToUse = currentConversationId;
-
-    // if (!conversationIdToUse) {
-    //   try {
-    //     const createResponse = await fetch('/api/conversations', {
-    //       method: 'POST',
-    //       headers: {
-    //         'Content-Type': 'application/json',
-    //       },
-    //       body: JSON.stringify({
-    //         userId: username,
-    //         firstMessage: messageText
-    //       }),
-    //     });
-
-    //     if (createResponse.ok) {
-    //       const newConversation = await createResponse.json();
-    //       conversationIdToUse = newConversation.id;
-    //       setCurrentConversationId(conversationIdToUse);
-    //       onConversationCreate?.(conversationIdToUse);
-    //     }
-    //   } catch (error) {
-    //     console.error('Error creating conversation:', error);
-    //   }
-    // }
-
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      text: messageText,
-      isUser: true,
-      timestamp: new Date(),
-    };
-
-    setMessages(prev => [...prev, userMessage]);
-
     try {
-      // Get conversation context from cache or database
-      let conversationContext = null;
+      // Conversation API integration (only for logged in users)
+      let conversationIdToUse = currentConversationId;
 
-      // Debug logging
-      console.log('Context Debug:', {
-        conversationIdToUse,
-        currentConversationId,
-        messagesLength: messages.length
-      });
+      if (userId) {
+        // Create conversation if this is the first message
+        if (!conversationIdToUse) {
+          // Create conversation with first user message as title
+          const result = await startConversation(
+            messageText, // Use first user message as title
+            messageText // Start with user message (no welcome message in API)
+          );
 
-      if (conversationIdToUse) {
-        // Try cache first
-        conversationContext = await ContextCacheService.getContext(conversationIdToUse);
-        console.log('Cache result:', conversationContext);
+          if (result) {
+            conversationIdToUse = result.conversationId;
+            setCurrentConversationId(conversationIdToUse);
 
-        // If not in cache, get from database
-        if (!conversationContext) {
-          conversationContext = await ContextTracingService.getConversationContext(conversationIdToUse);
-          console.log('DB result:', conversationContext);
-
-          // Cache the context for future use
-          if (conversationContext) {
-            await ContextCacheService.setContext(conversationIdToUse, conversationContext, 300); // 5 minutes TTL
+            onConversationCreate?.(conversationIdToUse);
           }
-        }
-      } else {
-        // Fallback: Use local messages as context if no conversation ID
-        if (messages.length > 0) {
-          const recentMessages = messages.slice(-6).map((msg, index) => ({
-            role: msg.isUser ? 'user' : 'assistant' as 'user' | 'assistant',
-            content: msg.text,
-            timestamp: msg.timestamp,
-            sequence: index
-          }));
-
-          conversationContext = {
-            conversationId: 'local',
-            currentSequence: messages.length,
-            recentMessages,
-            contextSummary: `Ngữ cảnh cuộc trò chuyện gần đây:\n${recentMessages.map((msg, i) =>
-              `${i + 1}. ${msg.role === 'user' ? 'Người dùng' : 'Trợ lý'}: ${msg.content}`
-            ).join('\n')}`
-          };
-
-          console.log('Using local context:', conversationContext);
+        } else {
+          // Add user message to existing conversation
+          await addMessage(messageText, 'user');
         }
       }
 
-      // Build contextual prompt
-      const contextualMessage = conversationContext
-        ? ContextTracingService.buildContextualPrompt(messageText, conversationContext)
-        : messageText;
+      // Get AI response
+      const recentHistory = messages.slice(-6); // Last 3 exchanges (6 messages)
 
-      console.log('Contextual message:', {
-        original: messageText,
-        contextual: contextualMessage,
-        hasContext: !!conversationContext
-      });
-
-      // Retry logic for first request
       let response;
-      let data: ChatResponse;
+      let data: ChatResponse | null = null;
       let retryCount = 0;
       const maxRetries = 3;
 
@@ -271,30 +203,25 @@ export default function HomeChatbot({
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              message: contextualMessage,
-              originalMessage: messageText, // Keep original for logging
-              context: conversationContext,
-              history: messages.slice(-6), // Send last 3 exchanges (6 messages)
+              message: messageText,
+              history: recentHistory,
               conversationId: conversationIdToUse,
-              userId: username || 'anonymous'
+              userId: userId || 'anonymous'
             }),
           });
 
           data = await response.json();
 
-          // If successful, break out of retry loop
-          if (data.success) {
+          if (data?.success) {
             break;
           }
 
-          // If not successful but not a connection error, don't retry
           if (response.ok) {
             break;
           }
 
           retryCount++;
           if (retryCount < maxRetries) {
-            // Wait before retrying (exponential backoff)
             await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
           }
         } catch (fetchError) {
@@ -302,55 +229,43 @@ export default function HomeChatbot({
           if (retryCount >= maxRetries) {
             throw fetchError;
           }
-          // Wait before retrying
           await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
         }
       }
 
-      const botMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        text: data.success ? data.response || 'Xin lỗi, tôi không thể trả lời câu hỏi này.' : data.error || 'Có lỗi xảy ra.',
-        isUser: false,
-        timestamp: new Date(),
-        metadata: data.metadata,
-      };
-
-      setMessages(prev => [...prev, botMessage]);
-
-      // Save messages with context to database (if conversation exists)
-      if (conversationIdToUse && data.success) {
-        try {
-          // Save user message
-          await ContextTracingService.saveMessageWithContext(
-            conversationIdToUse,
-            messageText,
-            'user',
-            conversationContext || undefined
-          );
-
-          // Save assistant response
-          await ContextTracingService.saveMessageWithContext(
-            conversationIdToUse,
-            data.response || '',
-            'assistant',
-            conversationContext || undefined
-          );
-
-          // Invalidate cache to force refresh on next request
-          await ContextCacheService.invalidateConversation(conversationIdToUse);
-        } catch (saveError) {
-          console.error('Error saving messages with context:', saveError);
+      // Save assistant response to API (only for logged in users)
+      if (userId && conversationIdToUse) {
+        if (data?.success && data.response) {
+          await addMessage(data.response, 'assistant', data.metadata);
+        } else {
+          await addMessage('Xin lỗi, tôi không thể trả lời câu hỏi này.', 'assistant');
         }
+        // Refresh messages from API
+        mutateMessages();
+      } else {
+        // For non-logged in users, add to local messages
+        const botMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          text: data?.success && data.response ? data.response : 'Xin lỗi, tôi không thể trả lời câu hỏi này.',
+          isUser: false,
+          timestamp: new Date(),
+          metadata: data?.metadata,
+        };
+
+        const userMessage: Message = {
+          id: Date.now().toString(),
+          text: messageText,
+          isUser: true,
+          timestamp: new Date(),
+        };
+
+        setLocalMessages(prev => [...prev, userMessage, botMessage]);
       }
+
     } catch (error) {
       console.error('Error sending message:', error);
-      const errorMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        text: 'Xin lỗi, chatbot đang khởi tạo hoặc gặp sự cố. Vui lòng thử lại sau vài giây.',
-        isUser: false,
-        timestamp: new Date(),
-      };
-      setMessages(prev => [...prev, errorMessage]);
+      // Show error message locally (won't be saved to API)
+      // You could implement a local error state here if needed
     } finally {
       setIsLoading(false);
     }
@@ -364,50 +279,99 @@ export default function HomeChatbot({
   };
 
   return (
-    <div className="h-[600px] bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden flex flex-col">
+    <div className="h-full bg-gradient-to-b shadow-md overflow-hidden flex flex-col">
       {/* Header */}
-      <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-100 text-gray-800">
-        <div className="flex items-center gap-3">
-          <ChatBubbleLeftRightIcon className="h-5 w-5 text-blue-600" />
-          <h2 className="text-lg font-semibold">AI Travel Assistant - Tourmate</h2>
+      <div className="p-6 text-amber-800">
+        <div className="flex items-center">
+          <h2 className="text-lg font-semibold">✈️ Trợ lý Du lịch Thông Minh Tourmate</h2>
         </div>
       </div>
 
       {/* Chat Messages */}
-      <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-4 space-y-3">
+      <div ref={chatContainerRef} className="flex-1 overflow-y-auto">
+        {/* Welcome Message - Always show when no real messages */}
+        {shouldShowWelcome && (
+          <div className="w-full py-6 bg-gray-50">
+            <div className="max-w-4xl mx-auto px-4">
+              <div className="flex justify-start">
+                <div className="max-w-2xl bg-amber-50 border border-amber-200 px-6 py-4 rounded-2xl shadow-sm">
+                  <div className="text-amber-800 leading-relaxed">
+                    <div className="whitespace-pre-wrap">{renderMessageText(getWelcomeMessage().text)}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Regular Messages */}
         {messages.map((message) => (
           <div
             key={message.id}
-            className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}
+            className={`w-full py-4 ${message.isUser ? 'bg-white' : 'bg-gray-50'}`}
           >
-            <div
-              className={`max-w-xs lg:max-w-md px-3 py-2 rounded-lg text-sm ${
-                message.isUser
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 text-gray-900'
-              }`}
-            >
-              <div className="whitespace-pre-wrap">{renderMessageText(message.text, message.isUser)}</div>
-              <div className="text-xs mt-1 opacity-70">
-                {message.timestamp.toLocaleTimeString('vi-VN', {
-                  hour: '2-digit',
-                  minute: '2-digit'
-                })}
-              </div>
+            <div className="max-w-4xl mx-auto px-4">
+              {message.isUser ? (
+                // User message - right aligned with background
+                <div className="flex justify-end">
+                  <div className="max-w-2xl bg-blue-600 text-white px-4 py-3 rounded-2xl shadow-sm">
+                    <div className="whitespace-pre-wrap">{renderMessageText(message.text, message.isUser)}</div>
+                    <div className="text-xs mt-1 opacity-70">
+                      {message.timestamp instanceof Date
+                        ? message.timestamp.toLocaleTimeString('vi-VN', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            timeZone: 'Asia/Ho_Chi_Minh'
+                          })
+                        : new Date(message.timestamp).toLocaleTimeString('vi-VN', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            timeZone: 'Asia/Ho_Chi_Minh'
+                          })
+                      }
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                // Bot message - full width, no background
+                <div className="w-full">
+                  <div className="text-gray-800 leading-relaxed">
+                    <div className="whitespace-pre-wrap">{renderMessageText(message.text, message.isUser)}</div>
+                    <div className="text-xs mt-2 text-gray-500">
+                      {message.timestamp instanceof Date
+                        ? message.timestamp.toLocaleTimeString('vi-VN', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            timeZone: 'Asia/Ho_Chi_Minh'
+                          })
+                        : new Date(message.timestamp).toLocaleTimeString('vi-VN', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            timeZone: 'Asia/Ho_Chi_Minh'
+                          })
+                      }
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         ))}
 
         {isLoading && (
-          <div className="flex justify-start">
-            <div className="bg-gray-100 text-gray-900 max-w-xs lg:max-w-md px-3 py-2 rounded-lg">
-              <div className="flex items-center space-x-2">
-                <div className="flex space-x-1">
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+          <div className="w-full py-4 bg-gray-50">
+            <div className="max-w-4xl mx-auto px-4">
+              <div className="w-full">
+                <div className="text-gray-600 leading-relaxed">
+                  <div className="flex items-center space-x-2">
+                    <div className="flex space-x-1">
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                    </div>
+                    <span className="text-sm text-gray-600">🔍 Đang tìm kiếm thông tin...</span>
+                  </div>
                 </div>
-                <span className="text-xs text-gray-500">Đang xử lý...</span>
               </div>
             </div>
           </div>
@@ -417,30 +381,47 @@ export default function HomeChatbot({
       </div>
 
       {/* Input Area */}
-      <div className="p-4 border-t border-gray-200">
-        <div className="flex gap-2">
-          <input
-            value={inputMessage}
-            onChange={(e) => setInputMessage(e.target.value)}
-            onKeyPress={handleKeyPress}
-            placeholder="Nhập câu hỏi về du lịch..."
-            className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            disabled={!isConnected || isLoading}
-          />
-          <button
-            onClick={sendMessage}
-            disabled={!inputMessage.trim() || isLoading || !isConnected}
-            className="bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            <PaperAirplaneIcon className="h-4 w-4" />
-          </button>
+      <div className="border-t border-gray-200 bg-white p-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex gap-3">
+            <input
+              value={inputMessage}
+              onChange={(e) => setInputMessage(e.target.value)}
+              onKeyDown={handleKeyPress}
+              placeholder="Nhập câu hỏi về du lịch..."
+              className="flex-1 border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+              disabled={!isConnected || isLoading}
+            />
+            <button
+              onClick={sendMessage}
+              disabled={!inputMessage.trim() || isLoading || !isConnected}
+              className="bg-blue-600 text-white px-4 py-3 rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+            >
+              <PaperAirplaneIcon className="h-4 w-4" />
+            </button>
+          </div>
         </div>
 
-        {!isConnected && (
-          <div className="mt-2 text-xs text-red-600">
-            ⚠️ Chatbot service không khả dụng
-          </div>
-        )}
+          {!isConnected && (
+            <div className="mt-3 text-xs text-amber-600 bg-amber-50 p-3 rounded-lg border border-amber-200">
+              <div className="flex items-center gap-2">
+                <div className="animate-spin w-3 h-3 border border-amber-400 border-t-transparent rounded-full"></div>
+                <span>🚀 Đang đánh thức server... (có thể mất 1-2 phút)</span>
+              </div>
+              <div className="text-xs text-amber-500 mt-2 flex items-center justify-between">
+                <span>💡 Server đang cold start, vui lòng đợi...</span>
+                <button
+                  onClick={() => {
+                    console.log('🔄 User click retry');
+                    pingAndCheckHealth();
+                  }}
+                  className="text-blue-600 hover:text-blue-800 underline ml-2"
+                >
+                  Thử lại
+                </button>
+              </div>
+            </div>
+          )}
       </div>
     </div>
   );

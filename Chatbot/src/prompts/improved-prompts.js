@@ -24,6 +24,20 @@ Base your classification on both the current input and short conversation histor
       - <intent>updateItinerary</intent>: Asking to modify or confirm changes to an existing itinerary (e.g., "Sửa lại giúp tôi phần ngày 2 của lịch trình")
     </intents>
 
+    <itinerary-detection-rules>
+      🎯 ALWAYS classify as <intent>generateItinerary</intent> if the message contains:
+      - Destination + Duration keywords: "lộ trình [địa điểm] [số] ngày/đêm"
+      - Planning keywords: "kế hoạch", "lịch trình", "plan", "itinerary", "tạo", "lập"
+      - Duration indicators: "[số] ngày", "[số] đêm", "days", "nights"
+      - Travel keywords: "du lịch", "travel", "trip", "chuyến đi"
+
+      🚀 IMMEDIATE ITINERARY TRIGGERS (no additional info needed):
+      - "lộ trình du lịch [địa điểm] [thời gian]"
+      - "kế hoạch [số] ngày ở [địa điểm]"
+      - "tôi muốn đi [địa điểm] [thời gian]"
+      - "[địa điểm] [thời gian] có gì hay?"
+    </itinerary-detection-rules>
+
     <context-management>
       - If there is no prior message, classify based on the current message only.
       - If the message is vague (e.g., "go ahead", "continue", "yes"), retain the previous intent: <last-intent>{last_intent}</last-intent>.
@@ -62,6 +76,11 @@ Choose from:
     <example input="lộ trình du lịch ở Đồng Nai cho 2 người 2 đêm với mức giá rẻ" output="<intent>generateItinerary</intent>" />
     <example input="kế hoạch du lịch Sapa tiết kiệm chi phí" output="<intent>generateItinerary</intent>" />
     <example input="tôi muốn đi Phú Quốc 3 ngày, có gì hay không?" output="<intent>generateItinerary</intent>, <intent>activities</intent>" />
+    <example input="du lịch Hội An 3 ngày 2 đêm cho gia đình" output="<intent>generateItinerary</intent>" />
+    <example input="tạo lịch trình Sapa 2 ngày 1 đêm tiết kiệm chi phí" output="<intent>generateItinerary</intent>" />
+    <example input="kế hoạch 3 ngày ở Đà Lạt" output="<intent>generateItinerary</intent>" />
+    <example input="tôi muốn đi Phú Quốc 4 ngày" output="<intent>generateItinerary</intent>" />
+    <example input="Đà Lạt 2 ngày 1 đêm có gì hay?" output="<intent>generateItinerary</intent>, <intent>activities</intent>" />
 
     <!-- Save itinerary -->
     <example input="Lưu lại lịch trình này giúp tôi." output="<intent>addItinerary</intent>" />
@@ -95,23 +114,37 @@ export const GENERATE_ITINERARY_TEMPLATE = `
 
     🧭 This prompt is for **creating and displaying itineraries only**. Do NOT call tools or store data unless the user clearly says they want to save it.
 
-    <default-assumptions>
-      Nếu user không cung cấp đầy đủ thông tin, hãy đưa ra giả định hợp lý:
-      - Ngân sách: Nếu nói "giá rẻ" → ước tính 500.000-800.000 đ/người/ngày
-      - Ngân sách: Nếu nói "cao cấp" → ước tính 1.500.000-3.000.000 đ/người/ngày
-      - Ngân sách: Nếu không nói → ước tính 800.000-1.200.000 đ/người/ngày
-      - Sở thích: Nếu không nói → bao gồm cả tham quan, ẩm thực, nghỉ dưỡng
-      - Phương tiện: Nếu không nói → ưu tiên xe máy/taxi cho di chuyển gần, xe khách cho xa
-    </default-assumptions>
+    <smart-assumptions>
+      🧠 INTELLIGENT DEFAULT HANDLING - Đưa ra giả định thông minh khi thiếu thông tin:
 
-    <missing-info-handling>
-      - Nếu thiếu điểm đến: Yêu cầu bổ sung
-      - Nếu thiếu thời gian: Yêu cầu bổ sung
-      - Nếu thiếu ngân sách: Đưa ra giả định dựa trên từ khóa ("giá rẻ", "cao cấp", etc.)
-      - Nếu thiếu sở thích: Tạo lộ trình đa dạng (tham quan + ẩm thực + nghỉ dưỡng)
+      💰 BUDGET ASSUMPTIONS:
+      - "giá rẻ", "tiết kiệm", "budget" → 500.000-800.000 đ/người/ngày
+      - "cao cấp", "luxury", "sang trọng" → 1.500.000-3.000.000 đ/người/ngày
+      - "trung bình", không nói → 800.000-1.200.000 đ/người/ngày
 
-      ✅ LUÔN tạo lộ trình nếu có đủ điểm đến + thời gian, kể cả khi thiếu thông tin khác
-    </missing-info-handling>
+      🎯 PREFERENCE ASSUMPTIONS:
+      - Không nói sở thích → Tạo lộ trình cân bằng: 40% tham quan + 30% ẩm thực + 30% nghỉ dưỡng
+      - Gia đình → Ưu tiên địa điểm an toàn, phù hợp trẻ em
+      - Cặp đôi → Ưu tiên romantic spots, sunset views
+      - Nhóm bạn → Ưu tiên hoạt động vui nhộn, check-in spots
+
+      🚗 TRANSPORT ASSUMPTIONS:
+      - Trong thành phố → Taxi/Grab, xe máy thuê
+      - Liên tỉnh → Xe khách, máy bay (nếu xa)
+      - Tham quan → Xe máy (linh hoạt), xe đạp (gần)
+    </smart-assumptions>
+
+    <mandatory-creation-rules>
+      🚀 ALWAYS CREATE ITINERARY IF:
+      ✅ Có điểm đến (destination) + thời gian (duration)
+      ✅ KHÔNG cần hỏi thêm về ngân sách, sở thích, phương tiện
+      ✅ Sử dụng smart assumptions cho thông tin thiếu
+
+      ❌ ONLY ASK FOR MORE INFO IF:
+      ❌ Thiếu điểm đến hoàn toàn
+      ❌ Thiếu thời gian hoàn toàn
+      ❌ Câu hỏi không phải về lịch trình (chỉ hỏi thông tin chung)
+    </mandatory-creation-rules>
 
     ✅ Your response must follow this structure:
 

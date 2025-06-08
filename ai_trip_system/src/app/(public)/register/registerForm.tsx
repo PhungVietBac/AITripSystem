@@ -81,20 +81,19 @@ export default function RegisterForm() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center py-4 sm:py-8 md:py-12 px-4 sm:px-6 lg:px-8 overflow-y-auto">
-      <div className="w-full max-w-md my-4">
-        <div className="rounded-2xl shadow-xl filter backdrop-blur-md bg-[rgba(0, 0, 0, 0.1)] p-4 sm:p-6 md:p-8">
+    <div className="min-h-screen flex items-start justify-center pt-2 sm:pt-2 md:pt-2 pb-4 px-4 sm:px-6 lg:px-8 overflow-y-auto">
+      <div className="w-full max-w-6xl">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
+          {/* Left side - Register Form */}
+          <div className="w-full max-w-md mx-auto lg:mx-0 lg:ml-48 ml-48">
+            <div className="rounded-2xl shadow-xl filter backdrop-blur-md bg-yellow-50 border border-[#d1d9e0] p-4 sm:p-6 md:p-8">
           {/* Logo */}
-          <div className="flex justify-center mb-4 sm:mb-6">
-            <div className="w-12 h-12 sm:w-16 sm:h-16 bg-cyan-100 rounded-lg flex items-center justify-center">
-              <svg
-                className="w-8 h-8 sm:w-10 sm:h-10 text-cyan-500"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-              >
-                <path d="M12 2L2 7v10l10 5 10-5V7L12 2zm0 2.236L20 9l-8 4-8-4 8-4.764zM4 9.618v6L12 20l8-4.382v-6L12 14 4 9.618z" />
-              </svg>
-            </div>
+          <div className="flex justify-center">
+            <img
+              src="/images/logo.png"
+              alt="Explavue Logo"
+              className="w-12 h-12 sm:w-16 sm:h-16"
+            />
           </div>
 
           {/* Welcome Text */}
@@ -102,9 +101,6 @@ export default function RegisterForm() {
             <h2 className="text-xl sm:text-2xl font-bold text-gray-800">
               Đăng ký tài khoản mới 👋
             </h2>
-            <p className="text-gray-500 text-xs sm:text-sm mt-1">
-              Tham gia cùng EXPLAVUE ngay hôm nay!
-            </p>
           </div>
 
           {error && (
@@ -198,7 +194,7 @@ export default function RegisterForm() {
             </button>
           </form>
 
-          <div className="mt-6">
+          <div className="mt-2">
             <button
               type="button"
               className="w-full flex items-center justify-center py-3 px-4 border border-gray-300 rounded-xl hover:bg-gray-50 transition duration-200"
@@ -206,7 +202,7 @@ export default function RegisterForm() {
               <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24">
                 <path
                   d="M20.283 10.356h-8.327v3.451h4.792c-.446 2.193-2.313 3.453-4.792 3.453a5.27 5.27 0 0 1-5.279-5.28 5.27 5.27 0 0 1 5.279-5.279c1.259 0 2.397.447 3.29 1.178l2.6-2.599c-1.584-1.381-3.615-2.233-5.89-2.233a8.908 8.908 0 0 0-8.934 8.934 8.907 8.907 0 0 0 8.934 8.934c4.467 0 8.529-3.249 8.529-8.934 0-.528-.081-1.097-.202-1.625z"
-                  fill="#4285F4"
+                  fill="#EA4335"
                 />
               </svg>
               Đăng ký với Google
@@ -223,6 +219,19 @@ export default function RegisterForm() {
                 Đăng nhập
               </Link>
             </p>
+          </div>
+            </div>
+          </div>
+
+          {/* Right side - Vietnam Image */}
+          <div className="hidden lg:block">
+            <div className="relative">
+              <img
+                src="/images/vietnam.png"
+                alt="Vietnam"
+                className="w-full h-auto max-w-md mx-auto"
+              />
+            </div>
           </div>
         </div>
       </div>

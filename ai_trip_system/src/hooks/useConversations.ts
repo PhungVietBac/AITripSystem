@@ -1,6 +1,8 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import useSWR from 'swr';
+import { conversationApi, messageApi } from '@/lib/api/conversations';
+import { Message as ApiMessage } from '@/types/conversation';
 
 interface Conversation {
   id: string;
@@ -20,20 +22,48 @@ interface Message {
   metadata?: any;
 }
 
-// Fetcher function for SWR
-const fetcher = (url: string) => fetch(url).then(res => {
-  if (!res.ok) throw new Error('Failed to fetch');
-  return res.json();
+// Convert API message to local message format
+const convertApiMessageToLocal = (apiMessage: ApiMessage): Message => ({
+  id: apiMessage.id,
+  text: apiMessage.content,
+  isUser: apiMessage.role === 'user',
+  timestamp: new Date(apiMessage.created_at),
+  metadata: apiMessage.metadata
 });
 
 export function useConversations() {
-  const { user } = useAuth();
+  const { isLoggedIn } = useAuth();
   const [error, setError] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
+
+  // Get userId from localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storedUserId = localStorage.getItem('current_user_id');
+      setUserId(storedUserId);
+    }
+  }, [isLoggedIn]);
+
+  // Custom fetcher sử dụng API backend
+  const conversationFetcher = async () => {
+    if (!userId) return [];
+
+    try {
+      const response = await conversationApi.getConversations({
+        userId: userId,
+        page: 1,
+        limit: 10 // Only fetch 10 most recent conversations
+      });
+      return response.conversations || [];
+    } catch (err) {
+      throw new Error('Failed to load conversations');
+    }
+  };
 
   // Use SWR for data fetching
   const { data: conversations, error: swrError, isLoading, mutate } = useSWR(
-    user?.id ? `/api/conversations?userId=${user.id}&limit=50` : null,
-    fetcher,
+    userId ? `conversations-${userId}` : null,
+    conversationFetcher,
     {
       revalidateOnFocus: false,
       revalidateOnReconnect: true,
@@ -49,146 +79,140 @@ export function useConversations() {
     await mutate(); // Trigger revalidation
   }, [mutate]);
 
-  const createConversation = useCallback(async (title?: string, firstMessage?: string) => {
-    if (!user?.id) return null;
+  const createConversation = useCallback(async (title?: string) => {
+    if (!userId) return null;
 
     try {
-      const response = await fetch('/api/conversations', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId: user.id,
-          title: title || 'New Conversation',
-          firstMessage
-        }),
+      // First, get the latest conversations to check count
+      const response = await conversationApi.getConversations({
+        userId: userId,
+        page: 1,
+        limit: 50 // Get more to check total count
       });
+      const currentConversations = response.conversations || [];
 
-      if (response.ok) {
-        const newConversation = await response.json();
-        await mutate(); // Revalidate SWR cache
-        return newConversation;
+      // Check if we need to delete old conversations (keep only 9, so we can add 1 new = 10 total)
+      console.log(`📊 Current conversations count: ${currentConversations.length}`);
+      if (currentConversations.length >= 10) {
+        // Sort by date and get the oldest ones to delete
+        const sortedByDate = [...currentConversations].sort((a, b) => {
+          const dateA = new Date(a.updatedAt || a.updated_at || a.createdAt || a.created_at).getTime();
+          const dateB = new Date(b.updatedAt || b.updated_at || b.createdAt || b.created_at).getTime();
+          return dateA - dateB; // Oldest first
+        });
+
+        // Delete the oldest conversations to make room (keep 9, so we can add 1 new)
+        const conversationsToDelete = sortedByDate.slice(0, currentConversations.length - 9);
+        console.log(`🗑️ Auto-deleting ${conversationsToDelete.length} old conversations to maintain limit of 10`);
+        console.log('Conversations to delete:', conversationsToDelete.map(c => ({ id: c.id, title: c.title })));
+
+        for (const conv of conversationsToDelete) {
+          try {
+            console.log(`🗑️ Attempting to delete conversation: ${conv.id} - ${conv.title}`);
+            await conversationApi.archiveConversation(conv.id, userId);
+            console.log(`✅ Successfully auto-deleted old conversation: ${conv.title}`);
+          } catch (deleteErr) {
+            console.error('❌ Failed to delete old conversation:', deleteErr);
+            console.error('Conversation details:', conv);
+          }
+        }
       } else {
-        throw new Error('Failed to create conversation');
+        console.log(`✅ No need to delete conversations. Current count: ${currentConversations.length}/10`);
       }
+
+      console.log(`🆕 Creating new conversation with title: ${title || 'New Conversation'}`);
+      const newConversation = await conversationApi.createConversation({
+        user_id: userId,
+        title: title || 'New Conversation'
+      });
+      console.log(`✅ Successfully created new conversation:`, newConversation);
+
+      await mutate(); // Revalidate SWR cache
+      console.log(`🔄 SWR cache revalidated`);
+      return newConversation;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');
       console.error('Error creating conversation:', err);
       return null;
     }
-  }, [user?.id, mutate]);
+  }, [userId, mutate]);
 
   const deleteConversation = useCallback(async (conversationId: string) => {
-    if (!user?.id) return false;
+    if (!userId) return false;
 
     try {
-      const response = await fetch(`/api/conversations?id=${conversationId}&userId=${user.id}`, {
-        method: 'DELETE',
-      });
-
-      if (response.ok) {
-        await mutate(); // Revalidate SWR cache
-        return true;
-      } else {
-        throw new Error('Failed to delete conversation');
-      }
+      await conversationApi.archiveConversation(conversationId, userId);
+      await mutate(); // Revalidate SWR cache
+      return true;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');
       console.error('Error deleting conversation:', err);
       return false;
     }
-  }, [user?.id, mutate]);
+  }, [userId, mutate]);
 
   const updateConversationTitle = useCallback(async (conversationId: string, newTitle: string) => {
-    if (!user?.id) return false;
+    if (!userId) return false;
 
     try {
-      const response = await fetch(`/api/conversations/${conversationId}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId: user.id,
-          title: newTitle
-        }),
+      await conversationApi.updateConversation(conversationId, {
+        userId: userId,
+        title: newTitle
       });
 
-      if (response.ok) {
-        setConversations(prev => 
-          prev.map(conv => 
-            conv.id === conversationId 
-              ? { ...conv, title: newTitle }
-              : conv
-          )
-        );
-        return true;
-      } else {
-        throw new Error('Failed to update conversation title');
-      }
+      await mutate(); // Revalidate SWR cache
+      return true;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');
       console.error('Error updating conversation title:', err);
       return false;
     }
-  }, [user?.id]);
+  }, [userId, mutate]);
 
   const loadConversationMessages = useCallback(async (conversationId: string): Promise<Message[]> => {
-    if (!user?.id) return [];
+    if (!userId) return [];
 
     try {
-      const response = await fetch(`/api/conversations/${conversationId}/messages?userId=${user.id}`);
-      
-      if (response.ok) {
-        const messages = await response.json();
-        return messages;
-      } else {
-        throw new Error('Failed to load conversation messages');
-      }
+      const response = await messageApi.getMessages(conversationId, {
+        userId: userId,
+        page: 1,
+        limit: 100
+      });
+      return (response.messages || []).map(convertApiMessageToLocal);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');
       console.error('Error loading conversation messages:', err);
       return [];
     }
-  }, [user?.id]);
+  }, [userId]);
 
   const addMessageToConversation = useCallback(async (
-    conversationId: string, 
-    content: string, 
+    conversationId: string,
+    content: string,
     role: 'user' | 'assistant',
     metadata?: any
   ) => {
-    if (!user?.id) return null;
+    if (!userId) return null;
 
     try {
-      const response = await fetch(`/api/conversations/${conversationId}/messages`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId: user.id,
-          content,
-          role,
-          metadata
-        }),
+      const result = await messageApi.createMessageDirect({
+        userId: userId,
+        conversationId,
+        content,
+        role,
+        metadata,
+        token_count: 0
       });
 
-      if (response.ok) {
-        const result = await response.json();
-        // Refresh conversations to update last message
-        await loadConversations();
-        return result;
-      } else {
-        throw new Error('Failed to add message');
-      }
+      // Refresh conversations to update last message
+      await loadConversations();
+      return result;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');
       console.error('Error adding message:', err);
       return null;
     }
-  }, [user?.id, loadConversations]);
+  }, [userId, loadConversations]);
 
   return {
     conversations: conversations || [],

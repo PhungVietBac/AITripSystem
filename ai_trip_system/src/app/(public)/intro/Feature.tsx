@@ -1,43 +1,112 @@
-export default function Contents() {
+'use client'
+import { useEffect, useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
+
+export default function Feature() {
+  const [isVisible, setIsVisible] = useState(false)
+  const sectionRef = useRef<HTMLDivElement>(null)
+  const router = useRouter()
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true)
+        }
+      },
+      { threshold: 0.1 }
+    )
+
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current)
+    }
+
+    return () => observer.disconnect()
+  }, [])
+
   return (
     <div
+      ref={sectionRef}
       id="features"
-      className="mx-auto max-w-full py-24 sm:px-6 sm:py-32 lg:px-8 bg-transparent flex items-center justify-center"
+      className="py-24 sm:py-24 bg-transparent"
     >
-      <div className="relative isolate overflow-hidden w-7xl bg-cyan-600 backdrop-blur-md px-6 pt-16 shadow-2xl sm:rounded-3xl sm:px-16 md:pt-24 lg:flex lg:gap-x-20 lg:px-24 lg:pt-0">
-        <div className="mx-auto max-w-md text-center lg:mx-0 lg:flex-auto lg:py-32 lg:text-left">
-          <h2 className="text-3xl font-semibold tracking-tight text-balance text-white sm:text-4xl">
-            Du lịch thông minh với Explavue!
+      <div className="mx-auto max-w-7xl px-6 lg:px-8">
+        {/* Header */}
+        <div className={`text-center mb-14 transition-all duration-1000 ${
+          isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
+        }`}>
+          <h2 className="text-4xl font-bold text-white sm:text-5xl">
+            Trải nghiệm với <span className="text-[#FFD700] font-['PlaywriteDKLoopet']">Explavue!</span>
           </h2>
-          <p className="mt-6 text-lg/8 text-pretty text-gray-300">
-            Hệ thống đề xuất lộ trình du lịch thông minh dựa trên AI. Explavue
-            giúp bạn tiết kiệm thời gian và công sức trong việc lên kế hoạch cho
-            chuyến đi. Với nền tảng của chúng tôi, bạn có thể dễ dàng tìm kiếm,
-            so sánh và đặt các dịch vụ du lịch chỉ trong vài phút.
-          </p>
-          <div className="mt-10 flex items-center justify-center gap-x-6 lg:justify-start">
-            <a
-              href="/login"
-              className="rounded-md bg-white px-3.5 py-2.5 text-sm font-semibold text-gray-900 shadow-xs hover:bg-gray-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-            >
-              Bắt đầu ngay! <span aria-hidden="true">→</span>
-            </a>
-            <a
-              href="/home"
-              className="text-sm font-semibold text-white hover:text-gray-200"
-            >
-              Khám phá ngay <span aria-hidden="true">→</span>
-            </a>
+        </div>
+
+        {/* Main Content Grid */}
+        <div className={`grid grid-cols-1 lg:grid-cols-3 gap-8 items-start transition-all duration-1000 delay-300 ${
+          isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
+        }`}>
+
+          {/* Left Column*/}
+          <div className="bg-white rounded-2xl shadow-lg p-4 border-[0.5px] border-gray-200 hover:shadow-xl hover:scale-105 transition-all duration-300 cursor-pointer">
+            <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
+              <img
+                src="/destinations/sapa.jpg"
+                alt="Sapa"
+                className="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
+              />
+            </div>
+          </div>
+
+          {/* Center Column */}
+          <div className="bg-white rounded-2xl shadow-lg p-4 border-[0.5px] border-gray-200 hover:shadow-xl hover:scale-105 transition-all duration-300 cursor-pointer">
+            <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
+              <img
+                src="/destinations/halong.jpg"
+                alt="Hạ Long"
+                className="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
+              />
+            </div>
+          </div>
+
+          {/* Right Column */}
+          <div className="bg-white rounded-2xl shadow-lg p-4 border-[0.5px] border-gray-200 hover:shadow-xl hover:scale-105 transition-all duration-300 cursor-pointer">
+            <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
+              <img
+                src="/destinations/hoian.jpg"
+                alt="Hội An"
+                className="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
+              />
+            </div>
           </div>
         </div>
-        <div className="relative mt-16 h-80 lg:mt-8">
-          <img
-            alt="Sapa"
-            src="/destinations/sapa.jpg"
-            width={1824}
-            height={1080}
-            className="absolute top-15 left-0 w-[57rem] max-w-none rounded-md bg-white/5 ring-1 ring-white/10"
-          />
+
+        {/* Feature Descriptions */}
+        <div className={`grid grid-cols-1 md:grid-cols-3 gap-8 mt-8 transition-all duration-1000 delay-600 ${
+          isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
+        }`}>
+          <div className="text-center">
+            <h3 className="text-xl font-semibold text-white mb-2">Lên lịch trình đúng ý</h3>
+            <p className="text-gray-200">theo sở thích của riêng bạn</p>
+          </div>
+          <div className="text-center">
+            <h3 className="text-xl font-semibold text-white mb-2">Tích hợp bản đồ</h3>
+            <p className="text-gray-200">gợi ý đường đi ngắn nhất</p>
+          </div>
+          <div className="text-center">
+            <h3 className="text-xl font-semibold text-white mb-2">Nhận ngay Combo ưu đãi đến 40%</h3>
+            <p className="text-gray-200">khi mua hoạt động vui chơi trên lịch trình</p>
+          </div>
+        </div>
+
+        {/* CTA Button */}
+        <div className={`text-center mt-9 transition-all duration-1000 delay-900 ${
+          isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
+        }`}>
+          <button
+            onClick={() => router.push('/login')}
+            className="bg-[#FFD700] hover:bg-[#FFC107] text-black font-semibold px-8 py-4 rounded-full transition-colors duration-200 shadow-lg cursor-pointer"
+          >
+            ✨ Tạo lịch trình ngay !
+          </button>
         </div>
       </div>
     </div>
