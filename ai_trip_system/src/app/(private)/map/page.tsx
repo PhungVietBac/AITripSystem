@@ -1,14 +1,6 @@
-// src/app/map/page.tsx
 "use client";
 import React, { useState, useEffect, useRef } from "react";
-import {
-  FaUtensils,
-  FaHotel,
-  FaLandmark,
-  FaRoute,
-  FaSearch,
-  FaUmbrellaBeach,
-} from "react-icons/fa";
+import { FaRoute, FaSearch, FaTimes, FaCar, FaWalking, FaBus, FaMotorcycle, FaBicycle } from "react-icons/fa";
 import dynamic from "next/dynamic";
 
 const MapView = dynamic(() => import("@/components/Map"), {
@@ -16,14 +8,15 @@ const MapView = dynamic(() => import("@/components/Map"), {
 });
 
 export default function MapPage() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false); // Trạng thái menu mở rộng
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [showRouteFields, setShowRouteFields] = useState(false);
+  const [transportMode, setTransportMode] = useState<"car" | "walk" | "bus" | "motorcycle" | "bicycle">("car");
   const menuRef = useRef<HTMLDivElement>(null);
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
 
-  // Đóng menu khi nhấn ra ngoài
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
@@ -40,121 +33,125 @@ export default function MapPage() {
     };
   }, [isMenuOpen]);
 
-  const [hoveredLocation, setHoveredLocation] = useState<string | null>(null);
-
   return (
     <div className="min-h-screen flex flex-col">
-      <main className="flex-grow container mx-auto px-0.5 py-2 w-full">
-        <h1 className="text-2xl font-bold text-blue-900 mb-6 mt-3">Bản đồ</h1>
-        <div className="bg-white rounded-lg p-6 shadow-sm flex flex-col md:flex-row items-center gap-6 mb-0">
-          {/* Nhóm thanh tìm kiếm và nút Lộ trình */}
-          <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto flex-grow">
-            {/* Thanh tìm kiếm */}
-            <form className="relative flex-grow w-full md:w-auto">
-              <input
-                type="text"
-                placeholder="Tìm kiếm trên bản đồ"
-                className="w-full p-3 pr-12 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-700"
-              />
-              {/* Nút tìm kiếm */}
+      <main className="flex-grow w-full px-0">
+        <h1 className="text-2xl font-bold text-blue-900 mb-4 mt-4 px-6">Bản đồ</h1>
+
+        <div className="w-full px-6">
+          <div className="bg-white rounded-lg p-4 shadow-sm flex flex-col gap-4 relative">
+
+            {/* Nút đóng */}
+            {showRouteFields && (
               <button
-                type="submit"
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-blue-500"
+                onClick={() => setShowRouteFields(false)}
+                className="absolute top-3 right-3 text-gray-500 hover:text-red-500"
               >
-                <FaSearch className="w-5 h-5 mr-2" />
+                <FaTimes className="w-4 h-4" />
               </button>
-            </form>
+            )}
 
-            {/* Nút Lộ trình */}
-            <button className="flex items-center px-3 py-2 bg-teal-500 hover:bg-teal-700 text-white rounded-lg transition-colors duration-300 text-center gap-2">
-              <FaRoute />
-              <span className="text-sm">Lộ trình</span>
-            </button>
-          </div>
+            {/* Thanh tìm kiếm hoặc input lộ trình */}
+            {!showRouteFields ? (
+              <div className="flex flex-col md:flex-row gap-4">
+                <form className="relative flex-grow h-[48px]">
+                  <input
+                    type="text"
+                    placeholder="Tìm kiếm trên bản đồ"
+                    className="w-full h-full p-3 pr-12 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-700"
+                  />
+                  <button
+                    type="submit"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-blue-500"
+                  >
+                    <FaSearch className="w-5 h-5" />
+                  </button>
+                </form>
 
-          {/* 4 nút trên máy tính */}
-          <div className="hidden md:flex flex-wrap justify-end gap-2">
-            <button className="flex items-center px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors duration-300">
-              <FaUtensils className="w-5 h-5 mr-2" />
-              <span className="text-sm">Nhà hàng</span>
-            </button>
-            <button className="flex items-center px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors duration-300">
-              <FaHotel className="w-5 h-5 mr-2" />
-              <span className="text-sm">Khách sạn</span>
-            </button>
-            <button className="flex items-center px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors duration-300">
-              <FaUmbrellaBeach className="w-5 h-5 mr-2" />
-              <span className="text-sm">Đi chơi</span>
-            </button>
-            <button className="flex items-center px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors duration-300">
-              <FaLandmark className="w-5 h-5 mr-2" />
-              <span className="text-sm">Tham quan</span>
-            </button>
-          </div>
-
-          {/* Nút menu trên mobile */}
-          <div className="relative md:hidden" ref={menuRef}>
-            <button
-              onClick={toggleMenu}
-              className="flex items-center px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors duration-300"
-              aria-label="Mở menu danh mục"
-            >
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M4 6h16M4 12h16m-7 6h7"
-                />
-              </svg>
-            </button>
-            <div
-              className={`absolute top-12 right-0 bg-white min-w-[160px] shadow-lg rounded-lg z-10 transition-all duration-300 transform -translate-y-2 ${
-                isMenuOpen ? "opacity-100 translate-y-0" : "opacity-0 hidden"
-              }`}
-            >
-              <div className="flex flex-col">
                 <button
-                  onClick={() => setIsMenuOpen(false)}
-                  className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-t-lg"
+                  onClick={() => setShowRouteFields(true)}
+                  className="flex items-center gap-2 h-[48px] px-4 bg-[#000080] hover:bg-[#00BFFF] text-white rounded-lg transition-colors duration-300"
                 >
-                  <FaUtensils className="w-5 h-5 mr-2" />
-                  Nhà hàng
-                </button>
-                <button
-                  onClick={() => setIsMenuOpen(false)}
-                  className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100"
-                >
-                  <FaHotel className="w-5 h-5 mr-2" />
-                  Khách sạn
-                </button>
-                <button
-                  onClick={() => setIsMenuOpen(false)}
-                  className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100"
-                >
-                  <FaUmbrellaBeach className="w-5 h-5 mr-2" />
-                  Đi chơi
-                </button>
-                <button
-                  onClick={() => setIsMenuOpen(false)}
-                  className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-b-lg"
-                >
-                  <FaLandmark className="w-5 h-5 mr-2" />
-                  Tham quan
+                  <FaRoute className="w-4 h-4" />
+                  <span className="text-sm leading-none">Lộ trình</span>
                 </button>
               </div>
-            </div>
+            ) : (
+              <>
+                {/* Tabs phương tiện di chuyển */}
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setTransportMode("car")}
+                    className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm border ${transportMode === "car" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700"}`}
+                  >
+                    <FaCar /> Ô tô
+                  </button>
+                  <button
+                    onClick={() => setTransportMode("walk")}
+                    className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm border ${transportMode === "walk" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700"}`}
+                  >
+                    <FaWalking /> Đi bộ
+                  </button>
+                  <button
+                    onClick={() => setTransportMode("bus")}
+                    className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm border ${transportMode === "bus" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700"}`}
+                  >
+                    <FaBus /> Xe buýt
+                  </button>
+                  <button
+                    onClick={() => setTransportMode("motorcycle")}
+                    className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm border ${transportMode === "motorcycle" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700"}`}
+                  >
+                    <FaMotorcycle /> Xe máy
+                  </button>
+                  <button
+                    onClick={() => setTransportMode("bicycle")}
+                    className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm border ${transportMode === "bicycle" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700"}`}
+                  >
+                    <FaBicycle /> Xe đạp
+                  </button>
+                </div>
+
+                {/* Hai input: điểm bắt đầu - điểm kết thúc */}
+                <div className="flex flex-col gap-3">
+                  <div className="relative h-[48px]">
+                    <input
+                      type="text"
+                      placeholder="Bạn muốn bắt đầu từ đâu?"
+                      className="w-full h-full p-3 pr-12 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-700"
+                    />
+                    <button
+                      type="button"
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-blue-500"
+                    >
+                      <FaSearch className="w-5 h-5" />
+                    </button>
+                  </div>
+                            
+                  <div className="relative h-[48px]">
+                    <input
+                      type="text"
+                      placeholder="Bạn muốn đi đến đâu?"
+                      className="w-full h-full p-3 pr-12 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-700"
+                    />
+                    <button
+                      type="button"
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-blue-500"
+                    >
+                      <FaSearch className="w-5 h-5" />
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </div>
 
-        <div className="bg-white rounded-lg p-6 shadow-sm mt-6">
-          <MapView />
+        {/* Bản đồ */}
+        <div className="w-full mt-6 px-6 pb-3">
+          <div className="w-full h-[600px] bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
+            <MapView />
+          </div>
         </div>
       </main>
     </div>

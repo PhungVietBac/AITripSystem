@@ -12,6 +12,7 @@ interface JwtPayload {
 
 export function verifyToken(token: string): JwtPayload | null {
   try {
+    console.log("Verifying token with secret:", SECRET_KEY);
     const decoded = jwt.verify(token, SECRET_KEY) as JwtPayload;
     return decoded;
   } catch (error) {
