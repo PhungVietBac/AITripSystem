@@ -1,14 +1,15 @@
 "use client";
 
+
 import { useState, useEffect, useRef } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { FaMapMarkerAlt, FaLocationArrow, FaTimes } from "react-icons/fa";
+import { FaMapMarkerAlt, FaLocationArrow } from "react-icons/fa";
 import useSWR from "swr";
 import { useAuth } from "@/context/AuthContext";
-import PlaceCardComponent from "./PlaceCardComponent";
 
+// Fix default icon issue
 // Fix default icon issue
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -18,9 +19,11 @@ L.Icon.Default.mergeOptions({
 });
 
 // Vietnam bounds
+// Vietnam bounds
 const VIETNAM_CENTER: [number, number] = [14.0583, 108.2772];
 const VIETNAM_ZOOM = 6;
 
+// Custom icons
 // Custom icons
 const userLocationIcon = new L.Icon({
   iconUrl:
@@ -36,16 +39,19 @@ const userLocationIcon = new L.Icon({
   popupAnchor: [0, -12],
 });
 
-const getPlaceIcon = (isSelected: boolean = false) => {
-  const color = isSelected ? "#00FF00" : "#000000";
-  const svgString = `
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
-      <circle cx="12" cy="12" r="10" fill="${color}" stroke="#ffffff" stroke-width="2"/>
-      <circle cx="12" cy="12" r="4" fill="#ffffff"/>
-    </svg>
-  `.trim(); // Loại bỏ khoảng trắng thừa
+const getPlaceIcon = (type: number) => {
+  let color = "#000000";
+  if (type === 0) color = "#FF6347"; // Red for restaurant
+  if (type === 2) color = "#FFD700"; // Gold for landmark
   return new L.Icon({
-    iconUrl: "data:image/svg+xml;base64," + btoa(svgString),
+    iconUrl:
+      "data:image/svg+xml;base64," +
+      btoa(`
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+        <circle cx="12" cy="12" r="10" fill="${color}" stroke="#ffffff" stroke-width="2"/>
+        <circle cx="12" cy="12" r="4" fill="#ffffff"/>
+      </svg>
+    `),
     iconSize: [24, 24],
     iconAnchor: [12, 24],
     popupAnchor: [0, -24],
@@ -78,20 +84,11 @@ interface Place {
   lat: number;
   lon: number;
   idplace: string;
-  image?: string;
 }
-
-// Component để xử lý sự kiện click trên bản đồ
-const MapClickHandler = ({ onMarkerClick }: { onMarkerClick: (place: Place) => void }) => {
-  const map = useMapEvents({
-    click() { 
-    },
-  });
-  return null;
-};
 
 const MapComponent = () => {
   const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
+  const [locationPermission, setLocationPermission] = useState<"prompt" | "granted" | "denied">("prompt");
   const [locationPermission, setLocationPermission] = useState<"prompt" | "granted" | "denied">("prompt");
   const [mapCenter, setMapCenter] = useState<[number, number]>(VIETNAM_CENTER);
   const [mapZoom, setMapZoom] = useState(VIETNAM_ZOOM);
@@ -103,35 +100,32 @@ const MapComponent = () => {
   const [toast, setToast] = useState({ visible: false, message: "", type: "success" as "success" | "error" | "info" });
   const mapRef = useRef<L.Map | null>(null);
   const [mapKey, setMapKey] = useState(() => Math.random().toString(36).substr(2, 9));
-  const { token, isLoggedIn } = useAuth();
+  const { token } = useAuth(); // Lấy token từ AuthContext
 
   const fetcher = async (url: string) => {
     if (!token) throw new Error("No authorization token found");
+
     const response = await fetch(url, {
-      headers: { Authorization: `Bearer ${token}` },
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     });
+
     if (!response.ok) throw new Error("Failed to fetch places");
     return response.json();
   };
 
-  const { data: initialPlaces, error: initialError, isLoading: initialLoading } = useSWR<Place[]>(
+  const { data: places, error, isLoading } = useSWR<Place[]>(
     "https://aitripsystem-api.onrender.com/api/v1/places/all",
     fetcher
   );
 
   useEffect(() => {
-    if (initialPlaces && initialPlaces.length > 0) {
-      setPlaces(initialPlaces);
-      setMapCenter([initialPlaces[0].lat, initialPlaces[0].lon]);
+    if (places && places.length > 0) {
+      setMapCenter([places[0].lat, places[0].lon]);
       setMapZoom(6);
     }
-  }, [initialPlaces]);
-
-  useEffect(() => {
-    if (!isLoggedIn) {
-      window.location.href = "/login";
-    }
-  }, [isLoggedIn]);
+  }, [places]);
 
   const checkLocationPermission = async () => {
     if (!navigator.permissions) {
@@ -143,10 +137,14 @@ const MapComponent = () => {
       if (permission.state === "prompt") requestLocation();
       else if (permission.state === "granted") requestLocation();
       else {
+      const permission = await navigator.permissions.query({ name: "geolocation" });
+      if (permission.state === "prompt") requestLocation();
+      else if (permission.state === "granted") requestLocation();
+      else {
         setLocationPermission("denied");
-        showToast("Quyền truy cập vị trí đã bị từ chối. Vui lòng bật lại trong cài đặt trình duyệt.", "error");
+        alert("Quyền truy cập vị trí đã bị từ chối. Vui lòng bật lại trong cài đặt trình duyệt.");
       }
-    } catch {
+    } catch (error) {
       requestLocation();
     }
   };
@@ -162,7 +160,9 @@ const MapComponent = () => {
       (position) => {
         const { latitude, longitude, accuracy } = position.coords;
         setUserLocation({ lat: latitude, lng: longitude, accuracy });
+        setUserLocation({ lat: latitude, lng: longitude, accuracy });
         setMapCenter([latitude, longitude]);
+        setMapZoom(13);
         setMapZoom(13);
         setLocationPermission("granted");
         setIsLocating(false);
@@ -174,6 +174,7 @@ const MapComponent = () => {
         let errorMessage = "Không thể lấy vị trí của bạn.";
         switch (error.code) {
           case error.PERMISSION_DENIED:
+            errorMessage = "Bạn đã từ chối chia sẻ vị trí. Vui lòng bật lại trong cài đặt trình duyệt.";
             errorMessage = "Bạn đã từ chối chia sẻ vị trí. Vui lòng bật lại trong cài đặt trình duyệt.";
             break;
           case error.POSITION_UNAVAILABLE:
@@ -189,156 +190,105 @@ const MapComponent = () => {
     );
   };
 
-  const handleMarkerClick = (place: Place) => {
-    setSelectedPlace(place);
-    setMapCenter([place.lat, place.lon]);
-    setMapZoom(12); // Phóng to khi chọn và đưa marker vào giữa
-    setShowPlaces(true);
-  };
+  useEffect(() => {
+    return () => {
+      setMapKey(Math.random().toString(36).substr(2, 9));
+    };
+  }, []);
 
-  const showToast = (message: string, type: "success" | "error" | "info") => {
-    setToast({ visible: true, message, type });
-    setTimeout(() => setToast((prev) => ({ ...prev, visible: false })), 5000);
-  };
-
-  if (initialLoading) return <div className="h-full w-full flex items-center justify-center bg-gray-100">Đang tải dữ liệu...</div>;
-  if (initialError) return <div className="h-full w-full flex items-center justify-center bg-gray-100">Lỗi: {initialError.message}</div>;
+  if (isLoading) return <div className="h-full w-full flex items-center justify-center bg-gray-100">Đang tải dữ liệu...</div>;
+  if (error) return <div className="h-full w-full flex items-center justify-center bg-gray-100">Lỗi: {error.message}</div>;
 
   return (
-    <div className="min-h-screen bg-blue-50">
-      <div className="p-6">
-        <div className="mb-4 flex justify-between items-center"></div>
-        <div className="bg-white rounded-xl shadow-md overflow-hidden">
-          <div className="flex">
-            <div className={`transition-all duration-300 ${showPlaces ? "w-2/3" : "w-full"} relative overflow-hidden`}>
-              <div className="map-container relative h-[calc(100vh-180px)] w-full">
-                <MapContainer
-                  key={mapKey}
-                  center={mapCenter}
-                  zoom={mapZoom}
-                  scrollWheelZoom={true}
-                  style={{ height: "100%", width: "100%" }}
-                  className="map-view z-0"
-                  ref={mapRef}
-                >
-                  <TileLayer
-                    attribution='© <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors'
-                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                  />
-                  <MapUpdater center={mapCenter} zoom={mapZoom} />
-                  <MapClickHandler onMarkerClick={handleMarkerClick} />
-                  {userLocation && (
-                    <Marker position={[userLocation.lat, userLocation.lng]} icon={userLocationIcon}>
-                      <Popup>
-                        <div className="text-center">
-                          <FaMapMarkerAlt className="text-blue-500 mx-auto mb-1" />
-                          <div className="font-semibold text-sm">Vị trí của bạn</div>
-                          {userLocation.accuracy && (
-                            <div className="text-xs text-gray-600">Độ chính xác: ~{Math.round(userLocation.accuracy)}m</div>
-                          )}
-                        </div>
-                      </Popup>
-                    </Marker>
-                  )}
-                  {places &&
-                    places.map((place) => (
-                      <Marker
-                        key={place.idplace}
-                        position={[place.lat, place.lon]}
-                        icon={getPlaceIcon(selectedPlace?.idplace === place.idplace)}
-                        eventHandlers={{
-                          click: () => handleMarkerClick(place),
-                          mouseover: (e) => e.target.openPopup(),
-                          mouseout: (e) => e.target.closePopup(),
-                        }}
-                      >
-                        <Popup
-                          autoClose={false}
-                          closeOnClick={false}
-                          className="custom-popup max-w-xs p-2"
-                        >
-                          <div className="flex items-center space-x-2">
-                            {place.image && (
-                              <img
-                                src={place.image}
-                                alt={place.name}
-                                className="w-12 h-12 object-cover rounded"
-                              />
-                            )}
-                            <span className="text-sm font-medium">{place.name}</span>
-                          </div>
-                        </Popup>
-                      </Marker>
-                    ))}
-                </MapContainer>
-                <div className="absolute bottom-4 right-4 flex flex-col gap-2">
-                  <button
-                    onClick={checkLocationPermission}
-                    disabled={isLocating}
-                    className={`p-2 rounded-lg shadow-md hover:shadow-lg transition-shadow border border-gray-200 disabled:opacity-50 ${
-                      userLocation ? "bg-blue-500 text-white" : "bg-white text-gray-600"
-                    }`}
-                    title={isLocating ? "Đang lấy vị trí..." : userLocation ? "Cập nhật vị trí" : "Chia sẻ vị trí của bạn"}
-                  >
-                    {isLocating ? (
-                      <div className={`w-4 h-4 border ${userLocation ? "border-white border-t-transparent" : "border-gray-600 border-t-transparent"} rounded-full animate-spin`}></div>
-                    ) : (
-                      <FaLocationArrow className="w-4 h-4" />
-                    )}
-                  </button>
-                  <button
-                    onClick={() => {
-                      setMapCenter(VIETNAM_CENTER);
-                      setShowPlaces(false);
-                      setSelectedPlace(null);
-                    }}
-                    className="bg-white p-2 rounded-lg shadow-md hover:shadow-lg transition-shadow border border-gray-200"
-                    title="Xem toàn bộ Việt Nam"
-                  >
-                    <FaMapMarkerAlt className="text-gray-600 w-4 h-4" />
-                  </button>
-                  {showPlaces && (
-                    <button
-                      onClick={() => setShowPlaces(false)}
-                      className="bg-white p-2 rounded-lg shadow-md hover:shadow-lg transition-shadow border border-gray-200"
-                      title="Hủy chọn"
-                    >
-                      <FaTimes className="text-gray-600 w-4 h-4" />
-                    </button>
-                  )}
-                </div>
-                <div className="absolute bottom-4 left-4 bg-white p-3 rounded-lg shadow-md border border-gray-200">
-                  {userLocation && (
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full bg-blue-500 border-2 border-white shadow-sm"></div>
-                      <span className="text-xs text-gray-700">Vị trí của bạn</span>
-                    </div>
-                  )}
-                  <div className="text-xs text-gray-500 mt-1">
-                    {userLocation ? "Nhấp vào marker để xem chi tiết" : "Nhấp nút định vị để chia sẻ vị trí"}
-                  </div>
-                </div>
+    <div className="map-container relative h-full">
+      <MapContainer
+        key={mapKey}
+        center={VIETNAM_CENTER}
+        zoom={VIETNAM_ZOOM}
+        scrollWheelZoom={true}
+        style={{ height: "100%", width: "100%" }}
+        className="map-view z-0"
+        ref={mapRef}
+      >
+        <TileLayer
+          attribution='© <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
+        {mapCenter[0] !== undefined && mapCenter[1] !== undefined && (
+          <MapUpdater center={mapCenter} zoom={mapZoom} />
+        )}
+        {userLocation && (
+          <Marker position={[userLocation.lat, userLocation.lng]} icon={userLocationIcon}>
+            <Popup>
+              <div className="text-center">
+                <FaMapMarkerAlt className="text-blue-500 mx-auto mb-1" />
+                <div className="font-semibold text-sm">Vị trí của bạn</div>
+                {userLocation.accuracy && (
+                  <div className="text-xs text-gray-600">Độ chính xác: ~{Math.round(userLocation.accuracy)}m</div>
+                )}
               </div>
+            </Popup>
+          </Marker>
+        )}
+        {places &&
+          places.map((place) => (
+            <Marker key={place.idplace} position={[place.lat, place.lon]} icon={getPlaceIcon(place.type)}>
+              <Popup>
+                <div className="text-sm">
+                  <h4 className="font-medium">{place.name}</h4>
+                  <p className="text-xs text-gray-600">{place.address}</p>
+                  <p className="text-xs text-gray-600">Đánh giá: {place.rating}</p>
+                  <p className="text-xs text-gray-600">{place.description}</p>
+                </div>
+              </Popup>
+            </Marker>
+          ))}
+      </MapContainer>
+      <div className="absolute bottom-4 right-4 flex flex-col gap-2">
+        <button
+          onClick={checkLocationPermission}
+          disabled={isLocating}
+          className={`p-2 rounded-lg shadow-md hover:shadow-lg transition-shadow border border-gray-200 disabled:opacity-50 ${
+            userLocation ? "bg-blue-500 text-white" : "bg-white text-gray-600"
+          }`}
+          title={isLocating ? "Đang lấy vị trí..." : userLocation ? "Cập nhật vị trí" : "Chia sẻ vị trí của bạn"}
+        >
+          {isLocating ? (
+            <div className={`w-4 h-4 border ${userLocation ? "border-white border-t-transparent" : "border-gray-600 border-t-transparent"} rounded-full animate-spin`}></div>
+          ) : (
+            <FaLocationArrow className="w-4 h-4" />
+          )}
+        </button>
+        <button
+          onClick={() => {
+            setMapCenter(VIETNAM_CENTER);
+            setMapZoom(VIETNAM_ZOOM);
+          }}
+          className="bg-white p-2 rounded-lg shadow-md hover:shadow-lg transition-shadow border border-gray-200"
+          title="Xem toàn bộ Việt Nam"
+        >
+          <FaMapMarkerAlt className="text-gray-600 w-4 h-4" />
+        </button>
+      </div>
+      <div className="absolute bottom-4 left-4 bg-white p-3 rounded-lg shadow-md border border-gray-200">
+        <h4 className="text-xs font-semibold text-gray-800 mb-2">Bản đồ Việt Nam</h4>
+        <div className="flex flex-col gap-1">
+          {userLocation && (
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-blue-500 border-2 border-white shadow-sm"></div>
+              <span className="text-xs text-gray-700">Vị trí của bạn</span>
             </div>
-            {showPlaces && selectedPlace && (
-              <div className="w-1/3 border-l border-gray-200 flex flex-col">
-                <div className="p-4 border-b bg-white">
-                  <div className="flex items-center justify-between">
-                    <div></div>
-                    <FaTimes
-                      onClick={() => {
-                        setShowPlaces(false);
-                        setSelectedPlace(null);
-                      }}
-                      className="w-5 h-5 text-blue-500 cursor-pointer hover:text-blue-800"
-                    />
-                  </div>
-                </div>
-                <div className="flex-1 h-[calc(100vh-180px)] max-h-[calc(100vh-180px)] overflow-y-scroll bg-white p-4">
-                  <PlaceCardComponent place={selectedPlace} />
-                </div>
-              </div>
-            )}
+          )}
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full bg-red-500 border-2 border-white shadow-sm"></div>
+            <span className="text-xs text-gray-700">Nhà hàng</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full bg-yellow-500 border-2 border-white shadow-sm"></div>
+            <span className="text-xs text-gray-700">Địa danh</span>
+          </div>
+          <div className="text-xs text-gray-500 mt-1">
+            {userLocation ? "Nhấp vào marker để xem chi tiết" : "Nhấp nút định vị để chia sẻ vị trí"}
           </div>
         </div>
       </div>
@@ -357,6 +307,8 @@ const MapComponent = () => {
 
 // Wrapper component
 const Map = () => {
+// Wrapper component
+const Map = () => {
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -371,6 +323,7 @@ const Map = () => {
     );
   }
 
+  return <MapComponent />;
   return <MapComponent />;
 };
 
