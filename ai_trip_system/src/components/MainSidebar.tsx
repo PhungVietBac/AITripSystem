@@ -16,7 +16,8 @@ import {
   MapPinIcon,
   CalendarDaysIcon,
   UserIcon,
-  CogIcon
+  CogIcon,
+  MagnifyingGlassIcon
 } from '@heroicons/react/24/outline';
 import { useConversation } from '@/context/ConversationContext';
 import { useAuth } from '@/context/AuthContext';
@@ -112,7 +113,11 @@ export default function MainSidebar({
       label: 'Đặt chỗ của bạn',
       route: '/yourbooking'
     },
-
+    {
+      icon: MagnifyingGlassIcon,
+      label: 'Tìm kiếm',
+      route: '/search'
+    }
   ];
 
   const isActiveRoute = (route: string) => {
@@ -283,7 +288,7 @@ export default function MainSidebar({
                   ? `https://aitripsystem-api.onrender.com/api/v1/proxy_image/?url=${encodeURIComponent(
                       userData.avatar
                     )}`
-                  : "/profile.svg"
+                  : "/images/profile.svg"
               }
               fill
               className="rounded-full object-cover"

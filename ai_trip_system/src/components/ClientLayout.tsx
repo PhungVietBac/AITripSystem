@@ -54,7 +54,8 @@ function ClientLayoutWithAuth({ children }: ClientLayoutProps) {
                         pathname?.startsWith('/detail') ||
                         pathname?.startsWith('/friend') ||
                         pathname?.startsWith('/map') ||
-                        pathname?.startsWith('/result');
+                        pathname?.startsWith('/result') ||
+                        pathname?.startsWith('/search')
 
   // Show sidebar when logged in AND on private route
   const showSidebar = isLoggedIn && isPrivateRoute;
