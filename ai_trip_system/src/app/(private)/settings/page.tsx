@@ -1,19 +1,12 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { getCookie } from 'cookies-next';
-import useSWR, { mutate } from 'swr';
-import { toast, ToastContainer, Slide } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import {
-  FaChevronLeft,
-  FaPalette,
-  FaLanguage,
-  FaBell,
-  FaShield,
-  FaQuestionCircle
-} from 'react-icons/fa';
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { getCookie } from "cookies-next";
+import useSWR, { mutate } from "swr";
+import { toast, ToastContainer, Slide } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { FaChevronLeft, FaPalette, FaLanguage } from "react-icons/fa";
 
 interface UserResponse {
   iduser: string;
@@ -32,7 +25,7 @@ export default function SettingsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [settings, setSettings] = useState({
     theme: 0,
-    language: 0
+    language: 0,
   });
 
   const accessToken = getCookie("token");
@@ -43,7 +36,7 @@ export default function SettingsPage() {
       router.push("/login");
       return;
     }
-  }, []);
+  }, [accessToken, router]);
 
   const fetcher = (url: string) =>
     fetch(url, {
@@ -71,7 +64,7 @@ export default function SettingsPage() {
     if (userData) {
       setSettings({
         theme: userData.theme,
-        language: userData.language
+        language: userData.language,
       });
     }
   }, [userData]);
@@ -106,9 +99,9 @@ export default function SettingsPage() {
       );
 
       if (!response.ok) throw new Error("Failed to update settings");
-      
+
       toast.success("Cài đặt đã được lưu thành công");
-      
+
       await mutate(
         `https://aitripsystem-api.onrender.com/api/v1/users/idUser?lookup=${currentUserID}`
       );
@@ -172,11 +165,16 @@ export default function SettingsPage() {
                     {themeOptions.map((option) => (
                       <button
                         key={option.value}
-                        onClick={() => setSettings(prev => ({ ...prev, theme: option.value }))}
+                        onClick={() =>
+                          setSettings((prev) => ({
+                            ...prev,
+                            theme: option.value,
+                          }))
+                        }
                         className={`p-3 text-sm font-medium rounded-lg border transition-colors ${
                           settings.theme === option.value
-                            ? 'bg-blue-50 border-blue-500 text-blue-700'
-                            : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                            ? "bg-blue-50 border-blue-500 text-blue-700"
+                            : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
                         }`}
                       >
                         {option.label}
@@ -206,11 +204,16 @@ export default function SettingsPage() {
                     {languageOptions.map((option) => (
                       <button
                         key={option.value}
-                        onClick={() => setSettings(prev => ({ ...prev, language: option.value }))}
+                        onClick={() =>
+                          setSettings((prev) => ({
+                            ...prev,
+                            language: option.value,
+                          }))
+                        }
                         className={`p-3 text-sm font-medium rounded-lg border transition-colors ${
                           settings.language === option.value
-                            ? 'bg-green-50 border-green-500 text-green-700'
-                            : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                            ? "bg-green-50 border-green-500 text-green-700"
+                            : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
                         }`}
                       >
                         {option.label}

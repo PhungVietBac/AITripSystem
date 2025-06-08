@@ -40,7 +40,7 @@ export default function MapPage() {
     };
   }, [isMenuOpen]);
 
-  const [hoveredLocation, setHoveredLocation] = useState<string | null>(null);
+  // const [hoveredLocation, setHoveredLocation] = useState<string | null>(null);
 
   return (
     <div className="min-h-screen flex flex-col">

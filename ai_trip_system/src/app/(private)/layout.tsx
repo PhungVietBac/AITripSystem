@@ -6,7 +6,7 @@ export default function PrivateLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { user, loading } = useAuthCheck();
+  const { loading } = useAuthCheck();
   if (loading) return <p>Đang kiểm tra đăng nhập...</p>;
 
   return children;
