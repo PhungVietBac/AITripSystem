@@ -3,7 +3,7 @@
 import { useState, FormEvent } from "react";
 import Loading from "@/components/Loading";
 import Link from "next/link";
-import { setCookie } from "cookies-next";
+import { setCookie } from "cookies-next"; // Sử dụng setCookie
 import { FaEnvelope, FaLock } from "react-icons/fa";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
@@ -52,9 +52,18 @@ export default function LoginForm({ callbackUrl }: LoginFormProps) {
 
       // Store token in cookie and update auth context
       if (data.access_token) {
-        // Use the login function from auth context
+        // Lưu access_token vào cookie
+        setCookie("authToken", data.access_token, {
+          maxAge: 24 * 60 * 60, // 24 giờ
+          path: "/", // Cookie có thể truy cập trên toàn ứng dụng
+          secure: process.env.NODE_ENV === "production", // Chỉ gửi qua HTTPS ở production
+          sameSite: "strict", // Bảo vệ chống CSRF
+        });
+
+        // Cập nhật AuthContext
         login(data.access_token);
 
+        // Lấy profile và lưu userId
         const profileRes = await fetch(`/api/profile`, {
           headers: {
             Authorization: `Bearer ${data.access_token}`,
