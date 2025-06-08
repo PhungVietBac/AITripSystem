@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
-import Image from 'next/image';
-import useSWR from 'swr';
-import { getCookie } from 'cookies-next';
+import { useState, useEffect } from "react";
+import { useRouter, usePathname } from "next/navigation";
+import Image from "next/image";
+import useSWR from "swr";
+import { getCookie } from "cookies-next";
 import {
   ChatBubbleLeftRightIcon,
   MapIcon,
@@ -16,10 +16,10 @@ import {
   MapPinIcon,
   CalendarDaysIcon,
   UserIcon,
-  CogIcon
-} from '@heroicons/react/24/outline';
-import { useConversation } from '@/context/ConversationContext';
-import { useAuth } from '@/context/AuthContext';
+  CogIcon,
+} from "@heroicons/react/24/outline";
+import { useConversation } from "@/context/ConversationContext";
+import { useAuth } from "@/context/AuthContext";
 
 interface MainSidebarProps {
   currentConversationId?: string;
@@ -30,26 +30,22 @@ interface MainSidebarProps {
 export default function MainSidebar({
   currentConversationId,
   onConversationSelect,
-  onNewConversation
+  onNewConversation,
 }: MainSidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
   const [isRecentChatExpanded, setIsRecentChatExpanded] = useState(true);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
-  const [userid, setUserid] = useState<string>('');
+  const [userid, setUserid] = useState<string>("");
 
-  const {
-    conversations,
-    isLoading,
-    createConversation
-  } = useConversation();
+  const { conversations, isLoading, createConversation } = useConversation();
 
   const { logout } = useAuth();
 
   // Get user ID from localStorage
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const storedUserId = localStorage.getItem('current_user_id');
+    if (typeof window !== "undefined") {
+      const storedUserId = localStorage.getItem("current_user_id");
       if (storedUserId) {
         setUserid(storedUserId);
       }
@@ -66,12 +62,10 @@ export default function MainSidebar({
       },
     }).then((res) => res.json());
 
-  const {
-    data: userData,
-    error: userError,
-    isLoading: userLoading,
-  } = useSWR(
-    userid ? `https://aitripsystem-api.onrender.com/api/v1/users/idUser?lookup=${userid}` : null,
+  const { data: userData } = useSWR(
+    userid
+      ? `https://aitripsystem-api.onrender.com/api/v1/users/idUser?lookup=${userid}`
+      : null,
     fetcher,
     {
       revalidateIfStale: false,
@@ -82,37 +76,36 @@ export default function MainSidebar({
 
   const handleNewConversation = async () => {
     try {
-      const newConversation = await createConversation('Cuộc trò chuyện mới');
+      const newConversation = await createConversation("Cuộc trò chuyện mới");
       if (newConversation) {
         onNewConversation();
       }
     } catch (error) {
-      console.error('Error creating conversation:', error);
+      console.error("Error creating conversation:", error);
     }
   };
 
   const menuItems = [
     {
       icon: HomeIcon,
-      label: 'Trang chủ',
-      route: '/home'
+      label: "Trang chủ",
+      route: "/home",
     },
     {
       icon: MapIcon,
-      label: 'Khám phá',
-      route: '/explore'
+      label: "Khám phá",
+      route: "/explore",
     },
     {
       icon: MapPinIcon,
-      label: 'Lên kế hoạch',
-      route: '/trips'
+      label: "Lên kế hoạch",
+      route: "/trips",
     },
     {
       icon: CalendarDaysIcon,
-      label: 'Đặt chỗ của bạn',
-      route: '/yourbooking'
+      label: "Đặt chỗ của bạn",
+      route: "/yourbooking",
     },
-
   ];
 
   const isActiveRoute = (route: string) => {
@@ -124,22 +117,40 @@ export default function MainSidebar({
   };
 
   // Sort conversations by most recent first
-  const sortConversationsByRecent = (conversations: any[]) => {
+  interface Conversation {
+    id: string;
+    title: string;
+    createdAt?: string;
+    updatedAt?: string;
+    lastMessage?: string;
+    // Add other properties as needed
+  }
+
+  const sortConversationsByRecent = (conversations: Conversation[]) => {
     return [...conversations].sort((a, b) => {
-      const dateA = new Date(a.updatedAt || a.createdAt).getTime();
-      const dateB = new Date(b.updatedAt || b.createdAt).getTime();
+      const dateA = new Date(a.updatedAt || a.createdAt || 0).getTime();
+      const dateB = new Date(b.updatedAt || b.createdAt || 0).getTime();
       return dateB - dateA; // Most recent first
     });
   };
 
-  const sortedConversations = sortConversationsByRecent(conversations);
+  const filteredConversations: Conversation[] = conversations.filter(
+    (conv: unknown): conv is Conversation =>
+      typeof conv === "object" &&
+      conv !== null &&
+      typeof (conv as { id?: unknown }).id === "string" &&
+      typeof (conv as { title?: unknown }).title === "string" &&
+      (typeof (conv as { createdAt?: unknown }).createdAt === "string" ||
+        typeof (conv as { updatedAt?: unknown }).updatedAt === "string")
+  );
+  const sortedConversations = sortConversationsByRecent(filteredConversations);
 
   const handleLogout = () => {
     // Use the logout function from AuthContext
     logout();
 
     // Redirect to home page (will show header layout since user is logged out)
-    router.push('/');
+    router.push("/");
   };
 
   const handleProfile = () => {
@@ -152,7 +163,7 @@ export default function MainSidebar({
       {/* Logo Section */}
       <div className="border-b border-gray-200">
         <div
-          onClick={() => handleNavigation('/home')}
+          onClick={() => handleNavigation("/home")}
           className="flex items-center cursor-pointer hover:opacity-80 transition-opacity"
         >
           <div className="w-20 h-20 relative">
@@ -177,7 +188,7 @@ export default function MainSidebar({
         {menuItems.map((item, index) => {
           const Icon = item.icon;
           const isActive = item.route ? isActiveRoute(item.route) : false;
-          
+
           return (
             <div
               key={index}
@@ -188,8 +199,8 @@ export default function MainSidebar({
               }}
               className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-200 ${
                 isActive
-                  ? 'bg-blue-100 text-blue-700 border border-blue-200'
-                  : 'hover:bg-gray-100 text-gray-700'
+                  ? "bg-blue-100 text-blue-700 border border-blue-200"
+                  : "hover:bg-gray-100 text-gray-700"
               }`}
             >
               <Icon className="h-5 w-5" />
@@ -222,7 +233,10 @@ export default function MainSidebar({
             {isLoading ? (
               <div className="space-y-2">
                 {[...Array(3)].map((_, i) => (
-                  <div key={i} className="h-10 bg-gray-200 rounded animate-pulse" />
+                  <div
+                    key={i}
+                    className="h-10 bg-gray-200 rounded animate-pulse"
+                  />
                 ))}
               </div>
             ) : conversations.length === 0 ? (
@@ -244,25 +258,25 @@ export default function MainSidebar({
 
                 <div className="space-y-1">
                   {sortedConversations.map((conversation) => (
-                      <div
-                        key={conversation.id}
-                        onClick={() => onConversationSelect(conversation.id)}
-                        className={`p-2 rounded-lg cursor-pointer transition-colors text-sm ${
-                          conversation.id === currentConversationId
-                            ? 'bg-blue-100 text-blue-700'
-                            : 'hover:bg-gray-100 text-gray-700'
-                        }`}
-                      >
-                        <div className="truncate font-medium">
-                          {conversation.title}
-                        </div>
-                        {conversation.lastMessage && (
-                          <div className="text-xs text-gray-500 mt-1 truncate">
-                            {conversation.lastMessage}
-                          </div>
-                        )}
+                    <div
+                      key={conversation.id}
+                      onClick={() => onConversationSelect(conversation.id)}
+                      className={`p-2 rounded-lg cursor-pointer transition-colors text-sm ${
+                        conversation.id === currentConversationId
+                          ? "bg-blue-100 text-blue-700"
+                          : "hover:bg-gray-100 text-gray-700"
+                      }`}
+                    >
+                      <div className="truncate font-medium">
+                        {conversation.title}
                       </div>
-                    ))}
+                      {conversation.lastMessage && (
+                        <div className="text-xs text-gray-500 mt-1 truncate">
+                          {conversation.lastMessage}
+                        </div>
+                      )}
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
@@ -292,10 +306,14 @@ export default function MainSidebar({
           </div>
           <div className="flex-1">
             <div className="font-medium text-gray-800">
-              {userData?.username || 'User'}
+              {userData?.username || "User"}
             </div>
           </div>
-          <ChevronDownIcon className={`h-4 w-4 text-gray-500 transition-transform ${isProfileDropdownOpen ? 'rotate-180' : ''}`} />
+          <ChevronDownIcon
+            className={`h-4 w-4 text-gray-500 transition-transform ${
+              isProfileDropdownOpen ? "rotate-180" : ""
+            }`}
+          />
         </div>
 
         {/* Profile Dropdown */}
@@ -311,7 +329,7 @@ export default function MainSidebar({
             <div
               onClick={() => {
                 setIsProfileDropdownOpen(false);
-                router.push('/settings');
+                router.push("/settings");
               }}
               className="flex items-center gap-3 p-3 hover:bg-gray-50 cursor-pointer transition-colors border-b border-gray-100"
             >
@@ -322,8 +340,18 @@ export default function MainSidebar({
               onClick={handleLogout}
               className="flex items-center gap-3 p-3 hover:bg-red-50 cursor-pointer transition-colors text-red-600"
             >
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              <svg
+                className="h-5 w-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                />
               </svg>
               <span className="font-medium">Đăng xuất</span>
             </div>

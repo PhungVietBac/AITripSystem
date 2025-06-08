@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 export default function Contents() {
   return (
     <div className="mx-auto max-w-full py-24 sm:px-6 sm:py-32 lg:px-8 bg-transparent flex items-center justify-center">
@@ -24,7 +26,7 @@ export default function Contents() {
           </div>
         </div>
         <div className="relative mt-16 h-80 lg:mt-8">
-          <img
+          <Image
             alt="Sapa"
             src="/destinations/sapa.jpg"
             width={1824}
