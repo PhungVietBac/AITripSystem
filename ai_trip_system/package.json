@@ -14,6 +14,7 @@
     "@supabase/supabase-js": "^2.49.4",
     "animejs": "^4.0.2",
     "cookies-next": "^5.1.0",
+    "date-fns": "^4.1.0",
     "framer-motion": "^12.6.3",
     "jsonwebtoken": "^9.0.2",
     "leaflet": "^1.9.4",
@@ -25,7 +26,9 @@
     "react-leaflet": "^5.0.0",
     "react-modal-image": "^2.6.0",
     "react-toastify": "^11.0.5",
-    "swr": "^2.3.3"
+    "swr": "^2.3.3",
+    "moment": "^2.30.1",
+    "qs": "^6.14.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
@@ -39,6 +42,7 @@
     "eslint": "^9",
     "eslint-config-next": "15.2.4",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "@types/qs": "^6.14.0"
   }
 }

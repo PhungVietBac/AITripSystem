@@ -1,16 +1,17 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from "next/server";
 
-const CHATBOT_SERVICE_URL = process.env.CHATBOT_SERVICE_URL || 'http://localhost:5000';
+const CHATBOT_SERVICE_URL =
+  process.env.NEXT_PUBLIC_CHATBOT_SERVICE_URL || "http://localhost:5000";
 
 export async function POST(request: NextRequest) {
   try {
-    const { message, history = [], conversationId, userId } = await request.json();
+    const { message, history = [] } = await request.json();
 
     // Forward the request to the chatbot microservice
     const response = await fetch(`${CHATBOT_SERVICE_URL}/api/chat`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({ message, history }),
     });
@@ -19,11 +20,11 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(data);
   } catch (error) {
-    console.error('Chatbot proxy error:', error);
+    console.error("Chatbot proxy error:", error);
     return NextResponse.json(
       {
         success: false,
-        error: 'Không thể kết nối đến dịch vụ chatbot. Vui lòng thử lại sau.'
+        error: "Không thể kết nối đến dịch vụ chatbot. Vui lòng thử lại sau.",
       },
       { status: 500 }
     );
@@ -38,12 +39,12 @@ export async function GET() {
 
     return NextResponse.json(data);
   } catch (error) {
-    console.error('Chatbot health check error:', error);
+    console.error("Chatbot health check error:", error);
     return NextResponse.json(
       {
-        status: 'error',
+        status: "error",
         initialized: false,
-        message: 'Chatbot service unavailable'
+        message: "Chatbot service unavailable",
       },
       { status: 503 }
     );

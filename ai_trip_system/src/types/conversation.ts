@@ -13,9 +13,9 @@ export interface Message {
   id: string;
   conversation_id: string;
   content: string;
-  role: 'user' | 'assistant';
+  role: "user" | "assistant";
   created_at: string;
-  metadata?: any;
+  metadata?: Record<string, unknown>;
   token_count: number;
 }
 
@@ -39,8 +39,8 @@ export interface MessageCreateRequest {
   userId: string;
   conversationId?: string; // Optional for direct message creation
   content: string;
-  role: 'user' | 'assistant';
-  metadata?: any;
+  role: "user" | "assistant";
+  metadata?: Record<string, unknown>;
   token_count?: number;
 }
 
@@ -97,7 +97,7 @@ export interface ConversationState {
 export interface ChatMessage {
   id: string;
   content: string;
-  role: 'user' | 'assistant';
+  role: "user" | "assistant";
   timestamp: string;
   isLoading?: boolean;
 }

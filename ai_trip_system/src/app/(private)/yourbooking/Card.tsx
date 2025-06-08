@@ -1,15 +1,23 @@
-'use client';
+"use client";
 
-import Image from 'next/image';
-import { FaWifi, FaCoffee, FaConciergeBell, FaStar, FaCalendarAlt, FaMapMarkerAlt, FaCheckCircle, FaHourglass, FaTimes } from 'react-icons/fa';
-import React from 'react';
-import { useState } from 'react';
-import { useEffect } from 'react';
-import { getCookie } from 'cookies-next';
-import Loading from '@/components/Loading';
-import Modal from '@/components/Modal';
-import Toast from '@/components/Toast';
-import { useRouter } from 'next/navigation';
+import {
+  FaWifi,
+  FaCoffee,
+  FaConciergeBell,
+  FaCalendarAlt,
+  FaMapMarkerAlt,
+  FaCheckCircle,
+  FaHourglass,
+  FaTimes,
+} from "react-icons/fa";
+import React from "react";
+import { useState } from "react";
+import { useEffect } from "react";
+import { getCookie } from "cookies-next";
+import Loading from "@/components/Loading";
+import Modal from "@/components/Modal";
+import Toast from "@/components/Toast";
+import { useRouter } from "next/navigation";
 
 interface BookingCardProps {
   idbooking: string;
@@ -26,14 +34,14 @@ interface UserInfo {
   username: string;
   gender: boolean;
   email: string;
-  phoneNumber?: string
+  phoneNumber?: string;
 }
 
 export default function BookingCard({
   idbooking,
   idplace,
   date,
-  status
+  status,
 }: {
   idbooking: string;
   idplace: string;
@@ -45,22 +53,26 @@ export default function BookingCard({
   const [showUserModal, setShowUserModal] = useState(false);
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [loadingUser, setLoadingUser] = useState(false);
-  const token = getCookie('token');
+  const token = getCookie("token");
   const [data, setData] = useState<BookingCardProps | null>(null);
   const [isEditingBooking, setIsEditingBooking] = useState(false);
-  const [editableBookingData, setEditableBookingData] = useState<BookingCardProps | null>(null);
+  const [editableBookingData, setEditableBookingData] =
+    useState<BookingCardProps | null>(null);
   const [toast, setToast] = useState({
     visible: false,
-    message: '',
-    type: 'success' as 'success' | 'error' | 'info' | 'warning'
+    message: "",
+    type: "success" as "success" | "error" | "info" | "warning",
   });
 
-  const showToast = (message: string, type: 'success' | 'error' | 'info' | 'warning') => {
+  const showToast = (
+    message: string,
+    type: "success" | "error" | "info" | "warning"
+  ) => {
     setToast({ visible: true, message, type });
   };
 
   const hideToast = () => {
-    setToast(prev => ({ ...prev, visible: false }));
+    setToast((prev) => ({ ...prev, visible: false }));
   };
 
   const fetchUserInfo = async () => {
@@ -79,9 +91,11 @@ export default function BookingCard({
       }
 
       const userData = await response.json();
-      setUserInfo(Array.isArray(userData) && userData.length > 0 ? userData[0] : null);
+      setUserInfo(
+        Array.isArray(userData) && userData.length > 0 ? userData[0] : null
+      );
     } catch (error) {
-      console.error('Error fetching user data:', error);
+      console.error("Error fetching user data:", error);
     } finally {
       setLoadingUser(false);
     }
@@ -128,22 +142,22 @@ export default function BookingCard({
       setData(updatedData);
       setIsEditingBooking(false);
     } catch (error) {
-      showToast(`Lỗi khi lưu thay đổi: ${error}`, 'error');
+      showToast(`Lỗi khi lưu thay đổi: ${error}`, "error");
     } finally {
       setIsLoading(false);
-      showToast('Thay đổi đã được lưu thành công!', 'success');
+      showToast("Thay đổi đã được lưu thành công!", "success");
     }
   };
 
   // Format the date from ISO string to a more readable format
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
-    return date.toLocaleDateString('vi-VN', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    return date.toLocaleDateString("vi-VN", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
@@ -164,19 +178,22 @@ export default function BookingCard({
       {/* Content section */}
       <div className="p-4">
         <div className="flex justify-between items-start mb-3">
-          <h3 
+          <h3
             className="font-semibold text-lg text-blue-700 cursor-pointer hover:text-blue-900 hover:underline"
             onClick={handlePlaceClick}
           >
             {/* Using idplace directly */}
             {`Địa điểm #${idplace}`}
           </h3>
-          <span className={`px-2 py-1 rounded-full text-xs font-medium ${status === 1 ? 'bg-green-100 text-green-800' :
-              status === 0 ? 'bg-yellow-100 text-yellow-800' :
-                'bg-red-100 text-red-800'
-            }`}>
-            {status === 1 ? 'CONFIRMED' :
-              status === 0 ? 'PENDING' : 'CANCELED'}
+          <span
+            className={`px-2 py-1 rounded-full text-xs font-medium ${status === 1
+              ? "bg-green-100 text-green-800"
+              : status === 0
+                ? "bg-yellow-100 text-yellow-800"
+                : "bg-red-100 text-red-800"
+              }`}
+          >
+            {status === 1 ? "CONFIRMED" : status === 0 ? "PENDING" : "CANCELED"}
           </span>
         </div>
 
@@ -187,9 +204,7 @@ export default function BookingCard({
 
         <div className="flex items-center text-gray-700 mb-1">
           <FaCalendarAlt className="mr-2 text-sky-600" />
-          <span className="text-sm">
-            {formatDate(date)}
-          </span>
+          <span className="text-sm">{formatDate(date)}</span>
         </div>
 
         <div className="flex items-center text-gray-700 mb-4">
@@ -218,7 +233,9 @@ export default function BookingCard({
           {status === 1 ? (
             <>
               <FaCheckCircle className="text-green-500 mr-2" />
-              <span className="text-sm text-green-600">Đã xác nhận đặt chỗ của bạn</span>
+              <span className="text-sm text-green-600">
+                Đã xác nhận đặt chỗ của bạn
+              </span>
             </>
           ) : status === 0 ? (
             <>
@@ -247,7 +264,6 @@ export default function BookingCard({
             Chỉnh sửa
           </button>
         </div>
-
       </div>
 
       {/* Modal thông tin người dùng */}
@@ -264,21 +280,30 @@ export default function BookingCard({
         ) : userInfo ? (
           <div className="space-y-4">
             <div className="flex items-center space-x-6 mb-4">
-              <p className="font-medium">{userInfo.name || 'Không có thông tin'}</p>
-              <p className="text-sm text-gray-500">{userInfo.username || 'Không có thông tin'}</p>
-              <p className="text-sm text-gray-500">{userInfo.gender ? 'Nam' : 'Nữ'}</p>
+              <p className="font-medium">
+                {userInfo.name || "Không có thông tin"}
+              </p>
+              <p className="text-sm text-gray-500">
+                {userInfo.username || "Không có thông tin"}
+              </p>
+              <p className="text-sm text-gray-500">
+                {userInfo.gender ? "Nam" : "Nữ"}
+              </p>
             </div>
 
             <div>
               <p className="text-sm text-gray-500">Email</p>
-              <p className="font-medium">{userInfo.email || 'Không có thông tin'}</p>
+              <p className="font-medium">
+                {userInfo.email || "Không có thông tin"}
+              </p>
             </div>
 
             <div>
               <p className="text-sm text-gray-500">Số điện thoại</p>
-              <p className="font-medium">{userInfo.phoneNumber || 'Không có thông tin'}</p>
+              <p className="font-medium">
+                {userInfo.phoneNumber || "Không có thông tin"}
+              </p>
             </div>
-
 
             <button
               className="mt-4 w-full py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition duration-200"
@@ -314,17 +339,32 @@ export default function BookingCard({
         ) : (
           <div className="space-y-4">
             <div className="mb-4">
-              <label className="block text-sm text-gray-600 mb-1">Ngày đặt</label>
+              <label className="block text-sm text-gray-600 mb-1">
+                Ngày đặt
+              </label>
               <input
                 type="datetime-local"
-                value={editableBookingData.date ? new Date(editableBookingData.date).toISOString().slice(0, 16) : ''}
-                onChange={(e) => setEditableBookingData({ ...editableBookingData, date: e.target.value })}
+                value={
+                  editableBookingData.date
+                    ? new Date(editableBookingData.date)
+                      .toISOString()
+                      .slice(0, 16)
+                    : ""
+                }
+                onChange={(e) =>
+                  setEditableBookingData({
+                    ...editableBookingData,
+                    date: e.target.value,
+                  })
+                }
                 className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-cyan-500"
               />
             </div>
 
             <div className="mb-4">
-              <label className="block text-sm text-gray-600 mb-1">ID Địa điểm</label>
+              <label className="block text-sm text-gray-600 mb-1">
+                ID Địa điểm
+              </label>
               <input
                 type="text"
                 value={editableBookingData.idplace}

@@ -2,7 +2,7 @@
 import { useEffect, useRef } from "react";
 
 // Define a type for the anime function
-type AnimeFunction = (params: any) => any;
+// type AnimeFunction = (params: any) => any;
 
 export default function HeroSections() {
   // Component với các phần tử du lịch chuyển động và nội dung tĩnh
