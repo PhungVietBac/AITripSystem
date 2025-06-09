@@ -39,7 +39,6 @@ export default function PlaceCardComponent({ place }: { place: Place }) {
         <PlaceImage
           idPlace={place.idplace}
           altText={place.name}
-          imageUrl={place.image} // Sử dụng image từ API nếu có
           className="w-full h-full object-cover"
         />
         <div className="absolute top-2 right-2 bg-blue-500 text-white px-2 py-1 rounded-full text-xs font-bold flex items-center z-10">
