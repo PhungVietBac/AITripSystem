@@ -84,8 +84,7 @@ interface Place {
 // Component để xử lý sự kiện click trên bản đồ
 const MapClickHandler = ({ onMarkerClick }: { onMarkerClick: (place: Place) => void }) => {
   const map = useMapEvents({
-    click() {
-      setSelectedPlace(null); // Reset khi click ngoài marker
+    click() { 
     },
   });
   return null;
