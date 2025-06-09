@@ -2,19 +2,20 @@
 
 import BookingCard from "./Card";
 import React from "react";
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
 import { useState } from "react";
 import { getCookie } from "cookies-next";
 import Filter, { FilterOptions } from "./Filter";
 import Loading from "@/components/Loading";
 import useScrollReveal from "@/hooks/useScrollReveal";
+import { useAuthCheck } from "@/hooks/useAuthCheck";
 
 // Updated interface to match the API response
 interface Booking {
-  idPlace: string;
+  idplace: string;
   date: string;
   status: number;
-  idBooking: string;
+  idbooking: string;
 }
 
 function BookingCardReveal({
@@ -34,8 +35,8 @@ function BookingCardReveal({
       style={{ animationDelay: `${index * 80}ms`, animationFillMode: "both" }}
     >
       <BookingCard
-        idBooking={booking.idBooking}
-        idPlace={booking.idPlace}
+        idbooking={booking.idbooking}
+        idplace={booking.idplace}
         date={booking.date}
         status={booking.status}
       />
@@ -43,23 +44,54 @@ function BookingCardReveal({
   );
 }
 
+// Hàm chuyển đổi định dạng ngày thành dd/mm/yyyy hh:mm:ss
+const formatDate = (dateString: string): string => {
+  try {
+    const date = new Date(dateString);
+
+    // Kiểm tra nếu không phải date hợp lệ
+    if (isNaN(date.getTime())) return dateString;
+
+    const day = date.getDate().toString().padStart(2, "0");
+    const month = (date.getMonth() + 1).toString().padStart(2, "0");
+    const year = date.getFullYear();
+    const hours = date.getHours().toString().padStart(2, "0");
+    const minutes = date.getMinutes().toString().padStart(2, "0");
+    const seconds = date.getSeconds().toString().padStart(2, "0");
+
+    return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+  } catch (error) {
+    console.error("Error formatting date:", error);
+    return dateString;
+  }
+};
+
 export default function AllBookings() {
+  const { user, loading } = useAuthCheck();
   const [isLoading, setIsLoading] = useState(true);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const token = getCookie("token");
 
-  const fetchBookings = React.useCallback(
+  const fetchBookings = useCallback(
     async (filters: FilterOptions) => {
       setIsLoading(true);
 
       try {
-        let url = "https://aitripsystem-api.onrender.com/api/v1/bookings/";
+        let url = `https://aitripsystem-api.onrender.com/api/v1/users/${user?.userId}/bookings`;
+        console.log(user?.userId);
 
         // Nếu có filter
         if (filters.select !== "all" && filters.lookup) {
           url = `https://aitripsystem-api.onrender.com/api/v1/bookings/${
             filters.select
           }?lookup=${encodeURIComponent(filters.lookup)}`;
+          let lookup = filters.lookup;
+          if (filters.select === "date") {
+            lookup = formatDate(filters.lookup);
+          }
+          url = `https://aitripsystem-api.onrender.com/api/v1/bookings/${
+            filters.select
+          }?lookup=${encodeURIComponent(lookup)}`;
         }
 
         const response = await fetch(url, {
@@ -89,12 +121,15 @@ export default function AllBookings() {
         setIsLoading(false);
       }
     },
-    [token]
+    [token, user?.userId]
   );
 
   useEffect(() => {
-    fetchBookings({ select: "all", lookup: "" });
-  }, [fetchBookings]);
+    // Chỉ gọi khi user đã được load xong
+    if (user && user.userId) {
+      fetchBookings({ select: "all", lookup: "" });
+    }
+  }, [fetchBookings, user]); // Thêm user vào dependency array
 
   const handleFilterChange = (filters: FilterOptions) => {
     fetchBookings(filters);
@@ -104,7 +139,15 @@ export default function AllBookings() {
     <div className="space-y-4">
       <Filter onFilterChange={handleFilterChange} />
 
-      {isLoading ? (
+      {loading ? (
+        <div className="flex justify-center items-center h-64">
+          <Loading message="Đang xác thực người dùng..." />
+        </div>
+      ) : !user ? (
+        <div className="bg-white p-6 rounded-lg text-gray-500 text-center border border-gray-200 shadow-sm">
+          <p>Bạn cần đăng nhập để xem đặt chỗ</p>
+        </div>
+      ) : isLoading ? (
         <div className="flex justify-center items-center h-64">
           <Loading message="Đang tải dữ liệu đặt chỗ..." />
         </div>
@@ -116,7 +159,7 @@ export default function AllBookings() {
         <div className="space-y-6 overflow-y-auto max-h-[70vh] pr-2 custom-scrollbar">
           {bookings.slice(0, 10).map((booking, index) => (
             <BookingCardReveal
-              key={booking.idBooking}
+              key={booking.idbooking}
               booking={booking}
               index={index}
             />
