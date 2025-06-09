@@ -12,9 +12,8 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    // Step 1: Search for nearby places using lat/lon
     const nearbyRes = await fetch(
-      `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lon}&radius=100&type=tourist_attraction&key=${GOOGLE_API_KEY}`
+      `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lon}&radius=30&key=${GOOGLE_API_KEY}`
     );
     const nearbyData = await nearbyRes.json();
 
@@ -24,7 +23,6 @@ export async function GET(req: NextRequest) {
 
     const placeId = nearbyData.results[0].place_id;
 
-    // Step 2: Get place details using place_id
     const detailRes = await fetch(
       `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=reviews,rating&language=vi&key=${GOOGLE_API_KEY}`
     );

@@ -96,7 +96,7 @@ export default function RegisterForm() {
               {/* Logo */}
               <div className="flex justify-center">
                 <Image
-                  src="/images/logo.png"
+                  src="/logo.png"
                   alt="Explavue Logo"
                   className="w-12 h-12 sm:w-16 sm:h-16"
                   width={500}

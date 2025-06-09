@@ -17,7 +17,7 @@ import {
   CalendarDaysIcon,
   UserIcon,
   CogIcon,
-  MagnifyingGlassIcon
+  MagnifyingGlassIcon,
 } from "@heroicons/react/24/outline";
 import { useConversation } from "@/context/ConversationContext";
 import { useAuth } from "@/context/AuthContext";
@@ -109,9 +109,9 @@ export default function MainSidebar({
     },
     {
       icon: MagnifyingGlassIcon,
-      label: 'Tìm kiếm',
-      route: '/search'
-    }
+      label: "Tìm kiếm",
+      route: "/search",
+    },
   ];
 
   const isActiveRoute = (route: string) => {
@@ -174,7 +174,7 @@ export default function MainSidebar({
         >
           <div className="w-20 h-20 relative">
             <Image
-              src="/images/logo.png"
+              src="/logo.png"
               fill
               alt="Explavue Logo"
               className="object-contain"
