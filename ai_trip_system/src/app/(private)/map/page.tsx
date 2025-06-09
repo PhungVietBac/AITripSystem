@@ -1,160 +1,190 @@
-// src/app/map/page.tsx
 "use client";
-import React, { useState, useEffect, useRef } from "react";
-import {
-  FaUtensils,
-  FaHotel,
-  FaLandmark,
-  FaRoute,
-  FaSearch,
-  FaUmbrellaBeach,
-} from "react-icons/fa";
-import dynamic from "next/dynamic";
-
-const MapView = dynamic(() => import("@/components/Map"), {
-  ssr: false,
-});
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { FaSearch, FaTimes } from "react-icons/fa";
+import Map from "./MapComponent";
 
 export default function MapPage() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false); // Trạng thái menu mở rộng
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [suggestions, setSuggestions] = useState<Place[]>([]);
+  const [places, setPlaces] = useState<Place[]>([]);
+  const [isFocused, setIsFocused] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null); // Add input ref
+
+  interface Place {
+    name: string;
+    country: string;
+    city: string;
+    province: string | null;
+    address: string;
+    description: string;
+    rating: number;
+    type: number;
+    lat: number;
+    lon: number;
+    idplace: string;
+    image?: string;
+  }
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
 
-  // Đóng menu khi nhấn ra ngoài
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setIsMenuOpen(false);
+    if (searchQuery.trim() === "") {
+      if (isFocused) {
+        setSuggestions(places.slice(0, 15));
+      } else {
+        setSuggestions([]);
       }
-    };
-
-    if (isMenuOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
+    } else {
+      const filteredSuggestions = places.filter((place) =>
+        place.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        place.address.toLowerCase().includes(searchQuery.toLowerCase())
+      ).slice(0, 15);
+      setSuggestions(filteredSuggestions);
+      console.log("searchQuery updated to:", searchQuery);
     }
+  }, [searchQuery, places, isFocused]);
 
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [isMenuOpen]);
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    if (query.trim() === "") {
+      setSuggestions(places.slice(0, 15));
+    } else {
+      const filteredSuggestions = places.filter((place) =>
+        place.name.toLowerCase().includes(query.toLowerCase()) ||
+        place.address.toLowerCase().includes(query.toLowerCase())
+      ).slice(0, 15);
+      setSuggestions(filteredSuggestions);
+    }
+  };
 
-  // const [hoveredLocation, setHoveredLocation] = useState<string | null>(null);
+  const handleSelectSuggestion = (place: Place) => {
+    setSearchQuery(place.name);
+    setSuggestions(places.slice(0, 15));
+    setIsFocused(false);
+    if (mapRef.current) {
+      mapRef.current.handleMarkerClick(place);
+    }
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  };
+
+  const clearSearch = () => {
+    setSearchQuery("");
+    setSuggestions(places.slice(0, 15));
+  };
+
+  const mapRef = useRef<{ handleMarkerClick: (place: Place) => void; updateSearchQuery?: (name: string) => void }>(null);
+
+  const handlePlacesLoaded = useCallback((loadedPlaces: Place[]) => {
+    setPlaces(loadedPlaces);
+    if (isFocused) {
+      setSuggestions(loadedPlaces.slice(0, 15));
+    }
+  }, [isFocused]);
+
+  const handleFocus = () => {
+    setIsFocused(true);
+    setSuggestions(places.slice(0, 15));
+  };
+
+  const handleBlur = () => {
+    setTimeout(() => setIsFocused(false), 100);
+  };
+
+  const handleSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
-      <main className="flex-grow container mx-auto px-0.5 py-2 w-full">
-        <h1 className="text-2xl font-bold text-blue-900 mb-6 mt-3">Bản đồ</h1>
-        <div className="bg-white rounded-lg p-6 shadow-sm flex flex-col md:flex-row items-center gap-6 mb-0">
-          {/* Nhóm thanh tìm kiếm và nút Lộ trình */}
-          <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto flex-grow">
-            {/* Thanh tìm kiếm */}
-            <form className="relative flex-grow w-full md:w-auto">
-              <input
-                type="text"
-                placeholder="Tìm kiếm trên bản đồ"
-                className="w-full p-3 pr-12 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-700"
-              />
-              {/* Nút tìm kiếm */}
+      <main className="flex-grow w-full px-0">
+        <h1 className="text-2xl font-bold text-blue-900 mb-4 mt-4 px-6">Bản đồ</h1>
+        <div className="w-full px-6">
+          <div className="bg-white rounded-lg p-4 shadow-sm flex flex-col gap-4 relative" ref={menuRef}>
+            {isMenuOpen && (
               <button
-                type="submit"
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-blue-500"
+                onClick={() => setIsMenuOpen(false)}
+                className="absolute top-3 right-3 text-gray-500 hover:text-red-500"
               >
-                <FaSearch className="w-5 h-5 mr-2" />
+                <FaTimes className="w-4 h-4" />
               </button>
-            </form>
-
-            {/* Nút Lộ trình */}
-            <button className="flex items-center px-3 py-2 bg-teal-500 hover:bg-teal-700 text-white rounded-lg transition-colors duration-300 text-center gap-2">
-              <FaRoute />
-              <span className="text-sm">Lộ trình</span>
-            </button>
-          </div>
-
-          {/* 4 nút trên máy tính */}
-          <div className="hidden md:flex flex-wrap justify-end gap-2">
-            <button className="flex items-center px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors duration-300">
-              <FaUtensils className="w-5 h-5 mr-2" />
-              <span className="text-sm">Nhà hàng</span>
-            </button>
-            <button className="flex items-center px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors duration-300">
-              <FaHotel className="w-5 h-5 mr-2" />
-              <span className="text-sm">Khách sạn</span>
-            </button>
-            <button className="flex items-center px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors duration-300">
-              <FaUmbrellaBeach className="w-5 h-5 mr-2" />
-              <span className="text-sm">Đi chơi</span>
-            </button>
-            <button className="flex items-center px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors duration-300">
-              <FaLandmark className="w-5 h-5 mr-2" />
-              <span className="text-sm">Tham quan</span>
-            </button>
-          </div>
-
-          {/* Nút menu trên mobile */}
-          <div className="relative md:hidden" ref={menuRef}>
-            <button
-              onClick={toggleMenu}
-              className="flex items-center px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors duration-300"
-              aria-label="Mở menu danh mục"
-            >
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M4 6h16M4 12h16m-7 6h7"
-                />
-              </svg>
-            </button>
-            <div
-              className={`absolute top-12 right-0 bg-white min-w-[160px] shadow-lg rounded-lg z-10 transition-all duration-300 transform -translate-y-2 ${
-                isMenuOpen ? "opacity-100 translate-y-0" : "opacity-0 hidden"
-              }`}
-            >
-              <div className="flex flex-col">
-                <button
-                  onClick={() => setIsMenuOpen(false)}
-                  className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-t-lg"
-                >
-                  <FaUtensils className="w-5 h-5 mr-2" />
-                  Nhà hàng
-                </button>
-                <button
-                  onClick={() => setIsMenuOpen(false)}
-                  className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100"
-                >
-                  <FaHotel className="w-5 h-5 mr-2" />
-                  Khách sạn
-                </button>
-                <button
-                  onClick={() => setIsMenuOpen(false)}
-                  className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100"
-                >
-                  <FaUmbrellaBeach className="w-5 h-5 mr-2" />
-                  Đi chơi
-                </button>
-                <button
-                  onClick={() => setIsMenuOpen(false)}
-                  className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-b-lg"
-                >
-                  <FaLandmark className="w-5 h-5 mr-2" />
-                  Tham quan
-                </button>
+            )}
+            <div className="flex flex-col gap-4">
+              <div className="relative">
+                <form className="relative flex-grow h-[48px]" onSubmit={handleSubmit}>
+                  <input
+                    ref={inputRef}
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => handleSearch(e.target.value)}
+                    onFocus={handleFocus}
+                    onBlur={handleBlur}
+                    placeholder="Tìm kiếm địa điểm trên bản đồ"
+                    className="w-full h-full p-3 pr-12 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-700"
+                  />
+                  {isFocused && (
+                    <button
+                      type="button"
+                      onClick={clearSearch}
+                      className="absolute right-10 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-red-500"
+                    >
+                      <FaTimes className="w-4 h-4" />
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => handleSearch(searchQuery)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-blue-500"
+                  >
+                    <FaSearch className="w-5 h-5" />
+                  </button>
+                </form>
+                {isFocused && (
+                  <div className="absolute top-full left-0 w-full bg-white border border-gray-300 rounded-lg mt-1 shadow-md z-10 max-h-60 overflow-y-auto">
+                    {suggestions.length > 0 ? (
+                      suggestions.map((place) => (
+                        <div
+                          key={place.idplace}
+                          onMouseDown={() => handleSelectSuggestion(place)}
+                          className="p-2 hover:bg-gray-100 cursor-pointer flex items-center gap-2"
+                        >
+                          {place.image && (
+                            <img src={place.image} alt={place.name} className="w-8 h-8 object-cover rounded" />
+                          )}
+                          <div>
+                            <p className="text-sm font-medium">{place.name}</p>
+                            <p className="text-xs text-gray-500">{place.address}</p>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="p-2 text-gray-500">Không tìm thấy địa điểm</div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </div>
         </div>
-
-        <div className="bg-white rounded-lg p-6 shadow-sm mt-6">
-          <MapView />
+        <div className="w-full mt-6 px-6 pb-3">
+          <div className="w-full h-[600px] bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
+            <Map
+              ref={mapRef}
+              searchQuery={searchQuery}
+              onSelectPlace={(place: Place) => {
+                if (mapRef.current) {
+                  mapRef.current.handleMarkerClick(place);
+                }
+              }}
+              onPlacesLoaded={handlePlacesLoaded}
+              updateSearchQuery={(name: string) => setSearchQuery(name)} // Simplified updateSearchQuery
+            />
+          </div>
         </div>
       </main>
     </div>

@@ -5,18 +5,39 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import MapEx from "./Map_Ex";
 import PlaceCard from "./PlaceCard";
-import { FaList, FaMapMarkerAlt } from "react-icons/fa";
+import {
+  FaList,
+  FaMap,
+  FaStar,
+  FaMapMarkerAlt,
+  FaCompass,
+} from "react-icons/fa";
 import { getCookie } from "cookies-next";
 import vietnamProvinces from "@/data/vietnam-provinces.json";
+
+interface Place {
+  name: string;
+  country: string;
+  city: string;
+  province: string | null; // Có thể null theo schema
+  address: string;
+  description: string;
+  rating: number;
+  type?: number | null; // Optional theo schema
+  lat: number;
+  lon: number;
+  idplace: string; // Sửa thành chữ thường theo schema
+  image?: string; // Đánh dấu là optional vì không có trong schema
+}
 
 export default function ExplorePage() {
   const router = useRouter();
   const { isLoggedIn } = useAuth();
   const [selectedProvince, setSelectedProvince] = useState<string | null>(null);
-  const [places, setPlaces] = useState<PlaceResponse[]>([]);
+  const [places, setPlaces] = useState<Place[]>([]);
   const [loading, setLoading] = useState(false);
   const [showPlaces, setShowPlaces] = useState(false);
-  const [, setToast] = useState({
+  const [toast, setToast] = useState({
     visible: false,
     message: "",
     type: "success" as "success" | "error" | "info",
@@ -47,7 +68,7 @@ export default function ExplorePage() {
 
   const normalizePovinceName = (province: string): string => {
     // Remove common prefixes
-    const normalized = province
+    let normalized = province
       .replace(/^Tỉnh\s+/i, "") // Remove "Tỉnh" prefix
       .replace(/^tỉnh\s+/i, "") // Remove "tỉnh" prefix
       .replace(/^thành phố\s+/i, "") // Remove "thành phố" prefix

@@ -1,5 +1,13 @@
 "use client";
-import { FaChevronLeft, FaXmark, FaCamera } from "react-icons/fa6";
+import {
+  FaChevronLeft,
+  FaPen,
+  FaXmark,
+  FaCamera,
+  FaUserCheck,
+  FaUserXmark,
+  FaUserPlus,
+} from "react-icons/fa6";
 import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect, ChangeEvent } from "react";
 import Image from "next/image";
@@ -34,7 +42,7 @@ export default function ProfilePage({
       router.push("/login");
       return;
     }
-  }, [accessToken, router]);
+  }, []);
 
   const fetcher = (url: string) =>
     fetch(url, {
@@ -125,7 +133,7 @@ export default function ProfilePage({
     const gender = genderOptions.find(
       (option) => option.value === userData?.gender
     );
-    return <span>{gender ? gender.label : "Khác"}</span>;
+    return <span>{gender ? gender.label : "Other"}</span>;
   };
 
   const handleBtnBack = () => {
@@ -307,28 +315,16 @@ export default function ProfilePage({
             <div className="flex items-center gap-4">
               <button
                 onClick={handleBtnBack}
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors cursor-pointer"
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
               >
                 <FaChevronLeft className="w-5 h-5" />
               </button>
-              <h1 className="text-xl font-semibold">
-                {userData?.username || userData?.name}
-              </h1>
+              <h1 className="text-xl font-semibold">{userData?.username || userData?.name}</h1>
             </div>
             <div className="flex items-center gap-2">
               <button className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
-                  />
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
                 </svg>
               </button>
             </div>
@@ -349,7 +345,7 @@ export default function ProfilePage({
                     ? `https://aitripsystem-api.onrender.com/api/v1/proxy_image/?url=${encodeURIComponent(
                         userData.avatar
                       )}`
-                    : "/images/profile.svg"
+                    : "/profile.svg"
                 }
                 priority={true}
                 width={160}
@@ -376,13 +372,9 @@ export default function ProfilePage({
                   <button
                     onClick={handleFriendRequestSent}
                     disabled={isSending}
-                    className="px-4 py-1.5 text-sm font-medium text-white bg-blue-500 rounded-md hover:bg-blue-600 transition-colors cursor-pointer"
+                    className="px-4 py-1.5 text-sm font-medium text-white bg-blue-500 rounded-md hover:bg-blue-600 transition-colors"
                   >
-                    {isFriend
-                      ? "Bạn bè"
-                      : isFriendRequestSent
-                      ? "Hủy lời mời"
-                      : "Theo dõi"}
+                    {isFriend ? "Bạn bè" : isFriendRequestSent ? "Hủy lời mời" : "Theo dõi"}
                   </button>
                 )}
               </div>
@@ -409,10 +401,14 @@ export default function ProfilePage({
                   📞 {userData.phonenumber}
                 </div>
               )}
-              <div className="text-gray-500 mt-1">👤 {renderGender()}</div>
+              <div className="text-gray-500 mt-1">
+                👤 {renderGender()}
+              </div>
             </div>
           </div>
         </div>
+
+
       </div>
 
       {showEditModal && (
@@ -445,7 +441,7 @@ export default function ProfilePage({
                           ? `https://aitripsystem-api.onrender.com/api/v1/proxy_image/?url=${encodeURIComponent(
                               userData.avatar
                             )}`
-                          : "/images/profile.svg"
+                          : "/profile.svg"
                       }
                       width={96}
                       height={96}
@@ -467,9 +463,7 @@ export default function ProfilePage({
                     className="hidden"
                   />
                 </div>
-                <p className="text-sm text-gray-500 mt-2">
-                  Thay đổi ảnh đại diện
-                </p>
+                <p className="text-sm text-gray-500 mt-2">Thay đổi ảnh đại diện</p>
               </div>
 
               {/* Name */}

@@ -1,5 +1,3 @@
-import Image from "next/image";
-
 const features = [
   {
     name: "Lập kế hoạch với AI.",
@@ -53,7 +51,7 @@ export default function Features() {
             </div>
           </div>
           <div className="relative mt-16 h-80 lg:mt-8">
-            <Image
+            <img
               alt="Halong Bay"
               src="/destinations/halong.jpg"
               width={1824}
