@@ -39,6 +39,7 @@ export default function PlaceCardComponent({ place }: { place: Place }) {
         <PlaceImage
           idPlace={place.idplace}
           altText={place.name}
+          imageUrl={place.image} // Sử dụng image từ API nếu có
           className="w-full h-full object-cover"
         />
         <div className="absolute top-2 right-2 bg-blue-500 text-white px-2 py-1 rounded-full text-xs font-bold flex items-center z-10">
@@ -47,12 +48,16 @@ export default function PlaceCardComponent({ place }: { place: Place }) {
         </div>
       </div>
       <div className="p-4">
-        <h3 className="font-semibold text-lg text-gray-800 mb-1">{place.name}</h3>
+        <h3 className="font-semibold text-lg text-gray-800 mb-1">
+          {place.name}
+        </h3>
         <div className="flex items-center text-gray-600 text-sm mb-2">
           <FaMapMarkerAlt className="mr-1 text-blue-500" />
           <span>{place.address}</span>
         </div>
-        <p className="text-gray-600 text-sm">{truncateDescription(place.description ?? "")}</p>
+        <p className="text-gray-600 text-sm">
+          {truncateDescription(place.description ?? "")}
+        </p>
       </div>
     </div>
   );
