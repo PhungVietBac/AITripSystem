@@ -125,7 +125,7 @@ export default function ProfilePage({
     const gender = genderOptions.find(
       (option) => option.value === userData?.gender
     );
-    return <span>{gender ? gender.label : "Other"}</span>;
+    return <span>{gender ? gender.label : "Khác"}</span>;
   };
 
   const handleBtnBack = () => {
@@ -307,7 +307,7 @@ export default function ProfilePage({
             <div className="flex items-center gap-4">
               <button
                 onClick={handleBtnBack}
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors cursor-pointer"
               >
                 <FaChevronLeft className="w-5 h-5" />
               </button>
@@ -349,7 +349,7 @@ export default function ProfilePage({
                     ? `https://aitripsystem-api.onrender.com/api/v1/proxy_image/?url=${encodeURIComponent(
                         userData.avatar
                       )}`
-                    : "/profile.svg"
+                    : "/images/profile.svg"
                 }
                 priority={true}
                 width={160}
@@ -376,7 +376,7 @@ export default function ProfilePage({
                   <button
                     onClick={handleFriendRequestSent}
                     disabled={isSending}
-                    className="px-4 py-1.5 text-sm font-medium text-white bg-blue-500 rounded-md hover:bg-blue-600 transition-colors"
+                    className="px-4 py-1.5 text-sm font-medium text-white bg-blue-500 rounded-md hover:bg-blue-600 transition-colors cursor-pointer"
                   >
                     {isFriend
                       ? "Bạn bè"
@@ -445,7 +445,7 @@ export default function ProfilePage({
                           ? `https://aitripsystem-api.onrender.com/api/v1/proxy_image/?url=${encodeURIComponent(
                               userData.avatar
                             )}`
-                          : "/profile.svg"
+                          : "/images/profile.svg"
                       }
                       width={96}
                       height={96}
