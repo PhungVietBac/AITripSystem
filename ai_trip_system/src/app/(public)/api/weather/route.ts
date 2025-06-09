@@ -24,7 +24,7 @@ export async function GET(req: Request) {
     }
 
     return new Response(JSON.stringify(data), { status: 200 });
-  } catch {
+  } catch (err) {
     return new Response(JSON.stringify({ error: "Lỗi server" }), {
       status: 500,
     });

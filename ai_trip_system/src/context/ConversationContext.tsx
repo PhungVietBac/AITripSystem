@@ -3,12 +3,6 @@
 import { createContext, useContext, useState, ReactNode } from "react";
 import { useConversations } from "@/hooks/useConversations";
 
-interface Conversation {
-  id: string;
-  title: string;
-  // Add other properties as needed
-}
-
 interface ConversationContextType {
   currentConversationId: string | undefined;
   setCurrentConversationId: (id: string | undefined) => void;
@@ -16,15 +10,12 @@ interface ConversationContextType {
   handleNewConversation: () => void;
   handleConversationCreate: (conversationId: string) => void;
   // Expose conversations data and methods
-  conversations: Conversation[];
+  conversations: any[];
   isLoading: boolean;
   error: string | null;
-  createConversation: (title?: string) => Promise<Conversation | null>;
+  createConversation: (title?: string) => Promise<any>;
   deleteConversation: (conversationId: string) => Promise<boolean>;
-  updateConversationTitle: (
-    conversationId: string,
-    title: string
-  ) => Promise<boolean>;
+  updateConversationTitle: (conversationId: string, title: string) => Promise<boolean>;
 }
 
 const ConversationContext = createContext<ConversationContextType>({
@@ -36,18 +27,13 @@ const ConversationContext = createContext<ConversationContextType>({
   conversations: [],
   isLoading: false,
   error: null,
-  createConversation: async () => ({
-    id: "",
-    title: "",
-  }),
+  createConversation: async () => null,
   deleteConversation: async () => false,
   updateConversationTitle: async () => false,
 });
 
 export function ConversationProvider({ children }: { children: ReactNode }) {
-  const [currentConversationId, setCurrentConversationId] = useState<
-    string | undefined
-  >();
+  const [currentConversationId, setCurrentConversationId] = useState<string | undefined>();
 
   // Use the conversations hook
   const {
@@ -57,7 +43,7 @@ export function ConversationProvider({ children }: { children: ReactNode }) {
     createConversation,
     deleteConversation,
     updateConversationTitle,
-    mutate,
+    mutate
   } = useConversations();
 
   const handleConversationSelect = (conversationId: string) => {

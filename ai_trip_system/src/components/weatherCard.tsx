@@ -8,22 +8,16 @@ type WeatherProps = {
   };
 };
 
-type WeatherData = {
-  weather?: { description?: string }[];
-  main?: { temp?: number; humidity?: number };
-  wind?: { speed?: number };
-};
-
-const weatherCache = new Map<string, WeatherData>();
+const weatherCache = new Map<string, any>(); // key = `${lat},${lon}`
 
 export default function WeatherCard({ activity }: WeatherProps) {
-  const [weather, setWeather] = useState<WeatherData | null>(null);
+  const [weather, setWeather] = useState<any>(null);
   const key = `${activity.lat},${activity.lon}`;
 
   useEffect(() => {
     const fetchWeather = async () => {
       if (weatherCache.has(key)) {
-        setWeather(weatherCache.get(key) ?? null);
+        setWeather(weatherCache.get(key));
         return;
       }
 

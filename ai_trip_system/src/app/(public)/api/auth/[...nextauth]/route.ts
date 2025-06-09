@@ -1,31 +1,6 @@
-import NextAuth from "next-auth/next";
+import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
-
-// Extend NextAuth types to include 'id' and 'accessToken'
-
-declare module "next-auth" {
-  interface Session {
-    user: {
-      id: string;
-      name?: string | null;
-      email?: string | null;
-      image?: string | null;
-    };
-    accessToken: string;
-  }
-  interface User {
-    id: string;
-    accessToken?: string;
-  }
-}
-
-declare module "next-auth/jwt" {
-  interface JWT {
-    id: string;
-    accessToken?: string;
-  }
-}
 
 const handler = NextAuth({
   secret: process.env.NEXTAUTH_SECRET,
@@ -38,9 +13,9 @@ const handler = NextAuth({
         params: {
           prompt: "consent",
           access_type: "offline",
-          response_type: "code",
-        },
-      },
+          response_type: "code"
+        }
+      }
     }),
     CredentialsProvider({
       name: "Credentials",
@@ -95,7 +70,7 @@ const handler = NextAuth({
       // Initial sign in
       if (account && user) {
         if (account.provider === "credentials") {
-          token.accessToken = (user as { accessToken?: string }).accessToken;
+          token.accessToken = user.accessToken;
           token.id = user.id;
         } else if (account.provider === "google") {
           // Handle social login - you'll need to call your API to register/login the user
@@ -129,11 +104,8 @@ const handler = NextAuth({
       return token;
     },
     async session({ session, token }) {
-      if (session.user) {
-        (session.user as { id?: string }).id = token.id as string;
-        (session.user as { accessToken?: string }).accessToken =
-          token.accessToken as string;
-      }
+      session.user.id = token.id as string;
+      session.accessToken = token.accessToken as string;
       return session;
     },
   },

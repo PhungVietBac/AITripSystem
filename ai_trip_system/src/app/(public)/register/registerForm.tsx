@@ -5,7 +5,6 @@ import Loading from "@/components/Loading";
 import Link from "next/link";
 import { FaEnvelope, FaLock } from "react-icons/fa";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 
 export default function RegisterForm() {
   const [formData, setFormData] = useState({
@@ -73,14 +72,9 @@ export default function RegisterForm() {
       console.log(data);
 
       router.push("/login");
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        setError(err.message || "Đã có lỗi xảy ra.");
-        console.error(err);
-      } else {
-        setError("Đã có lỗi xảy ra.");
-        console.error(err);
-      }
+    } catch (err: any) {
+      setError(err.message || "Đã có lỗi xảy ra.");
+      console.error(err);
     } finally {
       setIsLoading(false);
     }
@@ -234,12 +228,10 @@ export default function RegisterForm() {
           {/* Right side - Vietnam Image */}
           <div className="hidden lg:block">
             <div className="relative">
-              <Image
+              <img
                 src="/images/vietnam.png"
                 alt="Vietnam"
                 className="w-full h-auto max-w-md mx-auto"
-                width={500}
-                height={500}
               />
             </div>
           </div>

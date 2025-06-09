@@ -20,6 +20,7 @@ const geistMono = Geist_Mono({
 
 const playwriteDKLoopet = Playwrite_DK_Loopet({
   variable: "--font-playwrite",
+  subsets: ["latin"],
   weight: "400",
 });
 

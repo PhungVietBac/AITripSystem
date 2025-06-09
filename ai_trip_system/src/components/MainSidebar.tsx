@@ -63,7 +63,11 @@ export default function MainSidebar({
       },
     }).then((res) => res.json());
 
-  const { data: userData } = useSWR(
+  const {
+    data: userData,
+    error: userError,
+    isLoading: userLoading,
+  } = useSWR(
     userid
       ? `https://aitripsystem-api.onrender.com/api/v1/users/idUser?lookup=${userid}`
       : null,
@@ -123,33 +127,15 @@ export default function MainSidebar({
   };
 
   // Sort conversations by most recent first
-  interface Conversation {
-    id: string;
-    title: string;
-    createdAt?: string;
-    updatedAt?: string;
-    lastMessage?: string;
-    // Add other properties as needed
-  }
-
-  const sortConversationsByRecent = (conversations: Conversation[]) => {
+  const sortConversationsByRecent = (conversations: any[]) => {
     return [...conversations].sort((a, b) => {
-      const dateA = new Date(a.updatedAt || a.createdAt || 0).getTime();
-      const dateB = new Date(b.updatedAt || b.createdAt || 0).getTime();
+      const dateA = new Date(a.updatedAt || a.createdAt).getTime();
+      const dateB = new Date(b.updatedAt || b.createdAt).getTime();
       return dateB - dateA; // Most recent first
     });
   };
 
-  const filteredConversations: Conversation[] = conversations.filter(
-    (conv: unknown): conv is Conversation =>
-      typeof conv === "object" &&
-      conv !== null &&
-      typeof (conv as { id?: unknown }).id === "string" &&
-      typeof (conv as { title?: unknown }).title === "string" &&
-      (typeof (conv as { createdAt?: unknown }).createdAt === "string" ||
-        typeof (conv as { updatedAt?: unknown }).updatedAt === "string")
-  );
-  const sortedConversations = sortConversationsByRecent(filteredConversations);
+  const sortedConversations = sortConversationsByRecent(conversations);
 
   const handleLogout = () => {
     // Use the logout function from AuthContext
@@ -303,7 +289,7 @@ export default function MainSidebar({
                   ? `https://aitripsystem-api.onrender.com/api/v1/proxy_image/?url=${encodeURIComponent(
                       userData.avatar
                     )}`
-                  : "/images/profile.svg"
+                  : "/profile.svg"
               }
               fill
               className="rounded-full object-cover"

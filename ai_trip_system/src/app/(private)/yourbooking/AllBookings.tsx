@@ -107,7 +107,7 @@ export default function AllBookings() {
           try {
             const errorJson = JSON.parse(errorText);
             console.error("Error details:", errorJson);
-          } catch {
+          } catch (e) {
             // Not JSON
           }
           throw new Error(`Error: ${response.status}`);

@@ -1,52 +1,18 @@
-import Image from "next/image";
-
 const members = [
-  {
-    studentID: "22520089",
-    name: "Phùng Việt Bắc",
-    avatar:
-      "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
-  },
-  {
-    studentID: "22520067",
-    name: "Phạm Đức Anh",
-    avatar:
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
-  },
-  {
-    studentID: "22521215",
-    name: "Nguyễn Văn Quốc",
-    avatar:
-      "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&crop=face",
-  },
-  {
-    studentID: "23520394",
-    name: "Trịnh Nhật Duy",
-    avatar:
-      "https://images.unsplash.com/photo-1519244703995-f4e0f30006d5?w=150&h=150&fit=crop&crop=face",
-  },
-  {
-    studentID: "23521729",
-    name: "Trần Anh Tuấn",
-    avatar:
-      "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150&h=150&fit=crop&crop=face",
-  },
+  { studentID: "22520089", name: "Phùng Việt Bắc", avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face" },
+  { studentID: "22520067", name: "Phạm Đức Anh", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face" },
+  { studentID: "22521215", name: "Nguyễn Văn Quốc", avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&crop=face" },
+  { studentID: "23520394", name: "Trịnh Nhật Duy", avatar: "https://images.unsplash.com/photo-1519244703995-f4e0f30006d5?w=150&h=150&fit=crop&crop=face" },
+  { studentID: "23521729", name: "Trần Anh Tuấn", avatar: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150&h=150&fit=crop&crop=face" },
 ];
 
 export default function Members() {
   return (
-    <div
-      id="members"
-      className="relative isolate overflow-hidden bg-transparent py-24 sm:py-48"
-    >
-      <Image
+    <div id="members" className="relative isolate overflow-hidden bg-transparent py-24 sm:py-48">
+      <img
         alt=""
-        src={`https://aitripsystem-api.onrender.com/api/v1/proxy_image/?url=${encodeURIComponent(
-          "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&crop=focalpoint&fp-y=.8&w=2830&h=1500&q=80&blend=111827&sat=-100&exp=15&blend-mode=multiply"
-        )}`}
+        src="https://images.unsplash.com/photo-1521737604893-d14cc237f11d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&crop=focalpoint&fp-y=.8&w=2830&h=1500&q=80&blend=111827&sat=-100&exp=15&blend-mode=multiply"
         className="absolute inset-0 -z-10 size-full object-cover object-right md:object-center"
-        width={500}
-        height={500}
       />
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto max-w-2xl lg:mx-0">
@@ -67,14 +33,10 @@ export default function Members() {
                 {/* Avatar */}
                 <div className="relative mb-6">
                   <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-[#FFD700] shadow-lg group-hover:scale-110 transition-transform duration-300">
-                    <Image
-                      src={`https://aitripsystem-api.onrender.com/api/v1/proxy_image/?url=${encodeURIComponent(
-                        member.avatar
-                      )}`}
+                    <img
+                      src={member.avatar}
                       alt={member.name}
                       className="w-full h-full object-cover"
-                      width={500}
-                      height={500}
                     />
                   </div>
                   {/* Decorative ring */}

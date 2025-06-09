@@ -3,10 +3,10 @@
 import { useState, FormEvent } from "react";
 import Loading from "@/components/Loading";
 import Link from "next/link";
+import { setCookie } from "cookies-next"; // Sử dụng setCookie
 import { FaEnvelope, FaLock } from "react-icons/fa";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 
 interface LoginFormProps {
   callbackUrl: string;
@@ -18,7 +18,7 @@ export default function LoginForm({ callbackUrl }: LoginFormProps) {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-  const { login } = useAuth();
+  const { login, socialLogin } = useAuth();
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -52,9 +52,18 @@ export default function LoginForm({ callbackUrl }: LoginFormProps) {
 
       // Store token in cookie and update auth context
       if (data.access_token) {
-        // Use the login function from auth context
+        // Lưu access_token vào cookie
+        setCookie("authToken", data.access_token, {
+          maxAge: 24 * 60 * 60, // 24 giờ
+          path: "/", // Cookie có thể truy cập trên toàn ứng dụng
+          secure: process.env.NODE_ENV === "production", // Chỉ gửi qua HTTPS ở production
+          sameSite: "strict", // Bảo vệ chống CSRF
+        });
+
+        // Cập nhật AuthContext
         login(data.access_token);
 
+        // Lấy profile và lưu userId
         const profileRes = await fetch(`/api/profile`, {
           headers: {
             Authorization: `Bearer ${data.access_token}`,
@@ -73,14 +82,9 @@ export default function LoginForm({ callbackUrl }: LoginFormProps) {
       } else {
         throw new Error("Thông tin đăng nhập không hợp lệ.");
       }
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        setError(err.message || "Đã có lỗi xảy ra.");
-        console.error(err);
-      } else {
-        setError("Đã có lỗi xảy ra.");
-        console.error(err);
-      }
+    } catch (err: any) {
+      setError(err.message || "Đã có lỗi xảy ra.");
+      console.error(err);
     } finally {
       setIsLoading(false);
     }
@@ -220,12 +224,10 @@ export default function LoginForm({ callbackUrl }: LoginFormProps) {
           {/* Right side - Vietnam Image */}
           <div className="hidden lg:block">
             <div className="relative">
-              <Image
+              <img
                 src="/images/vietnam.png"
                 alt="Vietnam"
                 className="w-full h-auto max-w-md mx-auto"
-                width={500}
-                height={500}
               />
             </div>
           </div>

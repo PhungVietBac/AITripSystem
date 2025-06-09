@@ -1,9 +1,11 @@
 "use client";
 
+import Image from "next/image";
 import {
   FaWifi,
   FaCoffee,
   FaConciergeBell,
+  FaStar,
   FaCalendarAlt,
   FaMapMarkerAlt,
   FaCheckCircle,
@@ -78,13 +80,16 @@ export default function BookingCard({
   const fetchUserInfo = async () => {
     setLoadingUser(true);
     try {
-      const response = await fetch(`https://aitripsystem-api.onrender.com/api/v1/bookings/${idbooking}/users/`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
+      const response = await fetch(
+        `https://aitripsystem-api.onrender.com/api/v1/bookings/${idbooking}/users/`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
         }
-      });
+      );
 
       if (!response.ok) {
         throw new Error(`API error ${response.status}`);
@@ -105,7 +110,7 @@ export default function BookingCard({
     setIsLoading(false);
     if (data) {
       setEditableBookingData(data);
-      console.log('Booking data loaded:', data);
+      console.log("Booking data loaded:", data);
     }
   }, [data]);
 
@@ -121,18 +126,21 @@ export default function BookingCard({
 
     setIsLoading(true);
     try {
-      const response = await fetch(`https://aitripsystem-api.onrender.com/api/v1/bookings/?idbooking=${idbooking}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          idplace: editableBookingData.idplace,
-          date: editableBookingData.date,
-          status: editableBookingData.status
-        })
-      });
+      const response = await fetch(
+        `https://aitripsystem-api.onrender.com/api/v1/bookings/?idbooking=${idbooking}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            idplace: editableBookingData.idplace,
+            date: editableBookingData.date,
+            status: editableBookingData.status,
+          }),
+        }
+      );
 
       if (!response.ok) {
         throw new Error(`API error ${response.status}`);
@@ -186,12 +194,13 @@ export default function BookingCard({
             {`Địa điểm #${idplace}`}
           </h3>
           <span
-            className={`px-2 py-1 rounded-full text-xs font-medium ${status === 1
-              ? "bg-green-100 text-green-800"
-              : status === 0
+            className={`px-2 py-1 rounded-full text-xs font-medium ${
+              status === 1
+                ? "bg-green-100 text-green-800"
+                : status === 0
                 ? "bg-yellow-100 text-yellow-800"
                 : "bg-red-100 text-red-800"
-              }`}
+            }`}
           >
             {status === 1 ? "CONFIRMED" : status === 0 ? "PENDING" : "CANCELED"}
           </span>
@@ -347,8 +356,8 @@ export default function BookingCard({
                 value={
                   editableBookingData.date
                     ? new Date(editableBookingData.date)
-                      .toISOString()
-                      .slice(0, 16)
+                        .toISOString()
+                        .slice(0, 16)
                     : ""
                 }
                 onChange={(e) =>
@@ -370,7 +379,10 @@ export default function BookingCard({
                 value={editableBookingData.idplace}
                 onChange={(e) => {
                   const value = parseInt(e.target.value) || 0;
-                  setEditableBookingData({ ...editableBookingData, idplace: value });
+                  setEditableBookingData({
+                    ...editableBookingData,
+                    idplace: value,
+                  });
                 }}
                 className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-cyan-500"
               />
