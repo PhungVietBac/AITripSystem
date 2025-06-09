@@ -38,7 +38,6 @@ function BookingPage() {
                 throw new Error('Thiếu thông tin địa điểm');
             }
 
-
       const requestBody = {
         idplace: idPlace,
         date: new Date(selectedDate).toISOString(),
@@ -55,9 +54,6 @@ function BookingPage() {
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify(requestBody),
-        }
-      );
-
         }
       );
 
@@ -288,11 +284,6 @@ function BookingPage() {
         setSelectedDate(e.target.value);
     };
 
-
-    const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setSelectedDate(e.target.value);
-    };
-
     const closeModal = async () => {
 
         // =============================    CORS    ==================================== 
@@ -384,7 +375,6 @@ function BookingPage() {
         setShowConfirmModal(false);
         setBookingData(null);
         console.log('=== DEBUG: closeModal function completed ===');
-    };
     };
 
   return (
