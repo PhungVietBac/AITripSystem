@@ -97,24 +97,14 @@ interface MapProps {
   updateSearchQuery?: (name: string) => void;
 }
 
-const MapClickHandler = ({ onMarkerClick }: { onMarkerClick: (place: Place) => void }) => {
+const MapClickHandler = ({ onMarkerClick, updateMapState }: { onMarkerClick: (place: Place) => void; updateMapState: (center: [number, number], zoom: number) => void }) => {
   const map = useMapEvents({
     moveend: () => {
-      // Cập nhật mapCenter và mapZoom khi người dùng di chuyển hoặc zoom bản đồ
       const center = map.getCenter();
       const zoom = map.getZoom();
+      updateMapState([center.lat, center.lng], zoom);
     },
   });
-
-  // Hàm để cập nhật trạng thái từ MapComponent
-  const onMapUpdate = useRef<(center: [number, number], zoom: number) => void>();
-
-  useEffect(() => {
-    onMapUpdate.current = (center, zoom) => {
-      // Cập nhật state ở MapComponent thông qua ref
-      (mapRef.current as any)?.updateMapState?.(center, zoom);
-    };
-  }, []);
 
   return null;
 };
@@ -148,13 +138,13 @@ const MapComponent = forwardRef(
 
     const { data: initialPlaces, error: initialError, isLoading: initialLoading } = useSWR<Place[]>(
       "https://aitripsystem-api.onrender.com/api/v1/places/all",
-      fetcher
+      fetcher,
+      { refreshInterval: 30000 } // Làm mới dữ liệu mỗi 30 giây
     );
 
     useEffect(() => {
       if (initialPlaces && initialPlaces.length > 0) {
         setPlaces(initialPlaces);
-        // Chỉ set mapCenter và mapZoom nếu chưa có userLocation hoặc selectedPlace
         if (!userLocation && !selectedPlace && mapCenter === VIETNAM_CENTER) {
           setMapCenter([initialPlaces[0].lat, initialPlaces[0].lon]);
           setMapZoom(6);
@@ -243,7 +233,6 @@ const MapComponent = forwardRef(
 
     const allPlaces = useMemo(() => places, [places]);
 
-    // Hàm để cập nhật trạng thái bản đồ từ MapClickHandler
     const updateMapState = useCallback((center: [number, number], zoom: number) => {
       setMapCenter(center);
       setMapZoom(zoom);
@@ -278,7 +267,7 @@ const MapComponent = forwardRef(
                       url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                     />
                     <MapUpdater center={mapCenter} zoom={mapZoom} />
-                    <MapClickHandler onMarkerClick={handleMarkerClick} />
+                    <MapClickHandler onMarkerClick={handleMarkerClick} updateMapState={updateMapState} />
                     {userLocation && (
                       <Marker position={[userLocation.lat, userLocation.lng]} icon={userLocationIcon}>
                         <Popup>

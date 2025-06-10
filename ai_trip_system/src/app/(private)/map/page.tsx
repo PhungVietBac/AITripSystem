@@ -10,7 +10,7 @@ export default function MapPage() {
   const [places, setPlaces] = useState<Place[]>([]);
   const [isFocused, setIsFocused] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null); // Add input ref
+  const inputRef = useRef<HTMLInputElement>(null);
 
   interface Place {
     name: string;
@@ -27,6 +27,14 @@ export default function MapPage() {
     image?: string;
   }
 
+  const removeDiacritics = (str: string): string => {
+    return str
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/đ/g, "d")
+      .replace(/Đ/g, "D");
+  };
+
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
@@ -42,8 +50,12 @@ export default function MapPage() {
       const filteredSuggestions = places
         .filter(
           (place) =>
-            place.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            place.address.toLowerCase().includes(searchQuery.toLowerCase())
+            removeDiacritics(place.name.toLowerCase()).includes(
+              removeDiacritics(searchQuery.toLowerCase())
+            ) ||
+            removeDiacritics(place.address.toLowerCase()).includes(
+              removeDiacritics(searchQuery.toLowerCase())
+            )
         )
         .slice(0, 15);
       setSuggestions(filteredSuggestions);
@@ -59,8 +71,12 @@ export default function MapPage() {
       const filteredSuggestions = places
         .filter(
           (place) =>
-            place.name.toLowerCase().includes(query.toLowerCase()) ||
-            place.address.toLowerCase().includes(query.toLowerCase())
+            removeDiacritics(place.name.toLowerCase()).includes(
+              removeDiacritics(query.toLowerCase())
+            ) ||
+            removeDiacritics(place.address.toLowerCase()).includes(
+              removeDiacritics(query.toLowerCase())
+            )
         )
         .slice(0, 15);
       setSuggestions(filteredSuggestions);
@@ -86,6 +102,7 @@ export default function MapPage() {
 
   const mapRef = useRef<{
     handleMarkerClick: (place: Place) => void;
+    updateMapState: (center: [number, number], zoom: number) => void;
     updateSearchQuery?: (name: string) => void;
   }>(null);
 
@@ -210,7 +227,7 @@ export default function MapPage() {
                 }
               }}
               onPlacesLoaded={handlePlacesLoaded}
-              updateSearchQuery={(name: string) => setSearchQuery(name)} // Simplified updateSearchQuery
+              updateSearchQuery={(name: string) => setSearchQuery(name)}
             />
           </div>
         </div>
