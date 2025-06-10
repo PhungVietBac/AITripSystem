@@ -1,36 +1,42 @@
 'use client';
 
-import React, { useState, useEffect } from 'react'
-import { useSearchParams, useRouter } from 'next/navigation'
-import { getCookie } from 'cookies-next';
-import { FaCalendarAlt, FaQrcode, FaInfoCircle, FaMapMarkerAlt } from 'react-icons/fa';
-import Image from 'next/image';
-import Toast from '@/components/Toast'; // Assuming you have a Toast component
+import React, { useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { getCookie } from "cookies-next";
+import {
+  FaCalendarAlt,
+  FaQrcode,
+  FaInfoCircle,
+  FaMapMarkerAlt,
+} from "react-icons/fa";
+import Image from "next/image";
 
 function BookingPage() {
-    const router = useRouter();
-    const searchParams = useSearchParams();
-    const idPlace = searchParams.get('idPlace');
-    const namePlace = searchParams.get('namePlace');
-    const token = getCookie('token') as string;
-    
-    const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
-    const [isLoading, setIsLoading] = useState(false);
-    const [bookingStatus, setBookingStatus] = useState<'1' | '0' | '2'>('1');
-    const [showQR, setShowQR] = useState(false);
-    const [toast, setToast] = useState({
-        visible: false,
-        message: '',
-        type: 'success' as 'success' | 'error' | 'info',
-    });
+  // const router = useRouter();
+  const searchParams = useSearchParams();
+  const idPlace = searchParams.get("idPlace");
+  const namePlace = searchParams.get("namePlace");
+  const token = getCookie("token") as string;
 
-    // Create a new hotel booking
-    const createBooking = async () => {
-        setIsLoading(true);
-        try {
-            if (!idPlace) {
-                throw new Error('Thiếu thông tin địa điểm');
-            }
+  const [selectedDate, setSelectedDate] = useState<string>(
+    new Date().toISOString().split("T")[0]
+  );
+  const [isLoading, setIsLoading] = useState(false);
+  const [bookingStatus, setBookingStatus] = useState<"1" | "0" | "2">("1");
+  const [showQR, setShowQR] = useState(false);
+  const [toast, setToast] = useState({
+    visible: false,
+    message: "",
+    type: "success" as "success" | "error" | "info",
+  });
+
+  // Create a new hotel booking
+  const createBooking = async () => {
+    setIsLoading(true);
+    try {
+      if (!idPlace) {
+        throw new Error("Thiếu thông tin địa điểm");
+      }
 
             const requestBody = {
                 idplace: idPlace,
@@ -48,50 +54,50 @@ function BookingPage() {
                 body: JSON.stringify(requestBody)
             });
 
-            // Thêm sau response để xem chi tiết lỗi
-            if (!response.ok) {
-                const errorText = await response.text();
-                console.error("API Error:", response.status, errorText);
-                throw new Error(`Lỗi ${response.status}: ${errorText}`);
-            }
+      // Thêm sau response để xem chi tiết lỗi
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("API Error:", response.status, errorText);
+        throw new Error(`Lỗi ${response.status}: ${errorText}`);
+      }
 
-            const data = await response.json();
-            console.log('Booking created:', data);
-            setShowQR(true);
-            showToast(
-                'Cảm ơn đã sử dụng dịch vụ của chúng tôi!\nVui lòng đợi trong giây lát để bên du lịch xác nhận!',
-                'success'
-            );
-            
-            // Simulate status change after some time (for demo purposes)
-            setTimeout(() => {
-                setBookingStatus('0');
-            }, 5000);
-            
-            return data;
-        } catch (error) {
-            console.error('Error creating booking:', error);
-            showToast('Có lỗi xảy ra khi đặt chỗ. Vui lòng thử lại sau.', 'error');
-        } finally {
-            setIsLoading(false);
-        }
+      const data = await response.json();
+      console.log("Booking created:", data);
+      setShowQR(true);
+      showToast(
+        "Cảm ơn đã sử dụng dịch vụ của chúng tôi!\nVui lòng đợi trong giây lát để bên du lịch xác nhận!",
+        "success"
+      );
+
+      // Simulate status change after some time (for demo purposes)
+      setTimeout(() => {
+        setBookingStatus("0");
+      }, 5000);
+
+      return data;
+    } catch (error) {
+      console.error("Error creating booking:", error);
+      showToast("Có lỗi xảy ra khi đặt chỗ. Vui lòng thử lại sau.", "error");
+    } finally {
+      setIsLoading(false);
     }
+  };
 
-    const showToast = (message: string, type: 'success' | 'error' | 'info') => {
-        setToast({
-            visible: true,
-            message,
-            type
-        });
+  const showToast = (message: string, type: "success" | "error" | "info") => {
+    setToast({
+      visible: true,
+      message,
+      type,
+    });
 
-        setTimeout(() => {
-            setToast(prev => ({ ...prev, visible: false }));
-        }, 5000);
-    };
+    setTimeout(() => {
+      setToast((prev) => ({ ...prev, visible: false }));
+    }, 5000);
+  };
 
-    const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setSelectedDate(e.target.value);
-    };
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSelectedDate(e.target.value);
+  };
 
     return (
         <div className="min-h-screen bg-gradient-to-b from-sky-50 to-blue-100 py-8">
@@ -123,36 +129,36 @@ function BookingPage() {
                             />
                         </div>
 
-                        {/* QR Code Section */}
-                        <div className="my-8">
-                            <h3 className="text-lg font-semibold text-gray-700 mb-4 flex items-center">
-                                <FaQrcode className="mr-2 text-blue-500" />
-                                Mã QR thanh toán
-                            </h3>
-                            
-                            {showQR ? (
-                                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 flex flex-col items-center">
-                                    <div className="w-48 h-48 bg-white p-2 rounded-md shadow-md relative mb-4">
-                                        <Image 
-                                            src="/images/elementor-placeholder-image.webp"
-                                            width={192}
-                                            height={192}
-                                            className="rounded-md" 
-                                            alt="QR Code"  
-                                            objectFit="contain"
-                                            priority
-                                        />
-                                    </div>
-                                    <p className="text-sm text-gray-600 text-center">
-                                        Quét mã QR để hoàn tất thanh toán cho đặt chỗ của bạn
-                                    </p>
-                                </div>
-                            ) : (
-                                <div className="bg-gray-50 p-6 rounded-lg border border-gray-200 text-center text-gray-500">
-                                    Mã QR sẽ hiển thị sau khi đặt chỗ
-                                </div>
-                            )}
-                        </div>
+            {/* QR Code Section */}
+            <div className="my-8">
+              <h3 className="text-lg font-semibold text-gray-700 mb-4 flex items-center">
+                <FaQrcode className="mr-2 text-blue-500" />
+                Mã QR thanh toán
+              </h3>
+
+              {showQR ? (
+                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 flex flex-col items-center">
+                  <div className="w-48 h-48 bg-white p-2 rounded-md shadow-md relative mb-4">
+                    <Image
+                      src="/images/elementor-placeholder-image.webp"
+                      width={192}
+                      height={192}
+                      className="rounded-md"
+                      alt="QR Code"
+                      objectFit="contain"
+                      priority
+                    />
+                  </div>
+                  <p className="text-sm text-gray-600 text-center">
+                    Quét mã QR để hoàn tất thanh toán cho đặt chỗ của bạn
+                  </p>
+                </div>
+              ) : (
+                <div className="bg-gray-50 p-6 rounded-lg border border-gray-200 text-center text-gray-500">
+                  Mã QR sẽ hiển thị sau khi đặt chỗ
+                </div>
+              )}
+            </div>
 
                         {/* Status Display */}
                         <div className="mb-6">
@@ -187,50 +193,70 @@ function BookingPage() {
                             </div>
                         </div>
 
-                        {/* Action Button */}
-                        <button
-                            className={`w-full py-3 rounded-md font-medium text-white shadow-md flex items-center justify-center ${
-                                isLoading || showQR ? 'bg-green-900 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
-                            }`}
-                            onClick={createBooking}
-                            disabled={isLoading || showQR}
-                        >
-                            {isLoading ? (
-                                <>
-                                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                    </svg>
-                                    Đang xử lý...
-                                </>
-                            ) : showQR ? (
-                                'Đã đặt chỗ thành công'
-                            ) : (
-                                'Xác nhận đặt chỗ'
-                            )}
-                        </button>
-                    </div>
+            {/* Action Button */}
+            <button
+              className={`w-full py-3 rounded-md font-medium text-white shadow-md flex items-center justify-center ${
+                isLoading || showQR
+                  ? "bg-green-900 cursor-not-allowed"
+                  : "bg-blue-600 hover:bg-blue-700"
+              }`}
+              onClick={createBooking}
+              disabled={isLoading || showQR}
+            >
+              {isLoading ? (
+                <>
+                  <svg
+                    className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                  Đang xử lý...
+                </>
+              ) : showQR ? (
+                "Đã đặt chỗ thành công"
+              ) : (
+                "Xác nhận đặt chỗ"
+              )}
+            </button>
+          </div>
 
-                    {/* Additional Information */}
-                    <div className="bg-white rounded-xl p-6 shadow-lg">
-                        <h3 className="text-lg font-semibold text-gray-700 mb-4">Thông tin bổ sung</h3>
-                        <ul className="space-y-3 text-sm text-gray-600">
-                            <li className="flex items-start">
-                                <span className="inline-block w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5 mr-2"></span>
-                                Vui lòng kiểm tra kỹ thông tin trước khi xác nhận đặt chỗ.
-                            </li>
-                            <li className="flex items-start">
-                                <span className="inline-block w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5 mr-2"></span>
-                                Bạn có thể hủy đặt chỗ trước 24 giờ mà không bị tính phí.
-                            </li>
-                            <li className="flex items-start">
-                                <span className="inline-block w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5 mr-2"></span>
-                                Liên hệ với chúng tôi qua hotline 0123456789 nếu cần hỗ trợ.
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
+          {/* Additional Information */}
+          <div className="bg-white rounded-xl p-6 shadow-lg">
+            <h3 className="text-lg font-semibold text-gray-700 mb-4">
+              Thông tin bổ sung
+            </h3>
+            <ul className="space-y-3 text-sm text-gray-600">
+              <li className="flex items-start">
+                <span className="inline-block w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5 mr-2"></span>
+                Vui lòng kiểm tra kỹ thông tin trước khi xác nhận đặt chỗ.
+              </li>
+              <li className="flex items-start">
+                <span className="inline-block w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5 mr-2"></span>
+                Bạn có thể hủy đặt chỗ trước 24 giờ mà không bị tính phí.
+              </li>
+              <li className="flex items-start">
+                <span className="inline-block w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5 mr-2"></span>
+                Liên hệ với chúng tôi qua hotline 0123456789 nếu cần hỗ trợ.
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
 
             {/* Toast Notification */}
             {toast.visible && (

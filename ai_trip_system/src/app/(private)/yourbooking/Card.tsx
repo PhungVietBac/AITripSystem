@@ -12,12 +12,12 @@ import Toast from '@/components/Toast';
 import { useRouter } from 'next/navigation';
 
 interface BookingCardProps {
-  idBooking: string;
-  idPlace: number;
+  idbooking: string;
+  idplace: number;
   status: number;
   date: string;
-  placeName?: string;
-  placeImage?: string;
+  placename?: string;
+  placeimage?: string;
 }
 
 interface UserInfo {
@@ -30,13 +30,13 @@ interface UserInfo {
 }
 
 export default function BookingCard({
-  idBooking,
-  idPlace,
+  idbooking,
+  idplace,
   date,
   status
 }: {
-  idBooking: string;
-  idPlace: string;
+  idbooking: string;
+  idplace: string;
   date: string;
   status: number;
 }) {
@@ -66,7 +66,7 @@ export default function BookingCard({
   const fetchUserInfo = async () => {
     setLoadingUser(true);
     try {
-      const response = await fetch(`https://aitripsystem-api.onrender.com/api/v1/bookings/${idBooking}/users/`, {
+      const response = await fetch(`https://aitripsystem-api.onrender.com/api/v1/bookings/${idbooking}/users/`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -91,6 +91,7 @@ export default function BookingCard({
     setIsLoading(false);
     if (data) {
       setEditableBookingData(data);
+      console.log('Booking data loaded:', data);
     }
   }, [data]);
 
@@ -106,14 +107,14 @@ export default function BookingCard({
 
     setIsLoading(true);
     try {
-      const response = await fetch(`https://aitripsystem-api.onrender.com/api/v1/bookings/?idBooking=${idBooking}`, {
+      const response = await fetch(`https://aitripsystem-api.onrender.com/api/v1/bookings/?idbooking=${idbooking}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
         body: JSON.stringify({
-          idPlace: editableBookingData.idPlace,
+          idplace: editableBookingData.idplace,
           date: editableBookingData.date,
           status: editableBookingData.status
         })
@@ -147,7 +148,7 @@ export default function BookingCard({
   };
 
   const handlePlaceClick = () => {
-    router.push(`/place?idBooking=${idBooking}`);
+    router.push(`/place?idPlace=${idplace}`);
   };
 
   if (isLoading) {
@@ -167,21 +168,24 @@ export default function BookingCard({
             className="font-semibold text-lg text-blue-700 cursor-pointer hover:text-blue-900 hover:underline"
             onClick={handlePlaceClick}
           >
-            {/* Using idPlace directly */}
-            {`Địa điểm #${idPlace}`}
+            {/* Using idplace directly */}
+            {`Địa điểm #${idplace}`}
           </h3>
-          <span className={`px-2 py-1 rounded-full text-xs font-medium ${status === 1 ? 'bg-green-100 text-green-800' :
-              status === 0 ? 'bg-yellow-100 text-yellow-800' :
-                'bg-red-100 text-red-800'
-            }`}>
-            {status === 1 ? 'CONFIRMED' :
-              status === 0 ? 'PENDING' : 'CANCELED'}
+          <span
+            className={`px-2 py-1 rounded-full text-xs font-medium ${status === 1
+              ? "bg-green-100 text-green-800"
+              : status === 0
+                ? "bg-yellow-100 text-yellow-800"
+                : "bg-red-100 text-red-800"
+              }`}
+          >
+            {status === 1 ? "CONFIRMED" : status === 0 ? "PENDING" : "CANCELED"}
           </span>
         </div>
 
         <div className="flex items-center text-gray-700 mb-1">
           <FaMapMarkerAlt className="mr-2 text-sky-600" />
-          <span className="text-sm">Địa điểm ID: {idPlace}</span>
+          <span className="text-sm">Địa điểm ID: {idplace}</span>
         </div>
 
         <div className="flex items-center text-gray-700 mb-1">
@@ -193,7 +197,7 @@ export default function BookingCard({
 
         <div className="flex items-center text-gray-700 mb-4">
           <span className="text-sm font-medium mr-2">Mã đặt chỗ:</span>
-          <span className="text-sm font-bold">{idBooking}</span>
+          <span className="text-sm font-bold">{idbooking}</span>
         </div>
 
         {/* Amenities */}
@@ -316,8 +320,19 @@ export default function BookingCard({
               <label className="block text-sm text-gray-600 mb-1">Ngày đặt</label>
               <input
                 type="datetime-local"
-                value={editableBookingData.date ? new Date(editableBookingData.date).toISOString().slice(0, 16) : ''}
-                onChange={(e) => setEditableBookingData({ ...editableBookingData, date: e.target.value })}
+                value={
+                  editableBookingData.date
+                    ? new Date(editableBookingData.date)
+                      .toISOString()
+                      .slice(0, 16)
+                    : ""
+                }
+                onChange={(e) =>
+                  setEditableBookingData({
+                    ...editableBookingData,
+                    date: e.target.value,
+                  })
+                }
                 className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-cyan-500"
               />
             </div>
@@ -326,10 +341,10 @@ export default function BookingCard({
               <label className="block text-sm text-gray-600 mb-1">ID Địa điểm</label>
               <input
                 type="text"
-                value={editableBookingData.idPlace}
+                value={editableBookingData.idplace}
                 onChange={(e) => {
                   const value = parseInt(e.target.value) || 0;
-                  setEditableBookingData({ ...editableBookingData, idPlace: value });
+                  setEditableBookingData({ ...editableBookingData, idplace: value });
                 }}
                 className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-cyan-500"
               />

@@ -6,7 +6,8 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "postbuild": "next-sitemap"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.2",
@@ -14,11 +15,14 @@
     "@supabase/supabase-js": "^2.49.4",
     "animejs": "^4.0.2",
     "cookies-next": "^5.1.0",
+    "date-fns": "^4.1.0",
     "framer-motion": "^12.6.3",
     "jsonwebtoken": "^9.0.2",
     "leaflet": "^1.9.4",
-    "next": "^15.3.3",
+    "next": "^15.2.4",
     "next-auth": "^4.24.11",
+    "next-sitemap": "^4.2.3",
+    "qs": "^6.14.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-icons": "^5.5.0",
@@ -33,6 +37,7 @@
     "@types/jsonwebtoken": "^9.0.9",
     "@types/leaflet": "^1.9.17",
     "@types/node": "^20",
+    "@types/qs": "^6.14.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/react-modal-image": "^2.6.4",
