@@ -133,12 +133,33 @@ const MapComponent = forwardRef(
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!response.ok) throw new Error("Failed to fetch places");
-      return response.json();
+      const data = await response.json();
+      return Array.isArray(data) ? data : data.data || []; 
+    };
+
+
+    const fetchAllPlaces = async () => {
+      let allPlaces: Place[] = [];
+      let skip = 0;
+      const limit = 5000; 
+
+      while (true) {
+        const response = await fetcher(`https://aitripsystem-api.onrender.com/api/v1/places/all?skip=${skip}&limit=${limit}`);
+        const placesPage: Place[] = response;
+        allPlaces = [...allPlaces, ...placesPage];
+
+        if (placesPage.length < limit) {
+          break; // Không còn dữ liệu, thoát vòng lặp
+        }
+        skip += limit; // Tăng skip để lấy trang tiếp theo
+      }
+
+      return allPlaces;
     };
 
     const { data: initialPlaces, error: initialError, isLoading: initialLoading } = useSWR<Place[]>(
       "https://aitripsystem-api.onrender.com/api/v1/places/all",
-      fetcher,
+      fetchAllPlaces,
       { refreshInterval: 30000 } // Làm mới dữ liệu mỗi 30 giây
     );
 
