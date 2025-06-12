@@ -8,7 +8,6 @@ import { FaMapMarkerAlt, FaLocationArrow, FaTimes, FaUtensils, FaHotel, FaLandma
 import { BsThreeDots } from "react-icons/bs";
 import useSWR from "swr";
 import { useAuth } from "@/context/AuthContext";
-import PlaceCardComponent from "./MapPagePlaceCard";
 import DetailedMapPlaceCard from "./DetailedMapPlaceCard";
 import Legend, { legendItems } from "./Legend"; 
 import { renderToStaticMarkup } from "react-dom/server";
