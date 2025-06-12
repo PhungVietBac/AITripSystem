@@ -4,10 +4,14 @@ import { useState, useEffect, useRef, useCallback, useMemo, forwardRef, useImper
 import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { FaMapMarkerAlt, FaLocationArrow, FaTimes } from "react-icons/fa";
+import { FaMapMarkerAlt, FaLocationArrow, FaTimes, FaUtensils, FaHotel, FaLandmark } from "react-icons/fa";
+import { BsThreeDots } from "react-icons/bs";
 import useSWR from "swr";
 import { useAuth } from "@/context/AuthContext";
 import PlaceCardComponent from "./MapPagePlaceCard";
+import DetailedMapPlaceCard from "./DetailedMapPlaceCard";
+import Legend, { legendItems } from "./Legend"; 
+import { renderToStaticMarkup } from "react-dom/server";
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -18,6 +22,7 @@ L.Icon.Default.mergeOptions({
 
 const VIETNAM_CENTER: [number, number] = [14.0583, 108.2772];
 const VIETNAM_ZOOM = 6;
+const MIN_ZOOM_TO_SHOW_MARKERS = 10;
 
 const userLocationIcon = new L.Icon({
   iconUrl:
@@ -33,14 +38,32 @@ const userLocationIcon = new L.Icon({
   popupAnchor: [0, -12],
 });
 
-const getPlaceIcon = (isSelected: boolean = false) => {
-  const color = isSelected ? "#00FF00" : "#000000";
+const getPlaceIcon = (type: number | null, isSelected = false) => {
+  const item = legendItems.find((it) => it.type === type) ?? legendItems.find((it) => it.type === null)!;
+  const fillColor = isSelected ? "#00FF00" : item.color;
+  const IconComp = item.icon;
+
+  const iconMarkup = renderToStaticMarkup(
+    <IconComp
+      style={{
+        color: "white",  
+        width: "16px",
+        height: "16px",
+        display: "block",
+        margin: "auto",
+      }}
+    />
+  );
+
   const svgString = `
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
-      <circle cx="12" cy="12" r="10" fill="${color}" stroke="#ffffff" stroke-width="2"/>
-      <circle cx="12" cy="12" r="4" fill="#ffffff"/>
+      <circle cx="12" cy="12" r="10" fill="${fillColor}"/>
+      <g transform="translate(4, 4)" style="transform-origin: center; width: 16px; height: 16px;">
+        ${iconMarkup}
+      </g>
     </svg>
-  `.trim();
+  `;
+
   return new L.Icon({
     iconUrl: "data:image/svg+xml;base64," + btoa(svgString),
     iconSize: [24, 24],
@@ -66,6 +89,10 @@ const MapUpdater = ({ center, zoom }: { center: [number, number]; zoom: number }
     }
   }, [map, center, zoom]);
 
+  useEffect(() => {
+    map.invalidateSize();
+  }, [map]);
+
   return null;
 };
 
@@ -83,7 +110,7 @@ interface Place {
   address: string;
   description: string;
   rating: number;
-  type: number;
+  type: number | null;
   lat: number;
   lon: number;
   idplace: string;
@@ -124,6 +151,7 @@ const MapComponent = forwardRef(
     const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
     const [toast, setToast] = useState({ visible: false, message: "", type: "success" as "success" | "error" | "info" });
     const mapRef = useRef<L.Map | null>(null);
+    const [visiblePlaces, setVisiblePlaces] = useState<Place[]>([]);
 
     const { token, isLoggedIn } = useAuth();
 
@@ -134,14 +162,13 @@ const MapComponent = forwardRef(
       });
       if (!response.ok) throw new Error("Failed to fetch places");
       const data = await response.json();
-      return Array.isArray(data) ? data : data.data || []; 
+      return Array.isArray(data) ? data : data.data || [];
     };
-
 
     const fetchAllPlaces = async () => {
       let allPlaces: Place[] = [];
       let skip = 0;
-      const limit = 5000; 
+      const limit = 5000;
 
       while (true) {
         const response = await fetcher(`https://aitripsystem-api.onrender.com/api/v1/places/all?skip=${skip}&limit=${limit}`);
@@ -149,9 +176,9 @@ const MapComponent = forwardRef(
         allPlaces = [...allPlaces, ...placesPage];
 
         if (placesPage.length < limit) {
-          break; // Không còn dữ liệu, thoát vòng lặp
+          break;
         }
-        skip += limit; // Tăng skip để lấy trang tiếp theo
+        skip += limit;
       }
 
       return allPlaces;
@@ -160,7 +187,7 @@ const MapComponent = forwardRef(
     const { data: initialPlaces, error: initialError, isLoading: initialLoading } = useSWR<Place[]>(
       "https://aitripsystem-api.onrender.com/api/v1/places/all",
       fetchAllPlaces,
-      { refreshInterval: 30000 } // Làm mới dữ liệu mỗi 30 giây
+      { refreshInterval: 30000 }
     );
 
     useEffect(() => {
@@ -239,11 +266,19 @@ const MapComponent = forwardRef(
     const handleMarkerClick = (place: Place) => {
       setSelectedPlace(place);
       setMapCenter([place.lat, place.lon]);
-      setMapZoom(15);
+      setMapZoom(15); 
       setShowPlaces(true);
       if (onSelectPlace) onSelectPlace(place);
       if (updateSearchQuery) {
-        updateSearchQuery(place.name);
+        updateSearchQuery(place.name); 
+      }
+      if (mapRef.current && mapZoom >= MIN_ZOOM_TO_SHOW_MARKERS) {
+        setTimeout(() => {
+          const map = mapRef.current!;
+          const bounds = map.getBounds();
+          const newVisiblePlaces = places.filter((p) => bounds.contains([p.lat, p.lon]));
+          setVisiblePlaces(newVisiblePlaces);
+        }, 100); 
       }
     };
 
@@ -257,158 +292,175 @@ const MapComponent = forwardRef(
     const updateMapState = useCallback((center: [number, number], zoom: number) => {
       setMapCenter(center);
       setMapZoom(zoom);
-    }, []);
+      if (mapRef.current && zoom >= MIN_ZOOM_TO_SHOW_MARKERS) {
+        const bounds = mapRef.current.getBounds();
+        const newVisiblePlaces = places.filter((p) => bounds.contains([p.lat, p.lon]));
+        setVisiblePlaces(newVisiblePlaces);
+      } else {
+        setVisiblePlaces([]); 
+      }
+    }, [places]);
 
     useImperativeHandle(ref, () => ({
       handleMarkerClick,
       updateMapState,
     }));
 
-    if (initialLoading) return <div className="h-full w-full flex items-center justify-center bg-gray-100">Đang tải dữ liệu...</div>;
-    if (initialError) return <div className="h-full w-full flex items-center justify-center bg-gray-100">Lỗi: {initialError.message}</div>;
+    useEffect(() => {
+      const handleResize = () => {
+        if (mapRef.current) {
+          mapRef.current.invalidateSize();
+        }
+      };
+      window.addEventListener("resize", handleResize);
+      return () => window.removeEventListener("resize", handleResize);
+    }, []);
+
+    useEffect(() => {
+      if (mapRef.current && mapZoom >= MIN_ZOOM_TO_SHOW_MARKERS) {
+        const bounds = mapRef.current.getBounds();
+        const newVisiblePlaces = places.filter((p) => bounds.contains([p.lat, p.lon]));
+        setVisiblePlaces(newVisiblePlaces);
+      } else {
+        setVisiblePlaces([]); 
+      }
+    }, [mapCenter, mapZoom, places]);
+
+    if (initialLoading) return <div className="min-h-screen w-full flex items-center justify-center bg-gray-100">Đang tải dữ liệu...</div>;
+    if (initialError) return <div className="min-h-screen w-full flex items-center justify-center bg-gray-100">Lỗi: {initialError.message}</div>;
+
+    const map = mapRef.current;
+    const bounds = map ? map.getBounds() : null;
 
     return (
-      <div className="min-h-screen bg-blue-50">
-        <div className="p-6">
-          <div className="mb-4 flex justify-between items-center"></div>
-          <div className="bg-white rounded-xl shadow-md overflow-hidden">
-            <div className="flex">
-              <div className={`transition-all duration-300 ${showPlaces ? "w-2/3" : "w-full"} relative overflow-hidden`}>
-                <div className="map-container relative h-[calc(100vh-180px)] w-full">
-                  <MapContainer
-                    center={mapCenter}
-                    zoom={mapZoom}
-                    scrollWheelZoom={true}
-                    style={{ height: "100%", width: "100%" }}
-                    className="map-view z-0"
-                    ref={mapRef}
+      <div className="relative w-full h-full flex flex-col lg:flex-row">
+        <div className={`w-full ${showPlaces && selectedPlace ? "lg:w-2/3" : "lg:w-full"} h-full relative`}>
+          <MapContainer
+            center={mapCenter}
+            zoom={mapZoom}
+            scrollWheelZoom={true}
+            style={{ height: "100%", width: "100%", margin: 0, padding: 0 }}
+            className="z-0"
+            ref={mapRef}
+          >
+            <TileLayer
+              attribution='© <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
+            <MapUpdater center={mapCenter} zoom={mapZoom} />
+            <MapClickHandler onMarkerClick={handleMarkerClick} updateMapState={updateMapState} />
+            {userLocation && (
+              <Marker position={[userLocation.lat, userLocation.lng]} icon={userLocationIcon}>
+                <Popup>
+                  <div className="text-center">
+                    <FaMapMarkerAlt className="text-blue-500 mx-auto mb-1" />
+                    <div className="font-semibold text-sm">Vị trí của bạn</div>
+                    {userLocation.accuracy && (
+                      <div className="text-xs text-gray-600">Độ chính xác: ~{Math.round(userLocation.accuracy)}m</div>
+                    )}
+                  </div>
+                </Popup>
+              </Marker>
+            )}
+            {visiblePlaces.length > 0 &&
+              visiblePlaces.map((place) => (
+                <Marker
+                  key={place.idplace}
+                  position={[place.lat, place.lon]}
+                  icon={getPlaceIcon(place.type, selectedPlace?.idplace === place.idplace)}
+                  eventHandlers={{
+                    click: () => handleMarkerClick(place),
+                    mouseover: (e) => e.target.openPopup(),
+                    mouseout: (e) => e.target.closePopup(),
+                  }}
+                >
+                  <Popup
+                    autoClose={false}
+                    closeOnClick={false}
+                    className="custom-popup max-w-xs p-2"
                   >
-                    <TileLayer
-                      attribution='© <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors'
-                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    />
-                    <MapUpdater center={mapCenter} zoom={mapZoom} />
-                    <MapClickHandler onMarkerClick={handleMarkerClick} updateMapState={updateMapState} />
-                    {userLocation && (
-                      <Marker position={[userLocation.lat, userLocation.lng]} icon={userLocationIcon}>
-                        <Popup>
-                          <div className="text-center">
-                            <FaMapMarkerAlt className="text-blue-500 mx-auto mb-1" />
-                            <div className="font-semibold text-sm">Vị trí của bạn</div>
-                            {userLocation.accuracy && (
-                              <div className="text-xs text-gray-600">Độ chính xác: ~{Math.round(userLocation.accuracy)}m</div>
-                            )}
-                          </div>
-                        </Popup>
-                      </Marker>
-                    )}
-                    {allPlaces &&
-                      allPlaces.map((place) => (
-                        <Marker
-                          key={place.idplace}
-                          position={[place.lat, place.lon]}
-                          icon={getPlaceIcon(selectedPlace?.idplace === place.idplace)}
-                          eventHandlers={{
-                            click: () => handleMarkerClick(place),
-                            mouseover: (e) => e.target.openPopup(),
-                            mouseout: (e) => e.target.closePopup(),
-                          }}
-                        >
-                          <Popup
-                            autoClose={false}
-                            closeOnClick={false}
-                            className="custom-popup max-w-xs p-2"
-                          >
-                            <div className="flex items-center space-x-2">
-                              {place.image && (
-                                <img
-                                  src={place.image}
-                                  alt={place.name}
-                                  className="w-12 h-12 object-cover rounded"
-                                />
-                              )}
-                              <span className="text-sm font-medium">{place.name}</span>
-                            </div>
-                          </Popup>
-                        </Marker>
-                      ))}
-                  </MapContainer>
-                  <div className="absolute bottom-4 right-4 flex flex-col gap-2">
-                    <button
-                      onClick={checkLocationPermission}
-                      disabled={isLocating}
-                      className={`p-2 rounded-lg shadow-md hover:shadow-lg transition-shadow border border-gray-200 disabled:opacity-50 ${userLocation ? "bg-blue-500 text-white" : "bg-white text-gray-600"}`}
-                      title={isLocating ? "Đang lấy vị trí..." : userLocation ? "Cập nhật vị trí" : "Chia sẻ vị trí của bạn"}
-                    >
-                      {isLocating ? (
-                        <div className={`w-4 h-4 border ${userLocation ? "border-white border-t-transparent" : "border-gray-600 border-t-transparent"} rounded-full animate-spin`}></div>
-                      ) : (
-                        <FaLocationArrow className="w-4 h-4" />
+                    <div className="flex items-center space-x-2">
+                      {place.image && (
+                        <img
+                          src={place.image}
+                          alt={place.name}
+                          className="w-12 h-12 object-cover rounded"
+                        />
                       )}
-                    </button>
-                    <button
-                      onClick={() => {
-                        setMapCenter(VIETNAM_CENTER);
-                        setMapZoom(VIETNAM_ZOOM);
-                        setShowPlaces(false);
-                        setSelectedPlace(null);
-                      }}
-                      className="bg-white p-2 rounded-lg shadow-md hover:shadow-lg transition-shadow border border-gray-200"
-                      title="Xem toàn bộ Việt Nam"
-                    >
-                      <FaMapMarkerAlt className="text-gray-600 w-4 h-4" />
-                    </button>
-                    {showPlaces && (
-                      <button
-                        onClick={() => {
-                          setShowPlaces(false);
-                          setSelectedPlace(null);
-                        }}
-                        className="bg-white p-2 rounded-lg shadow-md hover:shadow-lg transition-shadow border border-gray-200"
-                        title="Hủy chọn"
-                      >
-                        <FaTimes className="text-gray-600 w-4 h-4" />
-                      </button>
-                    )}
-                  </div>
-                  <div className="absolute bottom-4 left-4 bg-white p-3 rounded-lg shadow-md border border-gray-200">
-                    {userLocation && (
-                      <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full bg-blue-500 border-2 border-white shadow-sm"></div>
-                        <span className="text-xs text-gray-700">Vị trí của bạn</span>
-                      </div>
-                    )}
-                    <div className="text-xs text-gray-500 mt-1">
-                      {userLocation ? "Nhấp vào marker để xem chi tiết" : "Nhấp nút định vị để chia sẻ vị trí"}
+                      <span className="text-sm font-medium">{place.name}</span>
                     </div>
-                  </div>
-                </div>
-              </div>
-              {showPlaces && selectedPlace && (
-                <div className="w-1/3 border-l border-gray-200 flex flex-col">
-                  <div className="p-4 border-b bg-white">
-                    <div className="flex items-center justify-between">
-                      <div></div>
-                      <FaTimes
-                        onClick={() => {
-                          setShowPlaces(false);
-                          setSelectedPlace(null);
-                        }}
-                        className="w-5 h-5 text-blue-500 cursor-pointer hover:text-blue-800"
-                      />
-                    </div>
-                  </div>
-                  <div className="flex-1 h-[calc(100vh-180px)] max-h-[calc(100vh-180px)] overflow-y-scroll bg-white p-4">
-                    <PlaceCardComponent place={selectedPlace} />
-                  </div>
-                </div>
+                  </Popup>
+                </Marker>
+              ))}
+          </MapContainer>
+          <Legend />
+          <div className="absolute bottom-4 right-4 flex flex-col gap-2 z-[1001]">
+            <button
+              onClick={checkLocationPermission}
+              disabled={isLocating}
+              className={`p-2 rounded-lg shadow-md hover:shadow-lg transition-shadow border border-gray-200 disabled:opacity-50 ${userLocation ? "bg-blue-500 text-white" : "bg-white text-gray-600"}`}
+              title={isLocating ? "Đang lấy vị trí..." : userLocation ? "Cập nhật vị trí" : "Chia sẻ vị trí của bạn"}
+            >
+              {isLocating ? (
+                <div className={`w-4 h-4 border ${userLocation ? "border-white border-t-transparent" : "border-gray-600 border-t-transparent"} rounded-full animate-spin`}></div>
+              ) : (
+                <FaLocationArrow className="w-4 h-4" />
               )}
+            </button>
+            <button
+              onClick={() => {
+                setMapCenter(VIETNAM_CENTER);
+                setMapZoom(VIETNAM_ZOOM);
+                setShowPlaces(false);
+                setSelectedPlace(null);
+              }}
+              className="bg-white p-2 rounded-lg shadow-md hover:shadow-lg transition-shadow border border-gray-200"
+              title="Xem toàn bộ Việt Nam"
+            >
+              <FaMapMarkerAlt className="text-gray-600 w-4 h-4" />
+            </button>
+            {showPlaces && (
+              <button
+                onClick={() => {
+                  setShowPlaces(false);
+                  setSelectedPlace(null);
+                }}
+                className="bg-white p-2 rounded-lg shadow-md hover:shadow-lg transition-shadow border border-gray-200"
+                title="Hủy chọn"
+              >
+                <FaTimes className="text-gray-600 w-4 h-4" />
+              </button>
+            )}
+          </div>
+          {userLocation && (
+            <div className="absolute bottom-20 left-4 bg-white p-3 rounded-lg shadow-md border border-gray-200 z-[1001]">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-blue-500 border-2 border-white shadow-sm"></div>
+                <span className="text-xs text-gray-700">Vị trí của bạn</span>
+              </div>
+            </div>
+          )}
+        </div>
+        {showPlaces && selectedPlace && (
+          <div className="w-full lg:w-1/3 h-auto bg-white border-t lg:border-t-0 lg:border-l border-gray-200 flex flex-col">
+            <div className="p-4 border-b bg-white flex items-center justify-between">
+              <h2 className="text-lg font-semibold">Chi tiết địa điểm</h2>
+              <FaTimes
+                onClick={() => {
+                  setShowPlaces(false);
+                  setSelectedPlace(null);
+                }}
+                className="w-5 h-5 text-blue-500 cursor-pointer hover:text-blue-800"
+              />
+            </div>
+            <div className="flex-1 overflow-y-auto p-4">
+              <DetailedMapPlaceCard place={selectedPlace} token={token || ""} />
             </div>
           </div>
-        </div>
+        )}
         {toast.visible && (
           <div
-            className={`fixed top-4 right-4 p-4 rounded-md shadow-lg text-white ${toast.type === "success" ? "bg-green-500" : toast.type === "error" ? "bg-red-500" : "bg-blue-500"}`}
+            className={`fixed top-4 right-4 p-4 rounded-md shadow-lg text-white z-[1002] ${toast.type === "success" ? "bg-green-500" : toast.type === "error" ? "bg-red-500" : "bg-blue-500"}`}
           >
             {toast.message}
           </div>
@@ -427,7 +479,7 @@ const Map = forwardRef((props: MapProps, ref: Ref<{ handleMarkerClick: (place: P
 
   if (!isMounted) {
     return (
-      <div className="h-full w-full flex items-center justify-center bg-gray-100">
+      <div className="min-h-screen w-full flex items-center justify-center bg-gray-100">
         <div className="text-gray-500">Đang tải bản đồ...</div>
       </div>
     );
