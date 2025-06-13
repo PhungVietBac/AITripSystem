@@ -7,6 +7,7 @@ import { setCookie } from "cookies-next"; // Sử dụng setCookie
 import { FaEnvelope, FaLock } from "react-icons/fa";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 interface LoginFormProps {
   callbackUrl: string;
