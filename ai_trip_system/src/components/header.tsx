@@ -43,7 +43,11 @@ const Header = () => {
       },
     }).then((res) => res.json());
 
-  const { data: userData } = useSWR<UserResponse>(
+  const {
+    data: userData,
+    error: userError,
+    isLoading: userLoading,
+  } = useSWR<UserResponse>(
     `https://aitripsystem-api.onrender.com/api/v1/users/idUser?lookup=${userid}`,
     fetcher,
     {
@@ -54,9 +58,9 @@ const Header = () => {
   );
 
   // Helper function to check if a route is active
-  // const isActiveRoute = (route: string) => {
-  //   return pathname === route;
-  // };
+  const isActiveRoute = (route: string) => {
+    return pathname === route;
+  };
 
   // Handle navigation with loading state
   const handleNavigation = (route: string, e?: React.MouseEvent) => {
@@ -245,7 +249,7 @@ const Header = () => {
 
       <header
         className={`bg-gradient-to-r from-[#000080] to-[#00BFFF] flex items-center ${
-          isLoggedIn ? "h-[53px]" : "h-[80px]"
+          isLoggedIn ? 'h-[53px]' : 'h-[80px]'
         } fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
           scrolled
             ? "shadow-[0_4px_10px_rgba(0,0,0,0.5)] border-b border-black/30"
@@ -259,11 +263,7 @@ const Header = () => {
           </div>
         )}
         {/* Left side - Logo */}
-        <div
-          className={`flex justify-start items-center gap-3 ${
-            isLoggedIn ? "px-6 w-auto" : "p-4 w-1/4"
-          }`}
-        >
+        <div className={`flex justify-start items-center gap-3 ${isLoggedIn ? 'px-6 w-auto' : 'p-4 w-1/4'}`}>
           <div className="flex items-center justify-center">
             <div
               onClick={(e) => handleNavigation(isLoggedIn ? "/home" : "/", e)}
@@ -274,9 +274,7 @@ const Header = () => {
                 width={isLoggedIn ? 40 : 70}
                 height={isLoggedIn ? 40 : 70}
                 alt="logo"
-                className={`${
-                  isLoggedIn ? "w-[40px] h-[40px]" : "w-[70px] h-[70px] -my-1"
-                }`}
+                className={`${isLoggedIn ? 'w-[40px] h-[40px]' : 'w-[70px] h-[70px] -my-1'}`}
                 priority
               />
             </div>
@@ -286,11 +284,9 @@ const Header = () => {
               onClick={(e) => handleNavigation(isLoggedIn ? "/home" : "/", e)}
               className="cursor-pointer transition-all duration-300 hover:scale-105"
             >
-              <span
-                className={`text-[#FFD700] font-['PlaywriteDKLoopet'] tracking-wide ${
-                  isLoggedIn ? "text-2xl" : "text-4xl"
-                }`}
-              >
+              <span className={`text-[#FFD700] font-['PlaywriteDKLoopet'] tracking-wide ${
+                isLoggedIn ? 'text-2xl' : 'text-4xl'
+              }`}>
                 Explavue!
               </span>
             </div>
@@ -372,11 +368,7 @@ const Header = () => {
         </div>
 
         {/* Right side - Buttons */}
-        <div
-          className={`flex justify-end items-center ${
-            isLoggedIn ? "px-6" : "p-4 w-1/4"
-          }`}
-        >
+        <div className={`flex justify-end items-center ${isLoggedIn ? 'px-6' : 'p-4 w-1/4'}`}>
           {/* Login/Signup buttons - only show when not logged in */}
           {!isLoggedIn && (
             <div className="hidden md:flex items-center gap-3">
@@ -426,9 +418,7 @@ const Header = () => {
               />
             </div>
             <div
-              className={`absolute ${
-                isLoggedIn ? "top-[53px]" : "top-[80px]"
-              } right-0 bg-white min-w-[200px] shadow-lg rounded-md z-50 opacity-0 transition-all duration-300 transform -translate-y-2 ${
+              className={`absolute ${isLoggedIn ? 'top-[53px]' : 'top-[80px]'} right-0 bg-white min-w-[200px] shadow-lg rounded-md z-50 opacity-0 transition-all duration-300 transform -translate-y-2 ${
                 isDropdownOpen ? "block opacity-100 translate-y-0" : "hidden"
               }`}
             >

@@ -7,133 +7,90 @@ import {
   useEffect,
   ReactNode,
 } from "react";
-import { setCookie, deleteCookie } from "cookies-next";
-// import { useSession, signIn, signOut } from 'next-auth/react';
-// import { Session } from 'next-auth';
+import { getCookie, setCookie, deleteCookie } from "cookies-next";
 
-// Define the shape of our context
 interface AuthContextType {
   isLoggedIn: boolean;
+  token: string | null; // Thêm token vào context
   login: (token: string) => void;
   logout: () => void;
   socialLogin: (provider: string) => void;
-  session: unknown | null; // Changed from any to unknown
+  userId: string | null; // Thêm userId để sử dụng
 }
 
-// Create the context with a default value
 const AuthContext = createContext<AuthContextType>({
   isLoggedIn: false,
+  token: null,
   login: () => {},
   logout: () => {},
   socialLogin: () => {},
-  session: null,
+  userId: null,
 });
 
-// Provider component
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [token, setToken] = useState<string | null>(null); // Lưu token trong state
+  const [userId, setUserId] = useState<string | null>(null); // Lưu userId
   const [isInitialized, setIsInitialized] = useState(false);
-  // Define a type for session if you expect a user property
-  interface SessionType {
-    user?: {
-      name?: string;
-      email?: string;
-      [key: string]: unknown;
-    };
-    [key: string]: unknown;
-  }
-  // const { data: session, status } = useSession();
-  const session: SessionType | null = null; // Temporarily disabled
 
-  // Simple login function for traditional login
-  const login = (token: string) => {
-    // Set cookie
-    setCookie("token", token);
-
-    // Store in localStorage (only if in browser)
-    if (typeof window !== "undefined") {
-      localStorage.setItem("isLoggedIn", "true");
-    }
-
-    // Update state
-    setIsLoggedIn(true);
-
-    // Dispatch custom event to notify other components
-    if (typeof window !== "undefined") {
-      window.dispatchEvent(new Event("authStateChanged"));
-    }
-  };
-
-  // Function to handle social login
-  const socialLogin = (provider: string) => {
-    // signIn(provider, { callbackUrl: '/home' });
-    console.log("Social login temporarily disabled:", provider);
-  };
-
-  // Logout function
-  const logout = () => {
-    // Clear cookie
-    deleteCookie("token");
-
-    // Clear localStorage (only if in browser)
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("isLoggedIn");
-      localStorage.removeItem("username");
-    }
-
-    // Update state
-    setIsLoggedIn(false);
-
-    // Dispatch custom event to notify other components
-    if (typeof window !== "undefined") {
-      window.dispatchEvent(new Event("authStateChanged"));
-    }
-  };
-
-  // Initialize state from localStorage or session
+  // Khởi tạo trạng thái từ cookie khi component mount
   useEffect(() => {
-    // First check NextAuth session
-    if (session && (session as SessionType).user) {
-      setIsLoggedIn(true);
-      setIsInitialized(true);
-      return;
+    const storedToken = getCookie("token")?.toString();
+    if (storedToken) {
+      setToken(storedToken);
+      setIsLoggedIn(true); // Đặt isLoggedIn dựa trên sự hiện diện của token
     }
 
-    // If no NextAuth session, check localStorage (for traditional login)
-    if (typeof window !== "undefined") {
-      const checkAuthStatus = () => {
-        const storedLoggedIn = localStorage.getItem("isLoggedIn") === "true";
-        setIsLoggedIn(storedLoggedIn);
-        setIsInitialized(true);
-      };
+    // Lấy userId từ localStorage (nếu có)
+    const storedUserId = localStorage.getItem("current_user_id");
+    if (storedUserId) {
+      setUserId(storedUserId);
+    }
 
-      // Initial check
-      checkAuthStatus();
+    setIsInitialized(true);
+  }, []);
 
-      // Listen for storage changes (when login happens in another tab or component)
-      const handleStorageChange = (e: StorageEvent) => {
-        if (e.key === "isLoggedIn" || e.key === "access_token") {
-          checkAuthStatus();
+  const login = (newToken: string) => {
+    setToken(newToken);
+    setIsLoggedIn(true);
+    setCookie("token", newToken, {
+      maxAge: 24 * 60 * 60, // 24 giờ
+      path: "/",
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+    });
+
+    // (Tùy chọn) Lấy userId từ API profile
+    fetch("/api/profile", {
+      headers: {
+        Authorization: `Bearer ${newToken}`,
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.userId) {
+          setUserId(data.userId);
+          localStorage.setItem("current_user_id", data.userId);
         }
-      };
+      })
+      .catch((err) => console.error("Failed to fetch profile:", err));
+  };
 
-      window.addEventListener("storage", handleStorageChange);
+  const socialLogin = (provider: string) => {
+    console.log("Social login temporarily disabled:", provider);
+    // Thêm logic signIn nếu cần (ví dụ: window.location.href = `/api/auth/${provider}`);
+  };
 
-      // Also listen for custom events (for same-tab updates)
-      const handleAuthChange = () => {
-        checkAuthStatus();
-      };
+  const logout = () => {
+    setToken(null);
+    setIsLoggedIn(false);
+    setUserId(null);
+    deleteCookie("token");
+    localStorage.removeItem("isLoggedIn");
+    localStorage.removeItem("current_user_id");
+    console.log("Logout executed");
+  };
 
-      window.addEventListener("authStateChanged", handleAuthChange);
-
-      return () => {
-        window.removeEventListener("storage", handleStorageChange);
-        window.removeEventListener("authStateChanged", handleAuthChange);
-      };
-    }
-  }, [session]);
-
-  // Don't render children until auth is initialized to prevent hydration mismatch
   if (!isInitialized) {
     return null;
   }
@@ -142,10 +99,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     <AuthContext.Provider
       value={{
         isLoggedIn,
+        token, // Cung cấp token cho các component
         login,
         logout,
         socialLogin,
-        session,
+        userId,
       }}
     >
       {children}
@@ -153,7 +111,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 }
 
-// Custom hook to use the auth context
-export function useAuth() {
+export const useAuth = () => {
   return useContext(AuthContext);
-}
+};

@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, act } from "react";
 import Tab from "./tab";
 import { FaAngleLeft, FaAngleRight } from "react-icons/fa6";
 import { getCookie } from "cookies-next";

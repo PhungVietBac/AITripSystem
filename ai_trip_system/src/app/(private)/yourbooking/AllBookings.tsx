@@ -1,11 +1,11 @@
-"use client";
+'use client'
 
 import BookingCard from "./Card";
 import React from "react";
 import { useEffect, useCallback } from "react";
 import { useState } from "react";
 import { getCookie } from "cookies-next";
-import Filter, { FilterOptions } from "./Filter";
+import Filter, { FilterOptions } from './Filter';
 import Loading from "@/components/Loading";
 import useScrollReveal from "@/hooks/useScrollReveal";
 import { useAuthCheck } from "@/hooks/useAuthCheck";
@@ -94,24 +94,24 @@ export default function AllBookings() {
           }?lookup=${encodeURIComponent(lookup)}`;
         }
 
-        const response = await fetch(url, {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        });
+            const response = await fetch(url, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`
+                }
+            });
 
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error("Error response:", errorText);
-          try {
-            const errorJson = JSON.parse(errorText);
-            console.error("Error details:", errorJson);
-          } catch {
-            // Not JSON
-          }
-          throw new Error(`Error: ${response.status}`);
-        }
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error("Error response:", errorText);
+                try {
+                    const errorJson = JSON.parse(errorText);
+                    console.error("Error details:", errorJson);
+                } catch (e) {
+                    // Not JSON
+                }
+                throw new Error(`Error: ${response.status}`);
+            }
 
         const data = await response.json();
         setBookings(data);
@@ -121,7 +121,7 @@ export default function AllBookings() {
         setIsLoading(false);
       }
     },
-    [token, user?.userId]
+    [token]
   );
 
   useEffect(() => {
@@ -131,13 +131,13 @@ export default function AllBookings() {
     }
   }, [fetchBookings, user]); // Thêm user vào dependency array
 
-  const handleFilterChange = (filters: FilterOptions) => {
-    fetchBookings(filters);
-  };
+    const handleFilterChange = (filters: FilterOptions) => {
+        fetchBookings(filters);
+    };
 
-  return (
-    <div className="space-y-4">
-      <Filter onFilterChange={handleFilterChange} />
+    return (
+        <div className="space-y-4">
+            <Filter onFilterChange={handleFilterChange} />
 
       {loading ? (
         <div className="flex justify-center items-center h-64">
@@ -165,13 +165,13 @@ export default function AllBookings() {
             />
           ))}
 
-          {bookings.length > 10 && (
-            <div className="text-center py-3 text-sky-700 font-semibold bg-sky-50 rounded-lg border border-sky-100 shadow-sm">
-              Hiển thị 10/{bookings.length} đặt chỗ.
-            </div>
-          )}
+                    {bookings.length > 10 && (
+                        <div className="text-center py-3 text-sky-700 font-semibold bg-sky-50 rounded-lg border border-sky-100 shadow-sm">
+                            Hiển thị 10/{bookings.length} đặt chỗ.
+                        </div>
+                    )}
+                </div>
+            )}
         </div>
-      )}
-    </div>
-  );
+    );
 }

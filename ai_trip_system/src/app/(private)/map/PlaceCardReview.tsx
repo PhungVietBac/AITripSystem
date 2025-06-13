@@ -23,7 +23,7 @@ export default function Reviews({ idPlace }: ReviewProps) {
     const [error, setError] = useState<string | null>(null);
     const token = getCookie('token') as string;
 
-    // State cho form đánh giá mới
+
     const [showReviewForm, setShowReviewForm] = useState<boolean>(false);
     const [newRating, setNewRating] = useState<number>(5);
     const [newComment, setNewComment] = useState<string>('');
@@ -95,9 +95,8 @@ export default function Reviews({ idPlace }: ReviewProps) {
         } else {
             console.log('Missing idPlace or token:', { idPlace, hasToken: !!token });
         }
-    }, [idPlace, token]); // Ensure dependencies are correctly listed
+    }, [idPlace, token]); 
 
-    // Add a manual refresh function for testing
     const handleManualRefresh = () => {
         fetchReviews();
     };
@@ -140,7 +139,6 @@ export default function Reviews({ idPlace }: ReviewProps) {
                 );
             }
 
-            // Reset form
             setNewComment('');
             setNewRating(5);
             setShowReviewForm(false);
@@ -148,8 +146,6 @@ export default function Reviews({ idPlace }: ReviewProps) {
                     "Đăng tải đánh giá thành công!",
                     'success'
                 );
-
-            // Refresh reviews list
             fetchReviews();
 
         } catch (err: any) {
@@ -169,17 +165,14 @@ export default function Reviews({ idPlace }: ReviewProps) {
         const fullStars = Math.floor(rating);
         const hasHalfStar = rating % 1 >= 0.5;
 
-        // Add full stars
         for (let i = 0; i < fullStars; i++) {
             stars.push(<FaStar key={`full-${i}`} className="text-yellow-400" />);
         }
 
-        // Add half star if needed
         if (hasHalfStar) {
             stars.push(<FaStarHalfAlt key="half" className="text-yellow-400" />);
         }
 
-        // Add empty stars
         const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
         for (let i = 0; i < emptyStars; i++) {
             stars.push(<MdOutlineStarBorder key={`empty-${i}`} className="text-yellow-400" />);
@@ -314,7 +307,6 @@ export default function Reviews({ idPlace }: ReviewProps) {
                 </div>
             )}
 
-            {/* Toast Notification */}
             {toast.visible && (
                 <div className={`fixed bottom-4 right-4 max-w-md bg-white rounded-lg shadow-lg border-l-4 ${toast.type === 'success' ? 'border-green-500' :
                         toast.type === 'error' ? 'border-red-500' : 'border-blue-500'

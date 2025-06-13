@@ -7,8 +7,11 @@ import {
   FaMapMarkerAlt,
   FaUsers,
   FaCalendarAlt,
+  FaDollarSign,
   FaRobot,
   FaArrowLeft,
+  FaHeart,
+  FaStar,
 } from "react-icons/fa";
 import { motion } from "framer-motion";
 import Carousel from "@/components/carousel";
@@ -20,20 +23,7 @@ export default function TripSuggestions() {
   const searchParams = useSearchParams();
   const { isLoggedIn } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
-  type TripData = {
-    departure: string;
-    destination: string;
-    startDate: string;
-    endDate: string;
-    travelers: string;
-    budget: string;
-    travelStyle: string;
-    interests: string[];
-    accommodation: string;
-    transportation: string;
-  };
-
-  const [tripData, setTripData] = useState<TripData | null>(null);
+  const [tripData, setTripData] = useState<any>(null);
   const [showInfo, setShowInfo] = useState<boolean[]>([]);
   const { data } = useData();
 
@@ -91,16 +81,16 @@ export default function TripSuggestions() {
     return new Date(dateString).toLocaleDateString("vi-VN");
   };
 
-  // const getBudgetLabel = (budget: string) => {
-  //   const budgetMap: { [key: string]: string } = {
-  //     "under-5m": "Dưới 5 triệu",
-  //     "5m-10m": "5 - 10 triệu",
-  //     "10m-20m": "10 - 20 triệu",
-  //     "20m-50m": "20 - 50 triệu",
-  //     "over-50m": "Trên 50 triệu",
-  //   };
-  //   return budgetMap[budget] || budget;
-  // };
+  const getBudgetLabel = (budget: string) => {
+    const budgetMap: { [key: string]: string } = {
+      "under-5m": "Dưới 5 triệu",
+      "5m-10m": "5 - 10 triệu",
+      "10m-20m": "10 - 20 triệu",
+      "20m-50m": "20 - 50 triệu",
+      "over-50m": "Trên 50 triệu",
+    };
+    return budgetMap[budget] || budget;
+  };
 
   if (isLoading) {
     return (

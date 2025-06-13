@@ -10,41 +10,36 @@ import {
   MessageListParams,
   ConversationListResponse,
   MessageListResponse,
-} from "@/types/conversation";
-import { getCookie } from "cookies-next";
+} from '@/types/conversation';
+import { getCookie } from 'cookies-next';
 
 // Sử dụng API backend đã deploy trên Render
-const API_BASE = "https://aitripsystem-api.onrender.com/api/v1";
+const API_BASE = 'https://aitripsystem-api.onrender.com/api/v1';
 
 // Helper function to get auth headers
 const getAuthHeaders = () => {
-  const token = getCookie("token");
+  const token = getCookie('token');
   return {
-    "Content-Type": "application/json",
-    ...(token && { Authorization: `Bearer ${token}` }),
+    'Content-Type': 'application/json',
+    ...(token && { 'Authorization': `Bearer ${token}` })
   };
 };
 
 // Conversation API functions
 export const conversationApi = {
   // Get conversations list - SỬ DỤNG ĐÚNG ENDPOINT
-  async getConversations(
-    params: ConversationListParams
-  ): Promise<ConversationListResponse> {
+  async getConversations(params: ConversationListParams): Promise<ConversationListResponse> {
     const searchParams = new URLSearchParams();
 
-    if (params.page) searchParams.append("page", params.page.toString());
-    if (params.limit) searchParams.append("limit", params.limit.toString());
-    if (params.includeArchived) searchParams.append("include_archived", "true");
-    if (params.search) searchParams.append("search", params.search);
+    if (params.page) searchParams.append('page', params.page.toString());
+    if (params.limit) searchParams.append('limit', params.limit.toString());
+    if (params.includeArchived) searchParams.append('include_archived', 'true');
+    if (params.search) searchParams.append('search', params.search);
 
     // Sử dụng endpoint đúng: GET /users/{user_id}/conversations
-    const response = await fetch(
-      `${API_BASE}/users/${params.userId}/conversations?${searchParams}`,
-      {
-        headers: getAuthHeaders(),
-      }
-    );
+    const response = await fetch(`${API_BASE}/users/${params.userId}/conversations?${searchParams}`, {
+      headers: getAuthHeaders()
+    });
     if (!response.ok) {
       throw new Error(`Failed to fetch conversations: ${response.statusText}`);
     }
@@ -52,9 +47,9 @@ export const conversationApi = {
   },
 
   // Get single conversation - SỬ DỤNG ĐÚNG ENDPOINT
-  async getConversation(id: string): Promise<Conversation> {
+  async getConversation(id: string, userId: string): Promise<Conversation> {
     const response = await fetch(`${API_BASE}/conversations/${id}`, {
-      headers: getAuthHeaders(),
+      headers: getAuthHeaders()
     });
     if (!response.ok) {
       throw new Error(`Failed to fetch conversation: ${response.statusText}`);
@@ -63,11 +58,9 @@ export const conversationApi = {
   },
 
   // Create new conversation
-  async createConversation(
-    data: ConversationCreateRequest
-  ): Promise<Conversation> {
+  async createConversation(data: ConversationCreateRequest): Promise<Conversation> {
     const response = await fetch(`${API_BASE}/conversations/`, {
-      method: "POST",
+      method: 'POST',
       headers: getAuthHeaders(),
       body: JSON.stringify(data),
     });
@@ -78,12 +71,9 @@ export const conversationApi = {
   },
 
   // Update conversation
-  async updateConversation(
-    id: string,
-    data: ConversationUpdateRequest
-  ): Promise<Conversation> {
+  async updateConversation(id: string, data: ConversationUpdateRequest): Promise<Conversation> {
     const response = await fetch(`${API_BASE}/conversations/${id}`, {
-      method: "PUT",
+      method: 'PUT',
       headers: getAuthHeaders(),
       body: JSON.stringify(data),
     });
@@ -94,10 +84,10 @@ export const conversationApi = {
   },
 
   // Archive conversation (soft delete)
-  async archiveConversation(id: string): Promise<{ message: string }> {
+  async archiveConversation(id: string, userId: string): Promise<{ message: string }> {
     const response = await fetch(`${API_BASE}/conversations/${id}/archive`, {
-      method: "PATCH",
-      headers: getAuthHeaders(),
+      method: 'PATCH',
+      headers: getAuthHeaders()
     });
     if (!response.ok) {
       throw new Error(`Failed to archive conversation: ${response.statusText}`);
@@ -109,22 +99,16 @@ export const conversationApi = {
 // Message API functions
 export const messageApi = {
   // Get messages for a conversation - SỬ DỤNG ĐÚNG ENDPOINT
-  async getMessages(
-    conversationId: string,
-    params: MessageListParams
-  ): Promise<MessageListResponse> {
+  async getMessages(conversationId: string, params: MessageListParams): Promise<MessageListResponse> {
     const searchParams = new URLSearchParams();
 
-    if (params.page) searchParams.append("page", params.page.toString());
-    if (params.limit) searchParams.append("limit", params.limit.toString());
+    if (params.page) searchParams.append('page', params.page.toString());
+    if (params.limit) searchParams.append('limit', params.limit.toString());
 
     // Sử dụng endpoint đúng: GET /conversations/{id}/messages
-    const response = await fetch(
-      `${API_BASE}/conversations/${conversationId}/messages?${searchParams}`,
-      {
-        headers: getAuthHeaders(),
-      }
-    );
+    const response = await fetch(`${API_BASE}/conversations/${conversationId}/messages?${searchParams}`, {
+      headers: getAuthHeaders()
+    });
     if (!response.ok) {
       throw new Error(`Failed to fetch messages: ${response.statusText}`);
     }
@@ -132,10 +116,7 @@ export const messageApi = {
   },
 
   // Create new message in conversation
-  async createMessage(
-    conversationId: string,
-    data: MessageCreateRequest
-  ): Promise<Message> {
+  async createMessage(conversationId: string, data: MessageCreateRequest): Promise<Message> {
     const messageData = {
       conversation_id: conversationId,
       content: data.content,
@@ -145,7 +126,7 @@ export const messageApi = {
     };
 
     const response = await fetch(`${API_BASE}/messages/`, {
-      method: "POST",
+      method: 'POST',
       headers: getAuthHeaders(),
       body: JSON.stringify(messageData),
     });
@@ -166,7 +147,7 @@ export const messageApi = {
     };
 
     const response = await fetch(`${API_BASE}/messages/`, {
-      method: "POST",
+      method: 'POST',
       headers: getAuthHeaders(),
       body: JSON.stringify(messageData),
     });
@@ -177,8 +158,8 @@ export const messageApi = {
   },
 
   // Get single message - không có endpoint này trong backend, bỏ qua
-  async getMessage(): Promise<Message> {
-    throw new Error("Get single message endpoint not available in backend API");
+  async getMessage(messageId: string, userId: string): Promise<Message> {
+    throw new Error('Get single message endpoint not available in backend API');
   },
 };
 
@@ -189,7 +170,7 @@ export const chatUtils = {
     userId: string,
     title: string,
     firstMessage: string,
-    role: "user" | "assistant" = "user"
+    role: 'user' | 'assistant' = 'user'
   ): Promise<{ conversation: Conversation; message: Message }> {
     // Backend không có endpoint /messages/start-conversation
     // Phải tạo conversation trước, rồi tạo message sau
@@ -198,6 +179,7 @@ export const chatUtils = {
     const conversation = await conversationApi.createConversation({
       user_id: userId,
       title: title,
+      metadata: {}
     });
 
     // 2. Tạo message đầu tiên
@@ -207,7 +189,7 @@ export const chatUtils = {
       content: firstMessage,
       role: role,
       metadata: {},
-      token_count: 0,
+      token_count: 0
     });
 
     return { conversation, message };
@@ -215,10 +197,10 @@ export const chatUtils = {
 
   // Generate conversation title from first message
   generateTitle(firstMessage: string, maxLength: number = 50): string {
-    const cleaned = firstMessage.trim().replace(/\s+/g, " ");
+    const cleaned = firstMessage.trim().replace(/\s+/g, ' ');
     if (cleaned.length <= maxLength) {
       return cleaned;
     }
-    return cleaned.substring(0, maxLength - 3) + "...";
+    return cleaned.substring(0, maxLength - 3) + '...';
   },
 };

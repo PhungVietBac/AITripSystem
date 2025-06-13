@@ -36,6 +36,7 @@ const Tab = ({ activity, idPlace }: TabProps) => {
   const tabRef = useRef<Array<HTMLButtonElement | null>>([]);
   const [reviews, setReviews] = useState<PlaceReviewResponse[]>([]);
   const [images, setImages] = useState<PlaceImageResponse[]>([]);
+  const [weatherMap, setWeatherMap] = useState<Record<string, any>>({});
   const token = getCookie("token");
   const [underlineProps, setUnderlineProps] = useState<{
     width: number;
@@ -250,9 +251,7 @@ const Tab = ({ activity, idPlace }: TabProps) => {
         {tabs.map((tab, index) => (
           <button
             key={index}
-            ref={(el) => {
-              tabRef.current[index] = el;
-            }}
+            ref={(el) => (tabRef.current[index] = el)}
             className={`group relative flex-1 text-center py-3 text-sm font-medium transition-colors duration-300 ${
               index === activeTab
                 ? "text-blue-600"

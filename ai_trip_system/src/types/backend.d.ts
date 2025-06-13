@@ -45,7 +45,7 @@ interface ReviewTripResponse extends ReviewTripBase {
   idreview: string;
 }
 
-type ReviewTripCreate = ReviewTripBase;
+interface ReviewTripCreate extends ReviewTripBase {}
 
 interface PlaceBase {
   name: string;
@@ -64,7 +64,7 @@ interface PlaceResponse extends PlaceBase {
   idplace: string;
 }
 
-type PlaceCreate = PlaceBase;
+interface PlaceCreate extends PlaceBase {}
 
 interface PlaceReviewBase {
   idplace: string;
@@ -77,7 +77,7 @@ interface PlaceReviewResponse extends PlaceReviewBase {
   idreview: string;
 }
 
-type PlaceReviewCreate = PlaceReviewBase;
+interface PlaceReviewCreate extends PlaceReviewBase {}
 
 interface PlaceImageBase {
   idplace: string;
@@ -98,7 +98,7 @@ interface NotificationResponse extends NotificationBase {
   isread: boolean;
 }
 
-type NotificationCreate = NotificationBase;
+interface NotificationCreate extends NotificationBase {}
 
 interface DetailInformationBase {
   idtrip: string;
@@ -141,7 +141,7 @@ interface AIRecResponse extends AIRecBase {
   output: string;
 }
 
-type AIRecCreate = AIRecBase;
+interface AIRecCreate extends AIRecBase {}
 
 interface TripPlan {
   name: string;

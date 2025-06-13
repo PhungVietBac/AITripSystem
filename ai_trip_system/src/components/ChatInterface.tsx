@@ -1,5 +1,6 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
+import Image from "next/image";
 import { FaPaperPlane, FaRobot, FaUser } from "react-icons/fa";
 
 // Định nghĩa kiểu dữ liệu cho tin nhắn

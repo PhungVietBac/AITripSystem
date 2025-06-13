@@ -4,6 +4,7 @@ import { verifyToken } from "@/lib/auth";
 
 export async function GET(req: NextRequest) {
   const authHeader = req.headers.get("authorization");
+  
 
   if (!authHeader?.startsWith("Bearer ")) {
     return NextResponse.json({ message: "Thiếu token" }, { status: 401 });
