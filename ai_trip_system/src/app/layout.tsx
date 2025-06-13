@@ -57,6 +57,10 @@ export const metadata: Metadata = {
     description: "Lập kế hoạch du lịch thông minh và đơn giản cùng AI.",
     images: ["/og-image.jpg"],
   },
+  icons: {
+    icon: "/logo.png",
+    apple: "/logo.png",
+  },
 };
 
 export default function RootLayout({
@@ -81,6 +85,7 @@ export default function RootLayout({
             "@type": "WebApplication",
             name: "Explavue",
             url: "https://ai-trip-system.vercel.app",
+            logo: "https://ai-trip-system.vercel.app/logo.png",
             applicationCategory: "TravelApplication",
             operatingSystem: "All",
             description:

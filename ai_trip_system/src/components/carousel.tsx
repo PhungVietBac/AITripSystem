@@ -22,10 +22,10 @@ const Carousel = ({ activities }: CarouselProps) => {
   const [idPlaceArray, setIdPlaceArray] = useState<string[]>([]);
 
   const getVisibleCount = () => {
-    if (typeof window === "undefined") return 3;
+    if (typeof window === "undefined") return 2;
     if (window.innerWidth < 640) return 1;
     if (window.innerWidth < 1024) return 2;
-    return 3;
+    return 2;
   };
   const [visibleCount, setVisibleCount] = useState<number>(getVisibleCount());
   const token = getCookie("token");

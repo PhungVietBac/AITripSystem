@@ -16,6 +16,7 @@ import {
 import { motion } from "framer-motion";
 import Carousel from "@/components/carousel";
 import { useData } from "@/context/DataContext";
+import clsx from "clsx";
 
 export default function TripSuggestions() {
   const router = useRouter();
@@ -210,31 +211,33 @@ export default function TripSuggestions() {
             { label: "Chỉnh sửa", color: "yellow" },
             { label: "Kết quả khác", color: "red" },
             { label: "Chia sẻ", color: "cyan" },
-          ].map(({ label, color, onClick }) => (
-            <motion.button
-              key={label}
-              onClick={onClick}
-              variants={{
-                hidden: { opacity: 0, y: 10 },
-                visible: { opacity: 1, y: 0 },
-              }}
-              className={`border-2 border-${color}-500 text-${color}-600 hover:bg-${color}-500 hover:text-white font-semibold rounded-xl px-6 py-3 transition-all duration-200`}
-            >
-              {label}
-            </motion.button>
-          ))}
+          ].map(({ label, color, onClick }) => {
+            const base =
+              "border-2 font-semibold rounded-xl px-6 py-3 transition-all duration-200";
+            const colorClass = {
+              green: "border-green-500 text-green-600 hover:bg-green-500",
+              yellow: "border-yellow-500 text-yellow-600 hover:bg-yellow-500",
+              red: "border-red-500 text-red-600 hover:bg-red-500",
+              cyan: "border-cyan-500 text-cyan-600 hover:bg-cyan-500",
+            }[color];
+
+            return (
+              <motion.button
+                key={label}
+                onClick={onClick}
+                variants={{
+                  hidden: { opacity: 0, y: 10 },
+                  visible: { opacity: 1, y: 0 },
+                }}
+                className={clsx(base, colorClass, "hover:text-white")}
+              >
+                {label}
+              </motion.button>
+            );
+          })}
         </motion.div>
         {/* AI Suggestions Placeholder */}
         <div className="bg-white rounded-2xl shadow-xl p-8 text-center">
-          <FaRobot className="text-6xl text-blue-600 mx-auto mb-6" />
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">
-            Tính năng đang được phát triển
-          </h2>
-          <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
-            Chức năng tạo lộ trình AI đang được team phát triển và sẽ sớm được
-            tích hợp vào hệ thống. Bạn sẽ nhận được những gợi ý tuyệt vời cho
-            chuyến đi của mình!
-          </p>
           <div className="flex justify-center space-x-4">
             <button
               onClick={() => router.push("/trips")}

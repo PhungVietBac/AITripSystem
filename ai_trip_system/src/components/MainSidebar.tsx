@@ -16,10 +16,11 @@ import {
   MapPinIcon,
   CalendarDaysIcon,
   UserIcon,
-  CogIcon
-} from '@heroicons/react/24/outline';
-import { useConversation } from '@/context/ConversationContext';
-import { useAuth } from '@/context/AuthContext';
+  CogIcon,
+  MagnifyingGlassIcon,
+} from "@heroicons/react/24/outline";
+import { useConversation } from "@/context/ConversationContext";
+import { useAuth } from "@/context/AuthContext";
 
 interface MainSidebarProps {
   currentConversationId?: string;
@@ -112,7 +113,11 @@ export default function MainSidebar({
       label: 'Đặt chỗ của bạn',
       route: '/yourbooking'
     },
-
+    {
+      icon: MagnifyingGlassIcon,
+      label: "Tìm kiếm",
+      route: "/search",
+    },
   ];
 
   const isActiveRoute = (route: string) => {
@@ -157,7 +162,7 @@ export default function MainSidebar({
         >
           <div className="w-20 h-20 relative">
             <Image
-              src="/images/logo.png"
+              src="/logo.png"
               fill
               alt="Explavue Logo"
               className="object-contain"

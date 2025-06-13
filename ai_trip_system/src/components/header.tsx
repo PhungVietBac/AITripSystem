@@ -270,7 +270,7 @@ const Header = () => {
               className="cursor-pointer transition-transform duration-300 hover:scale-110"
             >
               <Image
-                src="/images/logo.png"
+                src="/logo.png"
                 width={isLoggedIn ? 40 : 70}
                 height={isLoggedIn ? 40 : 70}
                 alt="logo"

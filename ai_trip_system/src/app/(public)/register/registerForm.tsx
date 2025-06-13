@@ -87,14 +87,16 @@ export default function RegisterForm() {
           {/* Left side - Register Form */}
           <div className="w-full max-w-md mx-auto lg:mx-0 lg:ml-48 ml-48">
             <div className="rounded-2xl shadow-xl filter backdrop-blur-md bg-yellow-50 border border-[#d1d9e0] p-4 sm:p-6 md:p-8">
-          {/* Logo */}
-          <div className="flex justify-center">
-            <img
-              src="/images/logo.png"
-              alt="Explavue Logo"
-              className="w-12 h-12 sm:w-16 sm:h-16"
-            />
-          </div>
+              {/* Logo */}
+              <div className="flex justify-center">
+                <Image
+                  src="/logo.png"
+                  alt="Explavue Logo"
+                  className="w-12 h-12 sm:w-16 sm:h-16"
+                  width={500}
+                  height={500}
+                />
+              </div>
 
           {/* Welcome Text */}
           <div className="text-center mb-6">
