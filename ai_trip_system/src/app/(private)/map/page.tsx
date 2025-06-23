@@ -211,11 +211,6 @@ export default function MapPage() {
     updateMapState: (center: [number, number], zoom: number) => void;
     updateSearchQuery?: (name: string) => void;
   }>(null);
-  const mapRef = useRef<{
-    handleMarkerClick: (place: Place) => void;
-    updateMapState: (center: [number, number], zoom: number) => void;
-    updateSearchQuery?: (name: string) => void;
-  }>(null);
 
   const handlePlacesLoaded = useCallback(
     (loadedPlaces: Place[]) => {
