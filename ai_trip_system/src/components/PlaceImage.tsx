@@ -24,7 +24,7 @@ const PlaceImage = ({
       setIsLoading(true);
       try {
         if (!idPlace) {
-          setImageUrl("/default.jpg");
+          setImageUrl("/images/elementor-placeholder-image.webp");
           return;
         }
 
@@ -34,13 +34,17 @@ const PlaceImage = ({
         );
 
         if (!imageRes.ok) {
-          setImageUrl("/default.jpg");
+          setImageUrl("/images/elementor-placeholder-image.webp");
           return;
         }
 
         const imageData = await imageRes.json();
         console.log("API Response:", imageData); // Log để xem cấu trúc dữ liệu
-        setImageUrl(imageData.image || imageData.imageUrl || "/default.jpg");
+        setImageUrl(
+          `https://aitripsystem-api.onrender.com/api/v1/proxy_image/?url=${encodeURIComponent(
+            imageData.image
+          )}`
+        );
       } catch (err) {
         console.error("Lỗi khi fetch ảnh:", err);
         setImageUrl("/default.jpg");
@@ -56,11 +60,6 @@ const PlaceImage = ({
     console.log("Image URL:", imageUrl);
   }, [imageUrl]);
 
-  const proxyUrl = `https://aitripsystem-api.onrender.com/api/v1/proxy_image/?url=${encodeURIComponent(
-    imageUrl
-  )}`;
-  console.log("Proxy URL:", proxyUrl); // Log để kiểm tra URL đã encode đúng chưa
-
   return (
     <div className={`relative w-full h-full ${className}`}>
       {isLoading ? (
@@ -69,7 +68,7 @@ const PlaceImage = ({
         </div>
       ) : (
         <Image
-          src={proxyUrl}
+          src={imageUrl}
           alt={altText}
           className="w-full h-full object-cover"
           loading="lazy"

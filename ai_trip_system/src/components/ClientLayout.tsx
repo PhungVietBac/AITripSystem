@@ -91,20 +91,39 @@ function ClientLayoutContent({
     handleNewConversation,
   } = useConversation();
 
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   return (
     <>
       {showSidebar ? (
-        // Layout with sidebar for logged-in users on private routes
-        <div className="flex h-screen overflow-hidden">
-          <MainSidebar
-            currentConversationId={currentConversationId}
-            onConversationSelect={handleConversationSelect}
-            onNewConversation={handleNewConversation}
-          />
-          <main className="flex-1 overflow-auto">{children}</main>
-        </div>
+        <>
+          {!sidebarOpen && (
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="fixed top-4 left-4 z-50 p-2 bg-white rounded shadow"
+            >
+              ☰
+            </button>
+          )}
+          <div className="flex h-screen overflow-hidden">
+            {/* Sidebar Overlay */}
+            <MainSidebar
+              isOpen={sidebarOpen}
+              onClose={() => setSidebarOpen(false)}
+              currentConversationId={currentConversationId}
+              onConversationSelect={handleConversationSelect}
+              onNewConversation={handleNewConversation}
+            />
+
+            {/* Main Content */}
+            <main
+              className={`flex-1 overflow-auto ${sidebarOpen ? "" : "ps-16"}`}
+            >
+              {children}
+            </main>
+          </div>
+        </>
       ) : (
-        // Layout with header for public routes or non-logged-in users
         <>
           {showHeader && <Header />}
           <main className={`flex-grow ${showHeader ? "pt-[80px]" : ""}`}>

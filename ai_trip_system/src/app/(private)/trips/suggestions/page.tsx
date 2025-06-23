@@ -43,7 +43,6 @@ export default function TripSuggestions() {
       updated[index] = !updated[index];
       return updated;
     });
-  const handleOnPlan = () => router.push("/detail");
 
   // Redirect if not logged in
   useEffect(() => {
@@ -91,17 +90,6 @@ export default function TripSuggestions() {
     return new Date(dateString).toLocaleDateString("vi-VN");
   };
 
-  // const getBudgetLabel = (budget: string) => {
-  //   const budgetMap: { [key: string]: string } = {
-  //     "under-5m": "Dưới 5 triệu",
-  //     "5m-10m": "5 - 10 triệu",
-  //     "10m-20m": "10 - 20 triệu",
-  //     "20m-50m": "20 - 50 triệu",
-  //     "over-50m": "Trên 50 triệu",
-  //   };
-  //   return budgetMap[budget] || budget;
-  // };
-
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
@@ -130,9 +118,6 @@ export default function TripSuggestions() {
             Quay lại
           </button>
           <div>
-            {/* <h1 className="text-3xl font-bold text-gray-800">
-              Gợi ý lộ trình AI
-            </h1> */}
             <motion.h1
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -217,11 +202,11 @@ export default function TripSuggestions() {
           }}
         >
           {[
-            { label: "Lên kế hoạch", color: "green", onClick: handleOnPlan },
+            { label: "Lên kế hoạch", color: "green" },
             { label: "Chỉnh sửa", color: "yellow" },
             { label: "Kết quả khác", color: "red" },
             { label: "Chia sẻ", color: "cyan" },
-          ].map(({ label, color, onClick }) => {
+          ].map(({ label, color }) => {
             const base =
               "border-2 font-semibold rounded-xl px-6 py-3 transition-all duration-200";
             const colorClass = {
@@ -234,7 +219,6 @@ export default function TripSuggestions() {
             return (
               <motion.button
                 key={label}
-                onClick={onClick}
                 variants={{
                   hidden: { opacity: 0, y: 10 },
                   visible: { opacity: 1, y: 0 },

@@ -26,12 +26,16 @@ interface MainSidebarProps {
   currentConversationId?: string;
   onConversationSelect: (conversationId: string) => void;
   onNewConversation: () => void;
+  isOpen?: boolean;
+  onClose?: () => void;
 }
 
 export default function MainSidebar({
   currentConversationId,
   onConversationSelect,
   onNewConversation,
+  isOpen = false,
+  onClose,
 }: MainSidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -54,20 +58,18 @@ export default function MainSidebar({
   }, []);
 
   // Fetch user data from API using SWR
-  const access_token = getCookie("token") || "";
-  const fetcher = (url: string) =>
-    fetch(url, {
-      headers: {
-        Authorization: `Bearer ${access_token}`,
-        "Content-Type": "application/json",
-      },
-    }).then((res) => res.json());
-
   const { data: userData } = useSWR(
-    userid
-      ? `https://aitripsystem-api.onrender.com/api/v1/users/idUser?lookup=${userid}`
-      : null,
-    fetcher,
+    userid ? ["/api/user", userid] : null,
+    ([, id]) =>
+      fetch(
+        `https://aitripsystem-api.onrender.com/api/v1/users/idUser?lookup=${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${getCookie("token") || ""}`,
+            "Content-Type": "application/json",
+          },
+        }
+      ).then((res) => res.json()),
     {
       revalidateIfStale: false,
       revalidateOnFocus: false,
@@ -164,8 +166,20 @@ export default function MainSidebar({
     router.push(`/profile/${userid}`);
   };
 
+  if (!isOpen) return null;
+
   return (
-    <div className="w-72 bg-gradient-to-b from-slate-50 to-gray-100 border-r border-gray-200 flex flex-col h-full">
+    <div className="relative w-72 bg-gradient-to-b from-slate-50 to-gray-100 border-r border-gray-200 flex flex-col h-full">
+      {/* Close Button */}
+      <div className="absolute top-4 right-4">
+        <button
+          onClick={onClose}
+          className="text-gray-600 hover:text-black text-xl"
+          aria-label="Đóng sidebar"
+        >
+          ✕
+        </button>
+      </div>
       {/* Logo Section */}
       <div className="border-b border-gray-200">
         <div
